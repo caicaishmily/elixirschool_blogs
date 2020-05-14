@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <title>MyBlog</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.8.0/css/bulma.min.css">
+</head>
+
+<body>
+  <section class="section">
+    <div class="container">
+      
+<h1 class="title">
+  My First post
+</h1>
+<p class="subtitle"><strong>2019-11-28</strong></p>
+<p><hr />
+<h2 id="author-sean-callanauthor-link-https-github-com-doomsporkcategories-generaldate-2018-04-02layout-posttitle-a-look-at-elixir-1-6excerpt-follow-along-as-we-take-a-peek-at-what-s-inside-the-latest-elixir-release-learn-more-about-the-all-new-code-formatter-exciting-dynamic-supervisors-and-changes-coming-to-your-code-editors-that-make-working-in-elixir-even-better">author: Sean Callan
+author_link: https://github.com/doomspork
+categories: general
+date: 2018-04-02
+layout: post
+title:  A look at Elixir 1.6
+excerpt: &gt;
+Follow along as we take a peek at what's inside the latest Elixir release.
+Learn more about the all new code formatter, exciting dynamic supervisors, and changes coming to your code editors that make working in Elixir even better!</h2>
+<p>January 17th was like any other day until something exciting happened: José gave Elixir 1.6 to the people.
+Much like the versions before it this one continues the trend of feature packed releases made possible by the collaborative efforts of many.</p>
+<p>Let's take a look together at the exciting features made it into the 1.6 release and how they play into our applications.</p>
+<p><strong>Code Formatter</strong></p>
+<p>While some may not think a code formatter is essential there's one thing that the new <code>mix format</code> task makes sure of: gone are debates and arguments about which styleguide or format is the &quot;right&quot; one.</p>
+<p>It's easy to apply the formatter to your project if you're using 1.6:</p>
+<pre style="background-color:#2b303b;">
+<span style="color:#c0c5ce;">$ mix format lib/**/*.ex
+</span></pre>
+<p>Newly generated projects will include the <code>.formatter.exs</code> configuration file that allows you to fine tune how the formatter it applied to your code.</p>
+<p>Together the community was able to apply the formatter to the <em>entire</em> Elixir code base.  If you're interested in seeing all the changes made head over to <a href="https://github.com/elixir-lang/elixir/issues/6643">Elixir Issue #6643</a>.</p>
+<p>If you're not looking to dig through commits don't worry, we've got you covered.  Let's take a quick look at just a handful of the changes made to the core project with the formatter:</p>
+<ul>
+<li>
+<p>Add paranthesis to function calls:</p>
+<p>Before</p>
+<pre style="background-color:#2b303b;">
+<span style="color:#c0c5ce;">file = </span><span style="color:#ebcb8b;">Keyword</span><span style="color:#c0c5ce;">.get opts, </span><span style="color:#a3be8c;">:file</span><span style="color:#c0c5ce;">, &quot;</span><span style="color:#a3be8c;">nofile</span><span style="color:#c0c5ce;">&quot;
+</span><span style="color:#c0c5ce;">line = </span><span style="color:#ebcb8b;">Keyword</span><span style="color:#c0c5ce;">.get opts, </span><span style="color:#a3be8c;">:line</span><span style="color:#c0c5ce;">, </span><span style="color:#d08770;">1
+</span></pre>
+<p>After</p>
+<pre style="background-color:#2b303b;">
+<span style="color:#c0c5ce;">file = </span><span style="color:#ebcb8b;">Keyword</span><span style="color:#c0c5ce;">.get(opts, </span><span style="color:#a3be8c;">:file</span><span style="color:#c0c5ce;">, &quot;</span><span style="color:#a3be8c;">nofile</span><span style="color:#c0c5ce;">&quot;)
+</span><span style="color:#c0c5ce;">line = </span><span style="color:#ebcb8b;">Keyword</span><span style="color:#c0c5ce;">.get(opts, </span><span style="color:#a3be8c;">:line</span><span style="color:#c0c5ce;">, </span><span style="color:#d08770;">1</span><span style="color:#c0c5ce;">)
+</span></pre></li>
+<li>
+<p>Realign and reorganize complex statements:</p>
+<p>Before</p>
+<pre style="background-color:#2b303b;">
+<span style="color:#c0c5ce;">valid = is_list(aliases) and </span><span style="color:#ebcb8b;">Enum</span><span style="color:#c0c5ce;">.all?(aliases, </span><span style="color:#b48ead;">fn </span><span style="color:#c0c5ce;">{k, v} -&gt;
+</span><span style="color:#c0c5ce;"> is_atom(k) and is_atom(v)
+</span><span style="color:#b48ead;">end</span><span style="color:#c0c5ce;">)
+</span></pre>
+<p>After</p>
+<pre style="background-color:#2b303b;">
+<span style="color:#c0c5ce;">valid =
+</span><span style="color:#c0c5ce;">  is_list(aliases) and
+</span><span style="color:#c0c5ce;">    </span><span style="color:#ebcb8b;">Enum</span><span style="color:#c0c5ce;">.all?(aliases, </span><span style="color:#b48ead;">fn </span><span style="color:#c0c5ce;">{k, v} -&gt;
+</span><span style="color:#c0c5ce;">      is_atom(k) and is_atom(v)
+</span><span style="color:#c0c5ce;">    </span><span style="color:#b48ead;">end</span><span style="color:#c0c5ce;">)
+</span></pre></li>
+</ul>
+<p><strong>DynamicSupervisor</strong></p>
+<p>Easily one of the most exciting features of 1.6, the Dynamic Supervisor provides a powerful new tool to Elixir developers.</p>
+<p>With traditional Supervisors we are expected to provide a static list of child processes at initialization.
+While this works for many situations it requires us to know the exact number of supervised processes we need at start-up which may not always be foreseeable.</p>
+<p><em>Door opens and in strolls a new kid in town: <code>DynamicSupervisor</code>.</em></p>
+<p>Those constraints are a thing of the past with our new friend the <code>DynamicSupervisor</code>.
+Unlike other supervisors, the dynamic supervisor starts with no children.
+Instead we add those child processes as necessary using the  <a href="https://hexdocs.pm/elixir/master/DynamicSupervisor.html#start_child/2"><code>start_child/2</code></a> function.</p>
+<p>Look for an all new <code>DynamicSupervisor</code> lesson soon!</p>
+<p><strong>Compiler Behaviour</strong></p>
+<p>The new <code>Mix.Task.Compiler</code> behaviour won't be immediately noticeable or useful to most end users but it's exciting nonetheless.</p>
+<p>Through this change Elixir is able to ensure all compilers conform to a specification and provide adequate diagnostics in the event of errors.
+This improved diagnostics makes integration with code editors easier.
+The end result is better tooling support for Elixir users.</p>
+<p>If you're interested in taking a closer look at these changes we recommend you check out what Jake Becker, one of the features contributors, has to say in his blog post <a href="https://medium.com/@JakeBeckerCode/elixirls-0-2-better-builds-code-formatter-and-incremental-dialyzer-be70999ea3e7">ElixirLS 0.2: Better builds, code formatter, and incremental Dialyzer</a>.</p>
+<p>While at first glance it may not seem like much, these are just a few key features that make up the 1.6 release.  Dozens of fixes, tweaks, and other improvements make this release the best yet.</p>
+<p>A huge thank you to those who contributed to this release, you're doing a spectacular job!</p>
+<p>We want to hear from you!
+Are you using any of these features yet?
+What are your favorite changes in 1.6?</p>
+<p>Until next time!</p>
+</p>
+
+    </div>
+  </section>
+</body>
+
+</html>
