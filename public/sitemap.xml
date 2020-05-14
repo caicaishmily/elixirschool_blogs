@@ -6,4 +6,23 @@
             
         </url>
     
+        <url>
+            <loc>http://127.0.0.1:10086/blog/</loc>
+            
+        </url>
+    
+        <url>
+            <loc>http://127.0.0.1:10086/blog/first/</loc>
+            
+                <lastmod>2019-11-28</lastmod>
+            
+        </url>
+    
+        <url>
+            <loc>http://127.0.0.1:10086/blog/second/</loc>
+            
+                <lastmod>2019-11-28</lastmod>
+            
+        </url>
+    
 </urlset>
