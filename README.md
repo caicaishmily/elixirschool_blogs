@@ -16,3 +16,5 @@ Translatations for elixirschool blogs.
 - [ ] [LiveView 组件](./posts/2019-12-29-live-view-live-component.md)
 - [ ] [building admissions](./posts/2019-10-23-building-admissions.md)
 - [x] [TIL 端口](./posts/2019-04-17-til-ports.md)
+### 2018
+- [x] [1.6 前瞻](./posts/2018-04-03-a-look-at-16.md)
