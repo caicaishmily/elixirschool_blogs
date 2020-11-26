@@ -11,47 +11,63 @@ excerpt: >
   Join us to learn more!
 ---
 
-Welcome, Bem-vindo, Bienvenido!
+# 起步
 
-We're happy to share with you the all new Elixir School blog: Appendix!
-As part of our 2018 initiatives to bring you even more awesomeness at Elixir School we're rolling out some exciting new changes.
-In this post we'll cover some of those changes and some of the exciting ways _you_ can get involved.
+欢迎，欢迎，热烈欢迎！(原文分别是英语的欢迎，以及葡萄牙语，西班牙语的欢迎)
 
-### Appendix
+我们很高兴与您分享全新的 Elixir School 博客: 附录!
 
-With our blog we hope to allow you to follow along with our projects, join us for deep dives into Elixir, explore functional programming concepts, and discover new topics and libraries not covered in our lessons.
-If that's not enough to get you excited, here's a sneak peek at some of the topics we've got in store for you:
+作为我们 2018 年为您带来更多精彩的 Elixir School 举措的一部分，我们正在推出一些令人兴奋的新变化。
 
-+ How to deploy Elixir projects using OTP releases
-+ On-going series outlining the latest changes in Elixir
-+ Deep dives into topics like testing and concurrency
-+ Exploration of different libraries and projects
-+ Reviews of books and other learning materials
-+ Plus a wide range of Elixir tips, tricks, and best practices
+在这篇文章中，我们将介绍 _你_ 可以参与其中的一些变化和一些令人兴奋的方式。
 
-What could make this blog even better? __You__!
-Elixir School wouldn't be what it is today without the contributions of people such as yourself and this blog is no exception.
-As part of our initiative to encourage open source contributions and lower the barrier to educational resources, we want to welcome you and others to share the insights, experiences, and knowledge you've gained in your Elixir journey.
-If writing for Elixir School is something that interest you, create [Issues](https://github.com/elixirschool/elixirschool/issues) the each topics you'd like to suggest!
+### 附录
 
-### Extracurricular
+通过我们的博客，我们希望让您能够跟随我们的项目，加入我们的行列，深入了解 Elixir，探索函数式编程概念，并发现我们课程中没有涉及的新主题和库。
 
-We launched Extracurricular in early September 2017 with a goal to make it easier to become a contributor to Elixir open source projects.
-Our primary goal has always been to provide ways for users to discover Elixir, learn it, and find contribution opportunities.
-Extracurricular was no exception and we were excited to see the early adoption and usage.
-In recent months that usage has begun to slow which in turn led us to ask some tough questions about how we spend our resources.
-After much consideration we've made the tough decision to shutter Extracurricular in the coming weeks to focus on other projects we hope deliver greater value, like Appendix.
+如果这还不足以让你感到兴奋，这里是我们为你准备的一些可以抢先看的主题。
 
-Is this the end of Extracurricular?
-Probably not.
-We want to step back, gather our thoughts, and figure out a better approach or perhaps a different product altogether.
++ 如何使用 OTP 版本部署 Elixir 项目？
++ 正在进行中的 Elixir 系列概述的最新变化。
++ 深入探讨测试和并发等主题。
++ 探索不同的库和项目
++ 对书籍和其他学习材料的评论
++ 加上各种 Elixir 技巧、诀窍和最佳实践。
 
-### Sponsorship
+什么能让这个博客变得更好？ _你_！
 
-Another big change in 2018 here at Elixir School is the arrival of sponsors.
-Elixir School has always been free and always will be but that has limited some of the things we can do.
-Through sponsorship we'll be empowered to help fund global Elixir events, dedicate resources to growing our knowledge base, as well as provide discounts and giveaways for readers.
+如果没有像您这样的人的贡献，Elixir School 就不会有今天的成就，这个博客也不例外。
 
-If you're interested in sponsoring Elixir School we'd love to hear from you!
+作为我们鼓励开源贡献和降低教育资源门槛的举措之一，我们欢迎您和其他人分享您在 Elixir 旅程中获得的见解、经验和知识。
 
-Stay tuned — this is just the beginning of a very exciting year for the Elixir School team.
+如果您对为 Elixir School 撰写文章感兴趣，请在 [Issues](https://github.com/elixirschool/elixirschool/issues) 中创建您对每个主题的建议。
+
+### 课外活动
+
+我们在 2017 年 9 月初推出了 Extracurricular，目标是让用户更容易成为 Elixir 开源项目的贡献者。
+
+我们的首要目标一直是为用户提供发现 Elixir、学习 Elixir 和寻找贡献机会的方法。
+
+Extracurricular 也不例外，我们很高兴看到早期的采用和使用情况。
+
+最近几个月，这种使用率开始放缓，这反过来又让我们对如何使用资源提出了一些棘手的问题。
+
+经过深思熟虑，我们做出了一个艰难的决定，在未来几周内关闭 Extracurricular，专注于其他项目，我们希望能带来更大的价值，比如 Appendix。
+
+Extracurricular 就这样结束了吗？
+
+也许不是。
+
+我们想退一步，收集我们的想法，并找出更好的方法，或者可能是完全不同的产品。
+
+### 赞助
+
+2018 年 Elixir School 的另一大变化是赞助商的到来。
+
+Elixir School 一直是免费的，而且永远都是免费的，但这限制了我们可以做的一些事情。
+
+通过赞助，我们将有能力资助全球 Elixir 的活动，将资源投入到增长我们的知识库中，并为读者提供折扣和赠品。
+
+如果您有兴趣赞助 Elixir School，我们很乐意听到您的声音。
+
+敬请关注--这只是 Elixir School 团队激动人心的一年的开始。
