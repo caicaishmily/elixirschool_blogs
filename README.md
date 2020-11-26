@@ -18,3 +18,5 @@ Translatations for elixirschool blogs.
 - [x] [TIL 端口](./posts/2019-04-17-til-ports.md)
 ### 2018
 - [x] [1.6 前瞻](./posts/2018-04-03-a-look-at-16.md)
+- [x] [起步](./posts/2018-04-23-just-the-beginning.md)
+- [x] [《Elixir in Action》回顾](./posts/2018-05-31-elixir-in-action-review.md)

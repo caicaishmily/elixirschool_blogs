@@ -9,81 +9,91 @@ excerpt: >
  The first installment in our new series looking at, and reviewing, different learning materials available to the Elixir community.
 ---
 
-Welcome to the first post in our new series reviewing various learning material available for Elixir.
-Of course you're probably thinking "Elixir School is the best!" and we agree, but as we explore other material to improve our own we want to share it with you along with our thoughts.
-To get us started, we're going to kick off our series with a review of Saša Jurić's newest book _Elixir in Action, Second Edition._
+# 《Elixir in Action》回顾
 
-_Note 2018-06-18: The book is in beta (MEAP - Manning Early Access Program), very close to production according to the Manning website (September 2018).
-You can find more details about it [here](https://www.manning.com/books/elixir-in-action-second-edition)._
+欢迎来到我们新系列-回顾 Elixir 各种学习材料的第一篇文章。
 
-## Author
+当然，你可能会想："Elixir School 是最好的", 我们同意这种说法，但在我们探索其他材料以改进我们自己的材料时，我们希望与你一起分享我们的想法。
 
-Saša Jurić is a software developer with over a decade of professional experience in programming.
-Over the years Saša has worked with languages such as Elixir, Erlang, Ruby, JavaScript, C# and C++ giving him a range of experiences.
+让我们开始吧，我们将以对 Saša Jurić 的新书 _《Elixir in Action, Second Edition》_ 的回顾来开启我们的系列。
 
-## Target
+_注 2018-06-18: 这本书正处于 Beta 阶段（MEAP--Manning Early Access Program），根据曼宁网站（2018年9月），非常接近出版了。你可以[在这里](https://www.manning.com/books/elixir-in-action-second-edition)找到更多关于它的细节_
 
-What is the target audience of the book?  There is no better place to look than the book's introduction:
+## 作者
 
-> This is an intermediate level book that teaches about Elixir, Erlang, and how they assist
-the development of highly-available server side systems. To fully take advantage of the
-material, you should be an experienced software developer. It is not expected that you know
-anything about Elixir, Erlang, or functional programming, but you should be skillful in at
-least one programming language, such as Java, C#, Ruby, JavaScript.
+Saša Jurić 是一名拥有着十多年专业编程经验的软件开发人员。
 
-## Review
+多年来，Saša 曾使用 Elixir、Erlang、Ruby、JavaScript、C# 和 C++ 等语言，这使他拥有丰富的经验。
 
-Writing a book about a programming language is hard.
-It's even harder when that book needs to encompass not only the language but the platform on which it runs as well.
-As is often the case with technical books, authors usually choose one of two paths: "tutorial" authors who have readers follow along and build an application from start to finish and "documentation" authors who focus on theory, function definitions, and other technical tidbits.
+## 目标
 
-With this book Saša Jurić has taken another approach: there is a very small project, a ToDoList application, that exists solely to reinforce the readers understanding of each chapter's topics.
+这本书的目标读者是什么？ 最好的地方莫过于本书的介绍:
 
-He begins every section explaining the language feature, introducing how and why it is used in the sample project, and lastly finishing the section discussing his experiences and perspective with the particular topics. This is done in a quite natural way, each section is (almost) never broken, making our brain focus at one thing at any given time. This allows us to experience the ups and downs and explore the content alongside Saša.
+> 这是一本中级水平的书，教授 Elixir，Erlang，以及它们是如何帮助你开发高可用的服务器端系统。为了充分利用这本书，你应该是一个经验丰富的软件开发人员。我们不期望您知道关于 Elixir、Erlang 或函数式编程的任何东西，但你应该精通至少一门编程语言，比如 Java、C#、Ruby、JavaScript。
 
-## Chapter Analysis
+## 回顾
 
-In total the book has 13 chapters.
+编写一本关于编程语言的书是很难的。
 
-In Chapters 1 to 4, we are introduced to the platform, the language and the basics that we can use and find in almost any language (even more on functional ones). We can find details about variables, operators, control flow, data abstractions and protocols (Elixir version of polymorphism). In this section, we begin working on our ToDoList application, and by the end of it, we have a module that contains the CRUD functionality of a ToDoList entity.
+如果这本书不仅需要涵盖该语言，还需要涵盖它所运行的平台，那就更难了。
 
-Chapters 5 to 11 are probably the most awesome part of the book (and what I believe made the first edition of it so popular amongst Elixir developers), a very thorough explanation about OTP and its counterparts (GenServer, Supervision, ETS Tables, OTP Applications) and the toolkit (Observer, Mix, Plug). In this section a lot of features are added to the ToDoList app: 
-* add a custom server process to maintain state
-* migrate state to a GenServer
-* add a cache so that we start supporting multiple to-do lists
-* add basic data persistence
-* add a supervision tree and introduce a basic pool of workers
-Additionally, we are introduced to ETS tables, OTP Applications and configuration, dependencies and Plug. In this section, I got the feeling that I am pair programming as a junior with the author, sitting beside him while he designs the application. When he finds a hole in his design, he questions himself "What part of the OTP can cover this hole, and how?". Then, he turns to me and gives me a detailed explanation on what we are doing, proceeds with the implementation on the todo-list app, and finally turns to me again and discusses on alternatives and ups and downs of the chosen path. I like this aproach, and I want to see it in more language learning books. 
+就像技术类书籍经常出现的情况一样，作者通常会选择两条道路中的一条。"教程" 类的作者让读者从头到尾跟着一起构建一个应用程序，而 "文档" 类作者则专注于理论、功能定义和其他技术小细节。
+
+在这本书中，Saša Jurić 采取了另一种方式：有一个很小的项目 -- 一个 ToDoList 应用，它的存在仅仅是为了加强读者对每一章主题的理解。
+
+他在每一节的开头都解释了语言特性，介绍了它在示例项目中的使用方法和原因，最后在结束这一节时讨论了他对特定话题的经验和观点。这样做是相当自然的，每一节（几乎）从不间断，这使我们的大脑在任何时候都专注于一件事。让我们可以和 Saša 一起经历起伏，探索内容。
+
+## 章节分析
+
+这本书总共有13章。
+
+在 1-4 章中，介绍到了平台、语言基础知识，我们可以在几乎所有的语言中使用和发现（甚至更多的是函数式语言）。我们可以找到关于变量、操作符、控制流、数据抽象和协议（ Elixir 版本的多态性）的细节。在本节中，我们开始研究我们的 ToDoList 应用，到最后，我们有一个包含 ToDoList 实体的 CRUD 功能的模块。
+
+第 5-11 章可能是本书最棒的部分（我相信这也是本书第一版在 Elixir 开发者中如此受欢迎的原因），这一节对 OTP 及其对应程序（ GenServer、Supervision、ETS 表、OTP 应用程序）和工具包（Observer、Mix、Plug）进行了非常详尽的解释。在本节中，ToDoList应用中增加了很多这些功能。
+
+* 增加一个自定义服务器进程来维护状态
+* 将状态迁移到 GenServer 上
+* 增加一个缓存，以便我们开始支持多个 to-do 列表。
+* 增加基本的数据持久性
+* 增加一棵监督树，并引入一个基本的 workers 库；
+
+此外，还介绍了 ETS 表、OTP 应用和配置、依赖和 Plug。在这一节中，我有一种感觉，我是以一个小学生的身份和作者结对编程，在他设计应用程序的时候，坐在他身边。当他发现自己的设计有漏洞的时候，他就会自问 "OTP 的哪一部分可以解决这个漏洞，如何解决？"。然后，他转向我，给我详细解释我们正在做的事情，继续在 todo-list 应用上实现，最后又转向我，讨论备选方案和所选方案的起伏。我喜欢这种方法，我希望在更多的语言学习书籍中看到这种方法。
 
 In the last two chapters, we can see how to make our app run on a cluster, release it using Distillery, and maintain it (Debug, Log etc). The author follows the same approach here as well, albeit not in that much detail, as the topics discussed in this section are very broad (clustering, data replication, network partitions, releases) and would need way too much detail to cover in a language introduction book.
 
-## Conclusion
+在最后两章，我们可以看到如何让我们的 app 在集群上运行，使用 Distillery 发布，以及使用（Debug，Log 等）维护它。作者在这里也沿用了同样的方法，不过没有那么详细，因为这部分讨论的话题非常广泛（集群、数据复制、网络分区、发布），在一本语言入门书中需要涉及的细节太多。
 
-Lately books are being pushed to the side when it comes to learning new technology and not without good reason, reading and understanding a book requires dedication and a lot of time.
-These days most people don't seem to have the time for books, so instead videos and brief tutorials are used to jump start learning.
+## 结语
 
-Another factor working against books is that many authors omit important steps of their thinking process, which ultimately leaves us, the readers, unable to produce a similar solution ourselves.
-We're left to wonder: "How the heck did we come up with this solution?  What was the mindset that lead us to this point?".
-Fortunately, Saša is excellent at helping the reader understand his reasoning, he explains each step of the process while exploring alternatives when he thinks it's due.
+最近在谈到学习新技术时，书本被推到了一边，当然这不是没有道理的，毕竟阅读和理解一本书需要投入大量的时间。
 
-So is Saša Jurić's newest book _Elixir in Action, Second Edition._ worth the investment of your time?
+如今，大多数人似乎没有时间看书，所以取而代之的是使用视频和简短的教程来开始学习。
 
-If you're an experienced developer looking to advance your understanding of Elixir and the underlying BEAM: yes.
+另一个不利于书籍的因素是，很多作者省略了他们思考过程中的重要步骤，这最终让我们这些读者无法自己产生类似的解决方案。
 
-This IS NOT a beginner's book.
-This IS NOT a simple book.
-This IS an excellent resource highlighting the potential and shortcomings of Elixir and the BEAM.
+我们不得不去想 "我们到底是怎么想出这个解决方案的？ 是什么样的思维方式让我们走到了这一步？"。
 
-If you give it your attention you'll finish the book with a solid understanding of the platform and how best to leverage it at all stages of the development lifecycle.
+幸运的是，Saša 很擅长帮助读者理解他的推理过程，他解释了过程中的每一步，同时在他认为应该的时候探讨了替代方案。
 
-Look for more reviews to come soon!
+那么 Saša Jurić 的新作 _《Elixir in Action, Second Edition》_是否值得你投入时间呢？
 
-## Giveaway
+如果你是一个有经验的开发人员，希望提高对 Elixir 和底层 BEAM 的理解：是的。
 
-To kick off our new series we are giving away free copies of Saša Jurić's _Elixir in Action, Second Edition._!
+这不是一本适合初学者的书。
 
-Want your chance to win a free copy?
-Follow us on [Twitter](https://twitter.com/elixirschool) and retweet this blog post announcement!
-We'll be picking winners at the end of the month, don't miss your chance!
+这不是一本简单的书，
 
-Look for more reviews to come soon!
+它是一本强调 Elixir 和 BEAM 潜力与缺点的优秀资源。
+
+如果你能全神贯注地阅读本书，你就会在完成本书时对这个平台有一个扎实的了解，以及如何在开发生命周期中的各个阶段最好地利用它。
+
+期待更多评论的到来！
+## 赠品
+
+为了庆祝我们的新系列开启，我们将免费赠送 Saša Jurić 的 _《Elixir in Action, Second Edition》_!
+
+想获得免费的机会吗？
+
+请在 [Twitter](https://twitter.com/elixirschool) 上关注我们，并转发这篇博文公告! 我们将在月底抽取获奖者，不要错过机会!
+
+期待更多评论的到来！
