@@ -1,8 +1,11 @@
-## ElixirSchool Blogs
+# ElixirSchool 博客中文翻译
 
-Translatations for elixirschool blogs.
+假如你想学习 Elixir 这门编程语言。那么 [elixirschool](https://elixirschool.com/) 将是你的首选。不过官方网站上的博客一直没有提供中文翻译版，所以笔者抽出了一些时间翻译了这些博客，旨在帮助国内的开发者在学习 Elixir 的过程中能多一些文章参考。由于笔者能力有限，有些翻译可能有失水准，还望各位大佬批评指正。
 
-## Contents (按发布时间排序)
+喜欢的话可以给个 star, 欢迎 issue !
+
+## [官网链接](https://elixirschool.com/blog/)
+## 博客内容 (按发布时间排序)
 
 ### 2020
 
