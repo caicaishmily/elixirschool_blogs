@@ -9,24 +9,29 @@ title:  Ecto query composition
 excerpt: Follow along as we look at how to dynamically compose Ecto queries using pattern matching and reduction.
 ---
 
-Ecto is fantastic tool that provides us with a great degree of flexibility.
-In this blog post we'll look at how we can dynamically build our Ecto queries and sanitize our input data at the same time.
+# Ecto 查询组成
 
-Let's plan to approach our composition in 3 steps:
+Ecto 是一个神奇的工具，它为我们提供了很大程度的灵活性。
 
-- Create the base query we'll build upon
-- Compose our query from input criteria
-- Execute our final query
+在这篇博文中，我们将看看如何动态地构建我们的 Ecto 查询，同时对我们输入的数据进行消毒。
 
-For our example we'll be working with everyone's favorite example project: a blog!
-Before we begin, take a peek at the schema we'll be building our code to interface with:
+我们计划用 3 个步骤来进入组成部分。
+
+- 创建我们要建立的基础查询
+- 根据输入条件组成我们的查询
+- 执行我们的最后一个查询
+
+在我们的例子中将使用大家最喜欢的示例项目：一个博客！
+
+在开始之前，先来看看我们将构建代码接口的模式。
 
 ![image](https://user-images.githubusercontent.com/73386/41698787-7a4efb0e-74dd-11e8-970b-7fb8fe3fef14.png)
 
-## Query base
+## 查询基础
 
-To keep things clean we'll create a new module to contain the functionality for accessing the underlying schema data.
-Let's move ahead with creating our module and addressing the first step above: the base query.
+为了保持简洁，我们将创建一个新的模块来包含访问底层模式数据的功能。
+
+让我们继续创建我们的模块，并解决上面的第一步：基础查询。
 
 ```elixir
 defmodule Posts do
@@ -38,19 +43,23 @@ defmodule Posts do
 end
 ```
 
-Simple enough.
-When `base_query/0` is called we'll create the initial query that will serve as the base for our criteria.
-At this point our query is analogous to `SELECT * FROM posts`.
+足够简单。
 
-## Applying our criteria
+当调用 `base_query/0` 时，我们将创建初始查询，作为我们标准的基础。
 
-Next we'll need to build upon `base_query/0` by applying our criteria, this is where the magic of our query composition shines!
+此时我们的查询类似于 `SELECT * FROM posts`。
 
-There's a good chance the resulting query we want won't just be simple `==` comparisons.
-Let's consider how we might look up a blog post by title.
-It's unlikely we'll want to search by exact title, so instead of `p.title == "Repo"` we want `p.title ILIKE "%Repo%"`.
+## 应用我们的标准
 
-With that in mind it's easy to understand why the following is not only a bad idea, because it doesn't filter the criteria, but the resulting queries are basic `==` comparisons:
+接下来我们需要在 `base_query/0` 的基础上，应用我们的标准，这就是我们查询组成的神奇之处!
+
+我们想要的查询结果很有可能不只是简单的 `==` 比较。
+
+让我们考虑一下我们如何通过标题来查询一篇博客文章。
+
+我们不太可能想要通过精确的标题来搜索，所以我们想要的不是 `p.title == "Repo"`，而是 `p.title ILIKE "%Repo%"`。
+
+考虑到这一点，就很容易理解为什么下面的做法不仅是个坏主意(因为它没有过滤标准)，而且产生的查询是基本的 `==` 比较。
 
 ```elixir
 defp build_query(query, criteria) do
@@ -59,17 +68,18 @@ defp build_query(query, criteria) do
 end
 ```
 
-So how might we approach this problem instead?
+那么我们如何来避免这个问题呢？
 
-Before we discuss the new approach let's decide on some business rules for Post look up, see them applied in our approach, and then walk through it.
-For our example we will assume the following are always true:
+在讨论新的方法之前，我们先确定一些 Post 查找的业务规则，看看它们在我们的方法中的应用，然后再进行讨论。
 
-- Searches for `title` are expected to be `ILIKE "%title%"`
-- Including `tags` requires _at least_ one.
-- Simple comparison is available for `draft` and `id`
-- All other values are discarded
+在我们的例子中，我们将假设以下内容始终为真。
 
-Now that we know the rules around looking up a Post let's see them applied with query composition:
+- 搜索 `title` 期望是 `ILIKE "%title%"`。
+- 包含 `tags` _至少_ 需要一个。
+- 可对 `draft` 和 `id` 进行简单比较。
+- 所有其他的值都被丢弃。
+
+现在我们知道了关于查找 Post 的规则，让我们看看它们在查询组成中的应用。
 
 ```elixir
 defp build_query(query, criteria) do
@@ -95,10 +105,11 @@ defp compose_query(_unsupported_param, query) do
 end
 ```
 
-## Bringing it all together
+## 把它们整合在一起
 
-With `base_query/0` and `build_query/2` in place, let's define our public `all/1` function.
-There's nothing special to running our query so we can setup our new function as a pipeline ending in `Repo.all/1`:
+有了 `base_query/0` 和 `build_query/2`，让我们定义公共 `all/1` 函数。
+
+运行我们的查询没有什么特别之处，所以我们可以将我们的新函数设置为以 `Repo.all/1` 结束的管道。
 
 ```elixir
 def all(criteria) do
@@ -108,9 +119,9 @@ def all(criteria) do
 end
 ```
 
-The result is public function, our module's API, that is concise and to a degree self documenting: "Get the base query, build the query with the criteria, and get all records".
+结果是公共函数，也就是我们模块的 API，简明扼要，在一定程度上自成体系。"获取基础查询，建立标准查询，然后获取所有记录"。
 
-When we bring it all together and begin to leverage the flexibility we've provided, we begin to see the true power provided to us through Ecto:
+当我们把这一切结合在一起，并开始利用我们提供的灵活性时，我们开始看到通过 Ecto 提供给我们的真正力量。
 
 ```elixir
 defmodule Posts do
@@ -162,9 +173,9 @@ defmodule Posts do
 end
 ```
 
-Here we have a module that encapsulates the logic around our data retrieval, separating our presentation and data layers, while providing a clean interface into our data.
+在这里，我们封装了一个数据检索逻辑模块，分离了我们的表现层和数据层，同时提供了一个干净的接口读取我们的数据。
 
-If we're using Phoenix, than our controller might look something like this:
+如果我们使用 Phoenix，我们的控制器可能看起来像这样:
 
 ```elixir
 defmodule Web.PostController do
@@ -196,6 +207,6 @@ defmodule Web.PostController do
 end
 ```
 
-The controller is concise and does little more than present the data — as it should.
+控制器很简洁，除了呈现数据之外没有更多的作用--因为它本该如此。
 
-What do you think of this approach?  How are you composing your Ecto queries?  We'd love to hear your thoughts and suggestions!
+你对这种方法有什么看法？ 你是如何组成你的 Ecto 查询的？ 我们很想听听你的想法和建议!

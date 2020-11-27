@@ -9,55 +9,63 @@ excerpt: >
   Take a dive into flexible version management of Elixir, Erlang, and OTP with `asdf`!
 ---
 
-## What is it?
-Oftentimes we need to use multiple versions of our tools.
-Many communities have their own things to do this.
-In Ruby we have `chruby`, `rbenv`, `rvm` and more, NodeJS has `nvm`.
-These tools allow us to easily and quickly switch what we are using for a given project or environment.
+# asdf 版本管理
+## 它是啥？
 
-Today were going to talk about my favorite version manager of choice, `asdf`, because it lets you manage multiple languages with just one tool because it is agnostic as to what you manage the version of with it.
-There is one big win that I see with `asdf` that no other tool has allowed me to do as easily: control which version of OTP my Elixir was compiled with, and manage that and several versions of Elixir + OTP together.
-Let's check it out!
+很多时候我们需要使用多个版本的工具。
 
-## Setup
-Installing `asdf` is a breeze.
+很多社区都有自己的东西来做这个事情。
 
-First, clone it down:
+在 Ruby 中，我们有 `chruby`、`rbenv`、`rvm` 等等，NodeJS 有 `nvm`。
+
+这些工具可以让我们轻松快速的在某个项目或环境中切换我们使用的工具。
+
+今天将要讨论我最喜欢的版本管理器 `asdf`，为什么是我最喜欢的呢？因为它可以让您仅用一种工具就可以管理多种语言，因为它与您使用其管理的版本无关。
+
+在我看来，`asdf` 有然而其他工具都没有的一个很大的优点，它让我如此轻松地做到：控制我的 Elixir 是用哪个版本的 OTP 编译的，并把它和 Elixir + OTP 的几个版本一起管理。
+
+让我们来看看它吧!
+## 安装
+安装 `asdf` 轻而易举。
+
+首先，将其克隆：
 
 ```shell
 git clone https://github.com/asdf-vm/asdf.git ~/.asdf --branch v0.5.1
 ```
 
-Now its time for setup.
+现在是时候安装了
 
-On macOS:
+在 macOS 上:
 
 ```shell
 echo -e '\n. $HOME/.asdf/asdf.sh' >> ~/.bash_profile
 echo -e '\n. $HOME/.asdf/completions/asdf.bash' >> ~/.bash_profile
 ```
 
-On linux (with a standard bash shell):
+在 linux 上(用一个标准的 bash shell):
 
 ```shell
 echo -e '\n. $HOME/.asdf/asdf.sh' >> ~/.bashrc
 echo -e '\n. $HOME/.asdf/completions/asdf.bash' >> ~/.bashrc
 ```
 
-With ZSH:
+使用 ZSH:
 
 ```shell
 echo -e '\n. $HOME/.asdf/asdf.sh' >> ~/.zshrc
 echo -e '\n. $HOME/.asdf/completions/asdf.bash' >> ~/.zshrc
 ```
 
-With Fish:
+使用 Fish:
 
 ```shell
 echo 'source ~/.asdf/asdf.fish' >> ~/.config/fish/config.fish
 mkdir -p ~/.config/fish/completions; and cp ~/.asdf/completions/asdf.fish ~/.config/fish/completions
 ```
 Now restart your shell, and type `asdf` and we get our first introduction to the tool.
+
+现在重启你的 shell，然后输入 `asdf`，我们首先得到一个工具介绍。
 
 ```shell
 asdf
@@ -83,11 +91,13 @@ UTILS
   asdf update --head                   Update asdf to the latest on the master branch
 ```
 
-## Using it with Elixir
-To get `asdf` working with Elixir, we first will need Erlang.
-Depending on our system, there are some simple steps:
+## 搭配 Elixir 使用
 
-On OSX:
+要让 `asdf` 与 Elixir 一起工作，我们首先需要 Erlang。
+
+根据我们的系统不同，需要有一些简单的步骤。
+
+在 OSX 上:
 
 ```shell
 brew install autoconf wxmac
@@ -95,7 +105,7 @@ asdf plugin-add erlang https://github.com/asdf-vm/asdf-erlang.git
 asdf install erlang 21.1
 ```
 
-On Ubuntu
+在 Ubuntu 上：
 
 ```shell
 apt-get -y install build-essential autoconf m4 libncurses5-dev libwxgtk3.0-dev libgl1-mesa-dev libglu1-mesa-dev libpng3 libssh-dev
@@ -103,42 +113,46 @@ asdf plugin-add erlang https://github.com/asdf-vm/asdf-erlang.git
 asdf install erlang 21.1
 ```
 
-For the Erlang bits, we can use any ref from git or also pass a major OTP version.
-`asdf install erlang ref:master` would get us the latest master version from git.
-Since we can do this with Elixir, too, you can imagine how easy it makes building from a specific branch or version for debugging contributions to Elixir itself that may involve multiple versions!
+对于 Erlang 的部分，我们可以使用 git 中的任何 ref，或者传递一个主要的 OTP 版本。
 
-Now, let’s get Elixir set up.
-It will be the same on all systems since we got our plumbing done with Erlang.
+`asdf install erlang ref:master` 会让我们从 git 获得最新的 master 版本。
+
+既然我们也可以使用 Elixir 做到这一点，您可以想象它使从特定分支或版本进行构建来调试对 Elixir 本身的贡献（包括多个版本）变得多么容易！
+
+现在，让我们把 Elixir 设置好。
+
+自从我们使用 Erlang 完成管道以来，所有系统上的情况都是相同的。
 
 ```shell
 asdf plugin-add elixir https://github.com/asdf-vm/asdf-elixir.git
 asdf install elixir 1.7
 ```
 
-Now, what if we happened to know we needed it compiled on OTP 20 and not OTP 21, and to run in that environment?
+现在，如果我们碰巧知道我们需要在 OTP 20 而不是 OTP 21 上进行编译并在该环境中运行，该怎么办？
 
 ```shell
 asdf install erlang 20.3
 asdf install elixir 1.7-otp-20
 ```
 
-Now, we can set up what version we want to use in a given project (local environment, per directory) like so:
+现在，我们可以在给定项目（本地环境，每个目录）中设置要使用的版本，如下所示：
 
 ```shell
 asdf local erlang 20.3
 asdf local elixir 1.7.0-otp-20
 ```
 
-Or alternatively, we can set global configs (our entire system), too:
+或者，我们也可以选择设置全局配置（我们的整个系统）：
 
 ```shell
 asdf global erlang 20.3
 asdf global elixir 1.7.0-otp-20
 ```
 
-To learn more about how asdf manages these things under the hood and further customize, check out [their docs](https://github.com/asdf-vm/asdf#the-tool-versions-file).
+要了解有关 asdf 如何管理这些内容并进一步进行自定义的更多信息，请查看[文档](https://github.com/asdf-vm/asdf#the-tool-versions-file)。
 
-As you can see, this makes it quite seamless to be able to switch around a toolset that is somewhat complicated underneath the service.
-I find `asdf` to be a great tool for managing this piece of my complexity in my day to day life.
-Happy hacking!
+如您所见，这使得能够在服务之下有些复杂的工具集之间无缝切换。
 
+我发现 asdf 是管理日常生活中这种复杂性的好工具。
+
+骇客入侵！

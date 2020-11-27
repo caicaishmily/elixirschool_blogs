@@ -21,3 +21,5 @@ Translatations for elixirschool blogs.
 - [x] [起步](./posts/2018-04-23-just-the-beginning.md)
 - [x] [《Elixir in Action》回顾](./posts/2018-05-31-elixir-in-action-review.md)
 - [x] [揭秘配置](./posts/2018-07-17-configuration-demystified.md)
+- [x] [asdf 版本管理](./2018-10-01-asdf-version-management.md)
+- [x] [ecto multi](./posts/2018-10-10-ecto-multi.md)
