@@ -12,10 +12,6 @@ excerpt: >
 
 # 揭秘配置
 
-There's been a lot of discussion about configuration in the community lately.
-We thought this would be an opportune time to discuss configuration and how best to handle it within an Elixir application.
-It is surprising to see how a small change to our applications configuration can eliminate much of the headaches others are experiencing.
-
 最近社区里有很多关于配置的讨论。
 
 我们认为这是一个很好的时机去讨论配置以及如何在 Elixir 应用程序中最好地处理配置。
@@ -140,9 +136,6 @@ end
 我们已经成功地将我们的代码与运行时配置解耦了，而且配置是显式的，与代码并存。
 
 ### 把它整合起来
-
-In our last example we see the benefit to separating our configuration into two distinct parts.
-An easy way to avoid the confusion and pitfalls of configuration is to remember this simple rule: `System.get_env/1` should never be used to populate our application's configuration, the values defined in `config.exs`.
 
 在上一个例子中，我们看到了将配置分成两个不同部分的好处。
 
