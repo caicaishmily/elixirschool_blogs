@@ -10,9 +10,11 @@ excerpt: >
   Capture the output from Logger to clean up your test runs
 ---
 
-Have you ever run `mix test` and seen red error messages being logged when, in fact, all your tests are passing? This can often occur when adding test coverage for "sad path" code flows that include calls to `Logger.error/1`.
+# til capture log in exunit tests
 
-Here's a (slightly contrived) example of some code that demonstrates the problem. The `GithubClient.get_user_repos/1` function takes a GitHub username, makes a request to the GitHub API and returns a list of the user's repositories. Note the call to `Logger.error/1` if the GitHub user is not found:
+你是否曾经运行过 `mix test`，看到红色的错误信息被记录下来，而事实上，你的所有测试都通过了？当在 "sad path" 代码流中调用 `Logger.error/1` 增加测试覆盖范围时，经常会出现这种情况。
+
+这里有一个（略显造作）的例子来说明这个问题。`GithubClient.get_user_repos/1` 函数接收一个 GitHub 用户名，向 GitHub API 发出请求，并返回一个用户的仓库列表。注意，如果没有找到 GitHub 用户，则调用 `Logger.error/1`。
 
 ```elixir
 defmodule GithubClient do
@@ -40,7 +42,7 @@ defmodule GithubClient do
 end
 ```
 
-And here's the corresponding ExUnit tests. The details aren't super important, but the tests are  configured to use a [mock server for the test environment](https://medium.com/flatiron-labs/rolling-your-own-mock-server-for-testing-in-elixir-2cdb5ccdd1a0).
+这是相应的 ExUnit 测试。 细节不是很重要，但是测试配置使用[模拟服务器](https://medium.com/flatiron-labs/rolling-your-own-mock-server-for-testing-in-elixir-2cdb5ccdd1a0).
 
 
 ```elixir
@@ -61,20 +63,20 @@ defmodule GithubClientTest do
 end
 ```
 
-Great-- the tests pass! Interspersed in the output, though, you'll see the red error logging resulting from the _passing_ test of the 404 not found case:
+太棒了-测试通过了！ 不过，在输出中，您会看到红色错误记录，该错误记录是由 404 找不到案例的 _passing_ 测试导致的：
 
 `17:32:00.090 [error] User invalid_username does not exist`
 
-Right now we only have two tests, but this can get really distracting as the test suite grows. This applies not only to the "sad path" tests that include error logging, but any logging we might do using other functions included with the [`Logger` module](https://hexdocs.pm/logger/Logger.html) like `Logger.info/1` or `Logger.debug/1`
+目前我们只有两个测试，但是随着测试套件的增加，这可能会真正分散您的注意力。 这不仅适用于包含错误日志记录的 "sad path" 测试，而且适用于我们可能使用 [`Logger`模块](https://hexdocs.pm/logger/Logger.html) 随附的其他功能进行的任何日志记录 `Logger.info/1` 或 `Logger.debug/1`
 
 
-There are a few ways to solve this. To stop logged output from showing up for _all tests_ add `capture_log: true` to your ExUnit config. In a new mix project this would be found in `test/test_helper.exs` and look like:
+有几种解决方法。 要停止针对 _all tests_ 显示日志记录的输出，请在您的 ExUnit 配置中添加 `capture_log: true`。 在一个新的混合项目中，可以在 `test/test_helper.exs` 中找到它，如下所示：
 
 ```elixir
 ExUnit.start(capture_log: true)
 ```
 
-To capture the logs for a specific test module you can add a [`moduletag`](https://hexdocs.pm/ex_unit/ExUnit.Case.html#module-module-and-describe-tags) to the specific test module.
+要捕获特定测试模块的日志，可以将[`moduletag`](https://hexdocs.pm/ex_unit/ExUnit.Case.html#module-module-and-describe-tags)添加到特定测试模块
 
 ```elixir
 defmodule GithubClientTest do
@@ -85,4 +87,4 @@ defmodule GithubClientTest do
 end
 ```
 
-And that's it. Look at all that green!
+就是这样。 看看所有的绿色！
