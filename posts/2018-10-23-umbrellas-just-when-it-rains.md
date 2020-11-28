@@ -10,83 +10,105 @@ excerpt: >
   A look at umbrella applications and how they can help us write cleaner maintainable code.
 ---
 
-The umbrella application is a powerful tool available to us that a lot of users are unfamiliar with.
-In this post we'll look at umbrella applications and why we might want to consider using them for our next project.
+# 雨伞是下雨时用的
 
-## Project types
+伞式应用程序是许多用户不熟悉的功能强大的工具。
 
-Before we can understand when to use umbrellas and the role they play, let's review the types of projects available.
-For all intents and purposes there are three project types in the Erlang and Elixir ecosystem: Applications, Libraries, and umbrellas which are composed of the prior two.
+在本文中，我们将研究伞式应用程序，以及为什么我们可能要考虑在下一个项目中使用它们。
+## 项目类型
 
-Libraries are packages of code that can be re-used by other projects and applications.
-In Elixir a Library would lack the `:mod` key in the Mix `application/0` function and would also lack a supervision tree.
+在了解何时使用伞式应用及其作用之前，让我们回顾一下可用的项目类型。
 
-Applications are like Libraries but contain a supervision tree.
-If you open the `mix.exs` file for a project and see that the `application/0` function defines a `:mod` entry point: you're working with an Application.
-This is a dependency that has, and maintains, state in addition to processes.
-An Application isn't simply a module with simple functions.
+出于所有目的，Erlang 和 Elixir 生态系统中有三种项目类型：应用程序，库和保护伞，它由前两个组成。
 
-Lastly we have umbrella applications which are little more than syntactic sugar for managing a collection of Libraries and Applications as a single project.
-Why we might use umbrellas is what we'll explore here today.
+库是可被其他项目和应用程序重复使用的代码包。
 
-## Getting to know umbrella Applications
+在 Elixir 中，库将在 Mix `application/0` 函数中缺少 `:mod` 键，并且还将缺少监督树。
 
-If you haven't already, take a peek at the [umbrella projects](/en/lessons/advanced/umbrella-projects/) lesson, which provides a great overview of Umbrella applications.
+应用程序类似于库，但包含一个监督树。
 
-## Separating concerns
+如果打开项目的 `mix.exs` 文件，并看到 `application/0` 函数定义了 `:mod` 入口点：您正在使用 Application。
 
-In my humble opinion one of the great strengths of umbrellas is the forced separation of concerns and decoupling of code.
-We have to be explicit with our individual application's configuration and this includes dependencies on other peer applications.
-If our presentation layer doesn't have the internal data application as a dependency there's no chance those two components will become coupled.
+这是一个依赖关系，除了进程外，它还具有状态并维护状态。
 
-While the same separation can be achieved in theory using a singular Application, the umbrella gives us the added benefit of enforcing it through dependencies.
-I've never seen "in theory" stand-up in a professional setting when skill levels and experience vary, umbrellas remove any questions and confusion.
+应用程序不仅仅是具有简单功能的模块。
 
-Above any other reason, this is often the deciding factor for whether or not I leverage an umbrella application.
+最后，我们拥有伞式应用程序，它是一个语法糖，可以将一个库和应用程序集合作为一个项目进行管理。
 
-## Service Oriented Architecture lite
+我们今天将在这里探讨为什么要使用伞式应用类型。
 
-If we know we are building a complex application with internal components that will grow in size with distinct roles and responsibilities, umbrellas can be a valuable tool in the toolchest.
+## 认识伞式应用
 
-With one codebase and repository we're able to maintain any number of sub applications as part of our overall umbrella.
-If we're building an online marketplace we could use this to keep our payment transaction code isolated from our other modules.
-We can implement integrations with third-party services as standalone applications inside our umbrella.
-This not only keeps those concerns separated but allows us to work on components individually and more importantly: test them individually.
+如果您还没有的话，请看一下[umbrella projects](/en/lessons/advanced/umbrella-projects/) 课程，其中提供了有关 Umbrella 应用程序的详尽概述。
 
-Nothing is keeping us from running multiple Phoenix applications in a single umbrella.
-We can develop our admin web portal independently of our customer facing site, running on a separate port making it a matter of network configuration to limit access to VPN users only.
+## 分离关注点
 
-If the scope of an application grows too much that we need to remove it from the umbrella, no problem!
-Doing this is simple with umbrellas because of those explicit dependencies, updating those references is all we need to do.
+依我的拙见，伞式应用的一大优点是强制分离关注点和解耦代码。
 
-An added benefit of developing our project as disparate micro-services: large teams can work concurrently on one codebase while minimizing code conflicts.
+我们必须明确我们各个应用的配置，这包括对其他同行应用的依赖。
 
-## One deployment to rule them all
+如果我们的展现层没有内部数据应用作为依赖，这两个组件就没有机会耦合在一起。
 
-What's easier: deploying changes to 12 applications or 1?
+虽然理论上使用单一的 Application 也可以实现同样的分离，但伞式应用给我们带来了额外的好处，即通过依赖关系来执行。
 
-Releases aren't just easier with umbrellas, they're more powerful.
-We not only have a single artifact we can deploy, we only have a single service to manage with `systemd` (or the tool of your choice).
-There's the additional benefit of no complex orchestration for releasing our different applications.
+我从未见过 "理论" 在专业环境中站立起来，当技术水平和经验各不相同时，伞时应用可以消除任何问题和困惑。
 
-That's not all.  With Distillery we're able to configure our release artifact to contain all of our applications or just a subset.
-Think about that for a moment: we still benefit from working in a single code base but our app separation allows us to deploy any combination of those applications (so long as all dependencies are accounted for).
+除开其他原因，这往往是我是否利用伞式应用的决定性因素。
 
-Our releases can begin life as a single artifact and as needs demands it, we can break out components for independent release.
+## 面向服务的架构精简版
 
-## To umbrella or not to Umbrella
+如果我们知道我们正在使用内部组件构建一个复杂的应用程序，并且内部组件的大小将随着角色和职责的不同而增长，那么伞式应用就可以成为最有用的工具。
 
-Contrary to what some may believe, umbrella applications aren't a perfect solution for every problem.
-Before we `mix new` we should pause and consider some simple rules to help guide our decision making process:
+有了一个代码库和一个存储库，我们就可以维护任何数量的子应用程序，这是我们总体伞式应用的一部分。
 
-- Is your application likely to grow in scope and size quickly?
-- Are there multiple distinct and separate internal components to our application?
-- Will multiple people be working on different parts of the code at once?
+如果我们要建立在线市场，则可以使用它来保持付款交易代码与其他模块隔离。
 
-If we've answered YES to the above then an umbrella might be the right choice for your project.
+我们可以将与第三方服务的集成作为独立的应用程序实现在我们的伞式应用之内。
 
-We'd love to hear your thoughts!
-Are you using umbrella applications?
-Have you found them helpful or a hinderance?
+这不仅使这些关注点分离开来，而且使我们能够分别处理组件，更重要的是：分开测试。
 
-Look for our future blog posts that'll cover designing and building your application as an umbrella!
+没有什么可以阻止我们在一个伞式应用中运行多个 Phoenix 应用程序。
+
+我们可以独立于面向客户的站点来开发管理 Web 门户，并在单独的端口上运行，这使得网络配置成为问题，从而仅限制对 VPN 用户的访问。
+
+如果应用程序的范围太大，我们需要将其从伞式应用中删除，那就没问题了！
+
+由于存在这些明确的依赖关系，因此使用伞很容易做到这一点，更新这些引用是我们所要做的。
+
+将我们的项目开发为不同的微服务的另一个好处是：大型团队可以在一个代码库上同时工作，同时最大程度地减少代码冲突。
+
+## 一个部署就能解决所有问题
+
+哪个更容易：应用程序部署更改 12 个还是 1 个？
+
+有了伞式应用，发布不仅更容易，而且更强大。
+
+我们不仅有一个单一的工件可以部署，我们只有一个服务可以用 `systemd`（或你选择的工具）来管理。
+
+还有一个额外的好处是，发布我们不同的应用程序不需要复杂的协调。
+
+这还不是全部。 有了 Distillery，我们可以配置发布工件，以包含我们所有的应用程序或只是一个子集。
+
+想一想：我们仍然受益于在单一代码库中工作，但我们的应用分离允许我们部署这些应用的任何组合（只要所有的依赖关系都被考虑在内）。
+
+我们的发布可以作为一个单一的工件开始生活，并根据需要，我们可以分解出组件进行独立发布。
+
+## 撑伞还是不撑伞
+
+与某些人所认为的相反，伞式应用程序并不是针对每个问题的完美解决方案。
+
+在我们 `mix new` 之前，我们应该暂停并考虑一些简单的规则，以帮助指导我们的决策过程：
+
+- 您的应用程序范围可能会迅速增长吗？
+- 我们的应用程序是否包含多个不同且独立的内部组件？
+- 是否会有多个人同时处理代码的不同部分？
+
+如果我们对以上回答是 YES，那么为您的项目选择伞式应用是正确的选择。
+
+我们希望听到您的想法！
+
+您正在使用伞式应用程序吗？
+
+您是否发现它们有帮助或是有阻碍？
+
+寻找我们将来的博客文章，这些文章将涵盖如何设计和构建您的应用程序！
