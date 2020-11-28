@@ -44,7 +44,7 @@
 - [ ] [til how to run ecto migrations in production](./posts/2018-12-26-til-how-to-run-ecto-migrations-in-production.md)
 - [ ] [til umbrella app child app tests](./posts/2018-12-17-til-umbrella-app-child-app-tests.md)
 - [ ] [til capture log in exunit tests](./posts/2018-12-12-til-capture-log-in-exunit-tests.md)
-- [ ] [til io inspect labels](./posts/2018-12-04-til-io-inspect-labels.md)
+- [x] [til io inspect labels](./posts/2018-12-04-til-io-inspect-labels.md)
 - [ ] [jwt auth with joken](./posts/2018-11-29-jwt-auth-with-joken.md)
 - [ ] [elixircards 审视](./posts/2018-11-14-elixir-cards-review.md)
 - [x] [雨伞是下雨时用的](./posts/2018-10-23-umbrellas-just-when-it-rains.md)

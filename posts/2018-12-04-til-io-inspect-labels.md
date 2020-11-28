@@ -9,7 +9,9 @@ excerpt: >
   Did you know you could label your output?  Neither did we!  Check out today's TIL to learn more.
 ---
 
-If you've ever found yourself debugging Elixir then you're probably familiar with `IO.inspect/2` but just in case let's see an example of how we might use it:
+# til io inspect labels
+
+如果你曾经发现自己在调试 Elixir，那么你可能很熟悉 `IO.inspect/2`，但为了以防万一，让我们看看一个如何使用它的例子。
 
 ```elixir
 defmodule Example do
@@ -23,9 +25,9 @@ defmodule Example do
 end
 ```
 
-Our function is simple: Given a map, take some keys, and cast them to integers; for this example we won't worry about invalid inputs and error handling.
+我们的函数很简单。给定一个 map，取一些键，并将它们转换为整数；在这个例子中，我们不考虑无效输入和错误处理。
 
-Let's see the output in `IEx`:
+让我们看看 `IEx` 里面的输出
 
 ```elixir
 iex> params = %{"price" => "100", "quantity" => "1", "onsale" => true}
@@ -35,11 +37,13 @@ iex> Example.sanitize_params(params)
 %{"price" => 100, "quantity" => 1}
 ```
 
-Looking at the code and output side-by-side, we can pretty easily follow along but without that we have to remember what and where we put our `IO.inspect/2` calls for the output to be meaningful.
-Can you imagine situations where there's __a lot__ more output on the screen and the code isn't as simple?
+并排地看代码和输出，我们可以很容易地跟上，但如果不这样做，我们必须记住我们的 `IO.inspect/2` 调用的内容和位置，输出才有意义。
 
-Allow me to introduce you to our new friend the `:label` option!
-Let's revisit our previous code, introduce the ever helpful `:label` option, and jump straight into the `IEx` output:
+你能想象屏幕上有 _更多_ 的输出，而代码又不那么简单的情况吗？
+
+请允许我向你介绍我们的新朋友 `:label` 选项!
+
+让我们重温一下之前的代码，介绍一下一直以来很有用的 `:label` 选项，然后直接跳到 `IEx` 输出。
 
 ```elixir
 defmodule Example do
@@ -61,10 +65,13 @@ Map.take/2: %{"price" => "100", "quantity" => "1"}
 %{"price" => 100, "quantity" => 1}
 ```
 
-Whoa!
-Our debugging output now has labels that make tracing our code _so_ much easier.
-It gets better too!
-Labels don't have to be preset, we can use our captured values for dynamic labels:
+哇哦！
+
+我们的调试输出现在有了标签，使我们的代码追踪变得更加容易。
+
+它还可以变得更好!
+
+标签不需要预设，我们可以使用我们捕获的值来制作动态标签。
 
 ```elixir
 iex> Enum.each(%{"a" => 1, "b" => 2, "c" => 3}, fn {k, v} -> IO.inspect(v, label: k) end)
@@ -73,7 +80,8 @@ b: 2
 c: 3
 ```
 
-How cool is that?!
+这多酷啊!
 
-Did you know about `:label` before?
-If so, have you found it as useful as we have?
+你以前知道 `:label` 吗?
+
+如果知道，你是否发现它和我们刚刚使用的一样有用？
