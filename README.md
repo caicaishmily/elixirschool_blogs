@@ -50,7 +50,7 @@
 - [ ] [未雨绸缪](./posts/2018-10-23-umbrellas-just-when-it-rains.md)
 - [x] [ecto multi](./posts/2018-10-10-ecto-multi.md)
 - [x] [asdf 版本管理](./2018-10-01-asdf-version-management.md)
-- [ ] [《Functional Web Development with Elixir, OTP, and Phoenix》审视](./posts/2018-08-02-functional-web-dev-elixir-otp-phoenix-review.md)
+- [x] [《Functional Web Development with Elixir, OTP, and Phoenix》审视](./posts/2018-08-02-functional-web-dev-elixir-otp-phoenix-review.md)
 - [x] [ecto 查询构成](./posts/2018-07-25-ecto-query-composition.md)
 - [x] [揭秘配置](./posts/2018-07-17-configuration-demystified.md)
 - [x] [《Elixir in Action》审视](./posts/2018-05-31-elixir-in-action-review.md)

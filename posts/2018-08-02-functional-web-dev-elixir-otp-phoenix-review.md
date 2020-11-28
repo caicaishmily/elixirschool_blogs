@@ -10,105 +10,124 @@ excerpt: >
  Lance Halvorsen shows us how to build our a guessing video game from the ground up using Elixir and OTP. In the end, he shows us how to build a fully working UI experience with Phoenix, Presence and Channels.
 ---
 
-Our first review was quite popular and the feedback we received has been wonderful!
-We want to thank everyone for their support and take a moment to congratulate our [raffle winners](https://twitter.com/elixirschool/status/1013961507221073920).
+# 《Functional Web Development with Elixir, OTP, and Phoenix》审视
 
-As part of our review series we hope to release at least one review per month.
-Along with these reviews, we're hoping to be able to offer additional discounts and giveaways.
+我们的第一篇评论非常受欢迎，收到的反馈非常好！
 
-For the next part of this series, we are reviewing [_Functional Web Development with Elixir, OTP, and Phoenix_](https://pragprog.com/book/lhelph/functional-web-development-with-elixir-otp-and-phoenix) by [Lance Halvorsen](https://twitter.com/lance_halvorsen).
+我们要感谢大家的支持，并花一点时间祝贺我们的[抽奖赢家](https://twitter.com/elixirschool/status/1013961507221073920).
 
+作为我们的评论系列的一部分，我们希望每月至少发布一篇评论。
 
-## Author
+跟随这些评论，我们希望能够提供额外的折扣和赠品。
 
-Lance has been developing software for the web professionally for two decades. He's worked with a number of languages, frameworks, and approaches during that time. All of those experiences feed into his current thoughts on web development, which are captured in this book.
+在这个系列的下一部分，我们将评测 [Lance Halvorsen](https://twitter.com/lance_halvorsen) 的 [《_Functional Web Development with Elixir, OTP, and Phoenix_》](https://pragprog.com/book/lhelph/functional-web-development-with-elixir-otp-and-phoenix)。
 
-Lance is also the original author of the Phoenix Guides, and is a Phoenix core team alumnus.
+## 作者
 
-If you want to have an idea about the author and the content of the book, check out [this awesome video](https://www.youtube.com/watch?v=lDKCSheBc-8)
+Lance 从事网络专业开发已有二十年了。 在此期间，他曾使用多种语言，框架和方法。 所有这些经验都融入了他当前关于 Web 开发的思想，这些思想在本书中都有介绍。
 
-## Target
+Lance 还是《Phoenix 指南》的原始作者，也是 Phoenix 核心团队成员。
 
-What is the target audience of the book? There is no better place to look than the book's introduction:
+如果您想对作者和本书的内容有所了解，请查看[此精彩视频]（https://www.youtube.com/watch?v=lDKCSheBc-8）
 
-> On a practical level, this book is for people who have some familiarity with Elixir and Phoenix, and who want to take that knowledge further. But there’s a wider list for whom the ideas in this book will resonate.
+## 目标
+
+这本书的目标读者是谁？没有比书中介绍更好的地方了：
+
+> 从实用的角度来看，这本书是为熟悉 Elixir 和 Phoenix 并希望进一步了解这些知识的人准备的。但是本书中的想法会引起更多的共鸣。
 >
-> For people who view OTP with a little trepidation, or for those who haven’t quite mastered OTP Behaviours, this book will give you the confidence to use OTP in any application.
+> 对于那些对 OTP 有点担心的人，或者对 OTP 行为不太了解的人，这本书将使您有信心在任何应用程序中使用 OTP。
 >
-> For people who have felt the sting of tight coupling between business logic and web frameworks, this book will show you a way out of that pain forever. For people who feel constrained by traditional web development, you will learn new techniques and new ways to structure apps that will spark your imagination.
+> 对于那些对业务逻辑和 Web 框架之间紧密耦合感到刺痛的人来说，这本书将让您永远摆脱痛苦。对于那些受传统 Web 开发束缚的人们，您将学习构建应用程序的新技术和新方法，这些将激发您的想象力。
 >
-> For people who are wondering what all the fuss is about with Elixir and Phoenix, you’ll get a great taste of what makes people so excited. You just might become a convert!
+> 对于那些想知道为何 Elixir 和 Phoenix 会让人觉得惊奇，您将领略到让人们如此兴奋的原因。您可能会成为路转粉！
 
-This book is certainly not for beginners and Lance doesn't mince words when saying as much:
+这本书当然不适合初学者，Lance 也不讳言：
 
-> Readers looking for an introduction to Elixir or Phoenix would do well to begin with other resources.
+> 想要了解 Elixir 或 Phoenix 的读者可能需要从其他资源入手。
 >
-> We won’t cover the basics of Elixir. I’ll assume you know them before you begin.
+> 我们不会介绍 Elixir 的基础知识。我假设您在开始之前就知道这些。
 >
-> If you need to get up to speed first, don’t worry—we’ll be here when you’re ready. In the meantime, Dave Thomas’s book, Programming Elixir 1.3 [Tho16], is a great place to start.
+> 如果您一开始不想那么快，请别担心-等你准备就绪后，我们会在这里。同时，Dave Thomas 的书《Programming Elixir 1.3》是一个很好的起点。
 >
-> The same is true for Phoenix. We will take a close look at channels and Presence, but you won’t learn the rest of Phoenix here. You should be able to follow along in this book without that information, but if you want to fill in the gaps, Programming Phoenix [TV16] by Chris McCord, Bruce Tate, and José Valim is the book to reach for.
+> Phoenix 也一样。我们将仔细研究 Channels 和 Presence，但在这里您不会学习其余的 Phoenix。您应该可以在没有这些信息的情况下继续阅读本书，但是如果您要填补这部分空白，可以尝试一下阅读 Chris McCord，Bruce Tate 和 José Valim 一起编写的 《Programming Phoenix》。
+## 评审
 
-## Review
+这本书的篇幅相当小，只有214页，是一本从头到尾涵盖了一个游戏开发的教程，一步步解释我们正在做的事情和包含的技术。
 
-This book is quite small at only 214 pages, a tutorial covering the development of a game from the beginning to the end, explaining step by step what we are doing and the technology included.
+书中对游戏制作的重点让我相当感兴趣，所以还在早期 beta 版本的时候我就买了它。
 
-The focus of the book on building a game had me quite interested so I purchased it while still in early beta.
-This is a standard 2-player position guessing game called Islands (it looks like Battleship). Each player sets up a handful of islands on their boards, and then starts guessing on the opponent island coordinates. When all islands are found, the game ends.
+这是一款标准的 2 人猜测游戏，名为 "群岛"（看起来像战舰）。每个玩家在自己的棋盘上设置少量的岛屿，然后开始猜测对手的岛屿坐标。当所有岛屿都被找到后，游戏就结束了。
 
-If you took the time to watch the author's video above, you have an idea of what to expect in the book.
-Something that might surprise many readers: **Phoenix is not your application**, it's simply a presentation layer for our underlying logic.
-In this book Lance attempts to help readers understand how to properly develop an application from the ground up starting with our business logic and growing from there.
-Data persistance and UI are details that come later, as they become necessary to support features.
+如果你花时间看了上面提到的作者的视频，你就会对书中的内容有所了解。
 
-The content is quite nicely paced which makes understanding the topics easy and enjoyable.
+有些东西可能会让很多读者感到惊讶。**Phoenix 不是你的应用**，它只是我们底层逻辑的一个展示层。
 
-## Chapter Analysis
+在本书中，Lance 试图帮助读者理解如何从我们的业务逻辑开始，从基础开始正确地开发一个应用程序，并从那里开始发展。
 
-The book has 7 chapters divided into 3 main parts: our business logic, implementing OTP behaviours, and finally adding a UI.
+数据持久化和 UI 是后面的细节，因为它们是支持功能的必要条件。
 
-Chapter 1 is an introduction, a roadmap of the adventure that lies ahead of us.
+内容的节奏相当好，这使得理解主题变得容易和愉快。
 
-In Part 1 we focus on the business logic as a game engine.
-We begin designing the entities of our game in Chapter 2 and add a custom State Machine to handle our game rules in Chapter 3.
+## 章节分析
 
-It goes without saying that the first part is the most important one in the book.
-Lance seeks to force us to rewire our brains on how to kick start an app, without the use of a framework or the database strangling us from the get-go.
-This is the [red pill](https://en.wikipedia.org/wiki/Red_pill_and_blue_pill), our way out of the complacency that `mix phx.new` and other frameworks have lulled us into.
+本书共 7 章，分为 3 大部分：我们的业务逻辑、OTP 实现行为、最后添加一个 UI。
 
-In the second part of the book we add some important OTP behaviours in our system, a GenServer in Chapter 4 and a Supervision Tree in Chapter 5.
+第 1 章是一个介绍，是我们前面提到的冒险路线图。
 
-In the final part we introduce our presentation layer: a web-based UI.
-Here we'll create a new Phoenix application and add our game engine as a dependency in Chapter 6.
-In Chapter 7 we explore Channels and Presence to finish implementing our working game.
+在第 1 部分中，我们专注于游戏引擎的业务逻辑。
 
-The structure of the book is based on _scalable knowledge_, you begin with nothing in your hands, just a miniature elixir app, and start designing around your needs, piece by piece. Not a single chapter feels forced, that it is there just to add some pages or just to introduce something the author wanted to say.
+我们在第 2 章开始设计我们的游戏实体，并在第 3 章添加一个自定义的状态机来处理我们的游戏规则。
 
-## Conclusion
+毋庸置疑，第一部分是本书中最重要的部分。
 
-I thoroughly enjoyed the book and my view of our craft in general changed a lot because of it. I started looking for ways to implement this way of programming in other languages / frameworks (mostly in vain, but what can you do?). The design technique described in this book can be applied to every app you can imagine, and it actually makes it easier to build it, because you stop thinking about your app in detail-land (UI, database). It also leads to more maintainable code, as your logic being outside the framework, helps you work on the core of your app and the interface independently, without changes on one having side effects on the other that easily.
+Lance 试图迫使我们重新开动大脑：如何启动一个应用程序，而不是使用从一开始就扼杀我们的框架或数据库。
 
-That said there are two things that I think would have made it a grand slam: testing and the presentation implementation.
+这就是[红药丸](https://en.wikipedia.org/wiki/Red_pill_and_blue_pill)，我们摆脱 `mix phx.new` 和其他框架让我们陷入的自满状态的方法。
 
-The use of testing, would have been a welcomed addition. Relying on `iex` to execute and valuate the code felt time consuming and didn't drive home the best practices the book encourages elsewhere. While I understand the author's goal with using `iex` I am not entirely sold on this idea. I think an opportunity to demonstrate how to properly test our code was lost. There was a talk with the author in the Pragmatic Bookshelf at the time of development of the book and when asked about this, he responded that he _did_ start working on the book using tests, but the tests started taking over the book.
+在本书的第二部分，我们在系统中添加了一些重要的 OTP 行为，在第四章中添加了一个 GenServer，在第五章中添加了一个监督树。
 
-The second improvement would be on how we implement our presentation layer for two reasons:
+在最后一部分，我们将介绍我们的展示层：一个基于 Web 的 UI。
 
-Firstly, as with `iex` testing above I did not care for relying on the in-browser console to execute and test my JavaScript code.
-Through the course of the final section we write a significant amount of JavaScript.
-When we go to test our game in another browser, we have to code this JavaScript and run it again via our console.
-Correctly building and testing JavaScript applications isn't the focus on this book but I feel there could have been a better approach.
+在这里，我们将创建一个新的 Phoenix 应用程序，并在第 6 章中添加我们的游戏引擎作为依赖。
 
-Finally, the book ends when you are supposed to start building the UI, and provides us with some files to copy paste inside our existing codebase so we can see the final result.
-We've spent over 180 pages understanding why we're doing what we are and it ends unceremoniously with us copying the majority of our front end code from elsewhere.
-I know that this book is about Elixir and OTP mostly but in my opinion the author could have written a final part that relied on writing down some code and explaining more along the way.
-It would have resulted an additional chapter or two but would have provided better closure to those who need it (like myself) while allowing others to skip it. Having said that, I feel I can justify the authors choice on this, as our community's attitude towards JS tends to be aggressive, but this is a theme for another post.
+在第 7 章中，我们将探索 Channel 和 Presence 来完成我们工作游戏的实现。
 
-## Giveaway
+本书的结构是基于 _可扩展的知识_，你从手中什么都没有开始，只是一个微型的 elixir 应用，然后开始围绕你的需求，一块一块地设计。没有任何一章让人觉得是被迫的，它的存在只是为了增加一些页数，或者只是为了介绍作者想说的东西。
 
-We are giving away 3 free **physical** copies of Lance Halvorsen's _Functional Web Development with Elixir, OTP, and Phoenix_.
-Want your chance to win a free copy?
-Follow us on [Twitter](https://twitter.com/elixirschool) and retweet [this blog post announcement](https://twitter.com/elixirschool/status/1032385564119523329)!
-We'll be picking winners on September 15th, don't miss your chance!
+## 结语
 
-Look for more reviews to come soon!
+我非常喜欢这本书，我对手艺的看法总体上也因此改变了很多。我开始寻找在其他语言/框架中实现这种编程方式的方法（大部分是徒劳的，但你能做什么？）本书中描述的设计技术可以应用于你能想象到的每一个应用，而且它实际上使构建应用变得更容易，因为你不再考虑你的应用在细节领域（UI，数据库）。这也导致了更多可维护的代码，因为你的逻辑在框架之外，帮助你独立地工作在你的应用的核心和界面上，而不会那么容易地在一个上的改变对另一个产生副作用。
+
+说到这里，有两点我认为会让它大获成功：测试和展示实现。
+
+测试的使用，会是一个很流行的补充项。依靠 `iex` 执行和估价代码感觉很耗时，而且没有把书中鼓励的最佳实践在其他地方推广开来。虽然我理解作者使用 `iex` 的目的，但我并不完全相信这个想法。我认为失去了一个展示如何正确测试我们的代码的机会。在本书编写之时，曾在实用主义书架上与作者有过一次谈话，当被问及这个问题时，他回答说，他 _确实_ 开始使用测试来编写本书，但测试开始接管了本书的内容。
+
+第二个改进将是关于我们如何实现展示层，原因有两个。
+
+首先，就像上面的 `iex` 测试一样，我不喜欢依赖浏览器中的控制台来执行和测试我的 JavaScript 代码。
+
+通过最后一节的过程，我们写了大量的 JavaScript。
+
+当我们在另一个浏览器中去测试我们的游戏时，我们必须对这些 JavaScript 进行编码，并通过我们的控制台再次运行它。
+
+正确地构建和测试 JavaScript 应用程序并不是本书的重点，但我觉得还可以有更好的方法。
+
+最后，本书在你应该开始构建 UI 的时候就结束了，并为我们提供了一些文件，让我们复制粘贴到现有的代码库里面，这样我们就可以看到最终的结果。
+
+我们花了 180 多页的时间来了解我们为什么要这样做，而它的结尾却毫不客气地让我们从其他地方复制了大部分的前端代码。
+
+我知道这本书主要是关于 Elixir 和 OTP 的，但在我看来，作者可以写一个最后的部分，依靠写下一些代码，并沿途多做解释。
+
+这会导致额外的一两章，但会给那些需要它的人（比如我自己）提供更好的结局，同时允许其他人跳过它。说到这里，我觉得我可以证明作者在这一点上的选择，因为我们社区对 JS 的态度往往是咄咄逼人的，但这是另一篇文章的主题。
+
+## 赠品
+
+我们将免费赠送 3 本 Lance Halvorsen 的 《_Functional Web Development with Elixir, OTP, and Phoenix_》**实体书**。
+
+想获得免费的机会吗？
+
+请在[Twitter](https://twitter.com/elixirschool)上关注我们，并转发[本博文公告](https://twitter.com/elixirschool/status/1032385564119523329)!
+我们将在 9 月 15 日抽取获奖者，不要错过机会!
+
+更多评论即将到来，敬请期待!
