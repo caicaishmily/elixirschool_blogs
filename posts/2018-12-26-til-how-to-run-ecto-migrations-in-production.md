@@ -10,46 +10,47 @@ excerpt: >
   What to do when you can't use `mix ecto.migrate`
 ---
 
-You'd think the answer to this question would be a simple Google search away. Unfortunately, that wasn't the case for me this afternoon, working on a Phoenix project with a newly-added Ecto backend. In an effort to save others (and let's be honest, future me) the same frustration, here's the most straight-forward solutions I found.
+# til 如何在生产环境运行 ecto migrations
 
-## What Doesn't Work
+你可能认为这个问题的答案只需要简单的谷歌搜索就能找到。不幸的是，情况并非如此，今天下午我正在处理一个带有新添加的 Ecto 后台的 Phoenix 项目。为了让其他人（说实话，未来的我）免于同样的挫折，这里是我找到的最直接的解决方案。
 
-[`Mix`](https://elixirschool.com/lessons/basics/mix/). `Mix` tasks aren't compiled into your deployed release, and as evidenced in [this exciting discussion](https://github.com/bitwalker/exrm/issues/67), there's no plans to change this any time soon.
+## 什么是不 work 的
 
-So don't try using your trusty local `mix ecto.migrate` task on production. Not gonna help you here.
+[`Mix`](https://elixirschool.com/lessons/basics/mix/). `Mix` 任务没有被编译到你的已部署的版本中，正如这个[令人激动的讨论](https://github.com/bitwalker/exrm/issues/67) 所证明的那样。没有计划在短时间内改变这种情况。
 
-## What Does Work
+所以不要尝试在生产环境上使用你信任的本地 `mix ecto.migrate` 任务。在这里它帮不了你。
+## 什么可以 Work
 
 ### 1. [Ecto.Migrator](https://hexdocs.pm/ecto/Ecto.Migrator.html)
 
-Ecto ships with [Ecto.Migrator](https://hexdocs.pm/ecto/Ecto.Migrator.html), a first-class module for Ecto's migration API. Run it manually by ssh'ing onto your app server, attaching to your Phoenix app, and running the following:
+Ecto 提供了 [Ecto.Migrator](https://hexdocs.pm/ecto/Ecto.Migrator.html)，这是 Ecto 迁移 API 的一流模块。通过 ssh 到你的应用服务器上，连接你的Phoenix 应用，然后手动运行以下内容。
 
 ```elixir
 iex> path = Application.app_dir(:my_app, "priv/repo/migrations")
 iex> Ecto.Migrator.run(MyApp.Repo, path, :up, all: true)
 ```
 
-Ideally, you'd wrap up the above in its own task that can be called during your build and deployment process. Check out Plataformatec's blog for a [nice example](http://blog.plataformatec.com.br/2016/04/running-migration-in-an-exrm-release/).
+理想的情况下，你会把上面的内容包在自己的任务中，在构建和部署过程中被调用。请看 Plataformatec 的博客，里面有一个[很好的例子](http://blog.plataformatec.com.br/2016/04/running-migration-in-an-exrm-release/)。
 
 ### 2. eDeliver
 
-Our app uses [`edeliver`](https://github.com/edeliver/edeliver) for deployments, and it has a super handy command for manually running migrations:
+我们的应用使用 [`edeliver`](https://github.com/edeliver/edeliver) 来进行部署，它有一个超级方便的命令来手动运行迁移。
 
 ```shell
 mix edeliver migrate production
 ```
 
-If we peek at the source, turns out this command actually just [wraps up `Ecto.Migrator` for you](https://github.com/edeliver/edeliver/blob/963610a90f67fc3671127e64df37a67ec365ef5b/lib/edeliver.ex#L124), saving some precious keystrokes.
+如果我们看一下源码，这个命令其实只是 [为你包装 `Ecto.Migrator`](https://github.com/edeliver/edeliver/blob/963610a90f67fc3671127e64df37a67ec365ef5b/lib/edeliver.ex#L124) 保存一些宝贵的按键。
 
-To run successfully, you'll need to add `ECTO_REPOSITORY="MyApp.Repo"` to your `.deliver/config` file.
+要想成功运行，你需要在你的 `.delivery/config` 文件中添加 `ECTO_REPOSITORY="MyApp.Repo"`。
 
-Again, Plataformatec has a nice blog post on [deploying your Elixir app with eDeliver](http://blog.plataformatec.com.br/2016/06/deploying-elixir-applications-with-edeliver/).
+同样，Plataformatec 有一篇很好的博客文章 [用 eDeliver 部署你的 Elixir 应用](http://blog.plataformatec.com.br/2016/06/deploying-elixir-applications-with-edeliver/)。
 
-## Summary
+## 结语
 
-Hi future me! Hope this post was still helpful the nth time around.
+嗨，未来的我！ 希望这篇文章对第 n 次仍然有帮助。
 
-### References:
+### 参考文献:
 
 - [Phoenix Ecto Integration](https://github.com/phoenixframework/phoenix_ecto)
 - [Ecto.Migrator](https://hexdocs.pm/ecto_sql/Ecto.Migrator.html)

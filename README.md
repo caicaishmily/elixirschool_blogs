@@ -41,7 +41,7 @@
 
 ### 2018
 
-- [ ] [til how to run ecto migrations in production](./posts/2018-12-26-til-how-to-run-ecto-migrations-in-production.md)
+- [x] [til how to run ecto migrations in production](./posts/2018-12-26-til-how-to-run-ecto-migrations-in-production.md)
 - [x] [til umbrella app child app tests](./posts/2018-12-17-til-umbrella-app-child-app-tests.md)
 - [x] [til capture log in exunit tests](./posts/2018-12-12-til-capture-log-in-exunit-tests.md)
 - [x] [til io inspect labels](./posts/2018-12-04-til-io-inspect-labels.md)
