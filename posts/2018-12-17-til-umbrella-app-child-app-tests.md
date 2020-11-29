@@ -10,13 +10,15 @@ excerpt: >
   Run all of the tests, or just a specific tests, for a given child app in an umbrella application with this handy command.
 ---
 
-If you're working on an Elixir umbrella app with multiple children, then you know that running the tests for the entire umbrella app isn't always ideal. It could take a while to run and it can be hard to zero in on one particular set of failures when deving on just of the child apps.
+# til umbrella app child app tests
 
-So, how can you run tests for just one specific child app?
+如果你正在开发一个有多个子应用的 Elixir umbrella 应用，那么你就会知道，为整个 umbrella 应用运行测试并不总是那么理想。它可能需要一段时间才能运行，而且在仅对子应用进行开发时，很难对某一特定的故障集进行归类。
 
-### Not Like This
+那么，如何为一个特定的子应用运行测试呢？
 
-My first attempt to run just one child app's tests went a little something like this:
+### 不像这样
+
+我第一次尝试只运行一个子应用的测试，结果有点像这样。
 
 ```bash
 mix test test/github_client_test.exs
@@ -37,37 +39,38 @@ Paths given to `mix test` did not match any directory/file: test/github_client_t
 Paths given to `mix test` did not match any directory/file: test/github_client_test.exs
 ```
 
-This _technically_ works--it _did_ run the test we specified--but its not quite what we want. Any `mix` command we run from the root of our umbrella app is recursively run from the root of each child app in the `apps/` directory. So, while this did run the `github_client_test.exs` test when the command was executed in the child app that contains that test, it also executed that command against *every other child app*. Resulting in these not-so-nice error messages:
+这在 _技术上_ 是可行的 -- 它 _确实_ 运行了我们指定的测试--但它并不是我们想要的。我们从 umbrella app 的根目录下运行的任何 `mix` 命令都会从 `apps/` 目录下的每个子 app 的根目录下递归运行。因此，虽然当命令在包含该测试的子应用中执行时，这确实运行了 `github_client_test.exe` 测试，但它也对 *所有其他子应用* 执行了该命令。导致了这些不太好的错误信息。
 
 ```bash
 Paths given to `mix test` did not match any directory/file:
 test/github_client_test.exs
 ```
 
-Not ideal.
+不太理想。
 
-### Like This
-To run _all_ of the tests for just one specific child app, we can run the following from the root of the umbrella app:
+### 像这样
+
+要运行一个特定子应用的 _所有_ 测试，我们可以从式形应用的根目录运行以下内容。
 
 ```elixir
 mix cmd --app child_app_name mix test --color
 ```
 
-We use `mix cmd --app` to indicate the app within which we want to run a given `mix` command. We follow that with the `mix test` command. Additionally, we can specify a test file and even line number to run:
+我们使用 `mix cmd --app` 来表示我们要在其中运行给定的 `mix` 命令的应用程序。之后我们再使用 `mix test` 命令。此外我们还可以指定要运行的测试文件甚至行号。
 
 ```elixir
 mix cmd --app child_app_name mix test test/child_app_name_test.exs:8 --color
 ```
 
-Where the `mix test` command is followed by the path to the test file you want to run, _from the root of that child app_.
+其中 `mix test` 命令后面是你要运行的测试文件的路径，_从该子应用的根目录开始_。
 
-The `--color` flag is important. Without it, we don't get that nice red/green color highlighting, leaving our test output pretty hard to read.
+`--color` 标志很重要。如果没有这个标志，我们就不能得到高亮的红/绿颜色，这会使我们的测试输出非常难读。
 
-#### Bonus
+#### 奖励
 
-Typing this command every time we want to run a given child app's tests is kind of a pain. We can define a mix alias to make our lives a little easier. A [mix alias](https://hexdocs.pm/mix/Mix.html#module-aliases) provides us a way to define a custom mix task that will only be available locally, _not_ in packaged versions of our application, i.e. not to devs who install our app as a dependency.
+每次我们想要运行一个给定子应用的测试时，输入这个命令都是挺麻烦的。我们可以定义一个 mix 别名来让我们的生活更轻松一些。[mix alias](https://hexdocs.pm/mix/Mix.html#module-aliases)为我们提供了一种定义自定义 mix 任务的方法，该任务仅在本地可用，而不是在我们应用程序的打包版本中可用，也就是说，不会提供给安装我们的应用程序作为依赖的开发人员。
 
-We'll define a mix alias for our child app test command:
+我们将为我们的子应用程序测试命令定义一个混合别名。
 
 ```elixir
 # mix.exs for root of umbrella app
@@ -86,17 +89,16 @@ def aliases do
 end
 ```
 
-Then from the root of umbrella app, we can run:
+然后在 umbrella app 的根目录，我们可以运行：
 
 ```bash
 mix child_app_name_test
 ```
 
-Or, to run a specific test:
+或者，运行一个特殊的测试
 
 ```bash
 mix child_app_name_test test/child_app_name_test.exs
 ```
 
-And that's it! A nice, easy-to-use command for running a child app's specs. You could define one such alias for each child app in your umbrella and run those tests with ease.
-
+就是这样! 一个用于运行子应用的规范的、漂亮的、易用的命令。你可以为你的 umbrella 应用中的每个子应用定义一个这样的别名，并轻松运行这些测试。
