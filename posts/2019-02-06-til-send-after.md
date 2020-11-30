@@ -9,30 +9,36 @@ excerpt: >
   Want to schedule something to run later? Need a reoccurring task? Today we learn how!
 ---
 
-Executing code later or creating reoccurring tasks can be tricky but did you know we can accomplish this in Elixir with just a process?
-With a GenServer, `Process.send_after/4`, and the `handle_info/2` callback we have everything we need.
+# til send_after
 
-Let's look at `Process.send_after/4` and the expected arguments:
+稍后执行代码或创建循环任务可能很棘手，但你知道我们可以在 Elixir 中只用一个进程就能完成这个任务吗？
+
+有了 GenServer、`Process.send_after/4` 和 `handle_info/2` 回调，我们就有了所需的一切。
+
+让我们看看 `Process.send_after/4` 和预期的参数。
 
 ```elixir
 send_after(dest, msg, time, opts \\ [])
 ```
 
-- The `dest` argument takes the `pid` or name of our process, we'll use a named GenServer for our example.
-- The `msg` we want sent to the process, this can be just about any data structure but we'll stick with a simple atom.
-- Provided as milliseconds, `time` is how long until we want our message sent.
-- Last but not least, options.
+- `dest` 参数采用进程的 `pid` 或名称，我们将使用一个命名的 GenServer 示例。
+- 我们要发送给进程的 `msg`，这几乎可以是任何数据结构，但我们将坚持用一个简单的原子类型。
+- 以毫秒为单位，`time` 是我们想要过多久发送消息的时间。
+- 最后但并非最不重要的，options。
 
-That's all well and good but where exactly does the `msg` go after `time` has elapsed?
-Great question!
+一切都很好，但是 `time` 过去后，`msg` 到底在哪里？
 
-The less often used `handle_info/2` callback is how these messages are handled.
-Just like `handle_cast/2`, `handle_info/2` takes two parmeters: the first will be our `msg` from above and second the current state.
+好问题！
 
-That's enough to get us going but if you're interested to learn more about `Process.send_after/4` be sure to check out the [official documentation](https://hexdocs.pm/elixir/Process.html#send_after/4).
+比较少使用的 `handle_info/2` 回调函数是用来处理这些消息的。
 
-For the sake of demonstrating how to use our aforementioned tools to perform reoccurring work let's build a simple module to output the current time every 10 seconds.
-Since we'll be working with a GenServer, we can rely on `init/1` as a good place to kick off our the reoccurring work using `Process.send_after/4` and a message of `:tick`:
+就像 `handle_cast/2` 一样，`handle_info/2` 需要两个参数：第一个是上面的 `msg`，第二个是当前状态。
+
+这足以使我们继续前进，但是如果您有兴趣了解有关 `Process.send_after/4` 的更多信息，请务必查看[官方文档](https://hexdocs.pm/elixir/Process.html#send_after/4)。
+
+为了演示如何使用上述工具执行重复工作，我们构建一个简单的模块，每 10 秒输出一次当前时间。
+
+由于我们在使用 GenServer，因此我们可以依靠 `init/1` 来作为开始使用 `Process.send_after/4` 和 `:tick` 消息进行重复工作的好地方：
 
 ```elixir
 @ten_seconds 10000
@@ -44,8 +50,9 @@ def init(opts) do
 end
 ```
 
-Next we'll need to define our `handle_info/2` callback for our `:tick` message.
-For this function we'll get and format the current time, output it, and mostly importantly trigger another `:tick` 10 seconds from now using `Process.send_after/4`:
+接下来我们需要为我们的 `:tick` 消息定义 `handle_info/2` 回调。
+
+对于这个函数，我们将获取并格式化当前时间，然后输出它，最重要的是使用 `Process.send_after/4` 触发 10 秒后的另一个 `:tick`。
 
 ```elixir
 def handle_info(:tick, state) do
@@ -62,7 +69,7 @@ def handle_info(:tick, state) do
 end
 ```
 
-When we bring it all together in our `Example` module we should have something like this:
+当我们把所有的内容汇集到我们的 `Example` 模块中时，我们的代码应该像这样：
 
 ```elixir
 defmodule Example do
@@ -91,9 +98,11 @@ defmodule Example do
 end
 ```
 
-Without further delay let us put our new code to work!
-Open `iex` and copy and paste our new module in.
-Now we start everything with `GenServer.start/3` which will in turn start our clock messages:
+不要再耽误时间了，让我们把我们的新代码投入使用吧！
+
+打开 `iex`，复制并粘贴我们的新模块。
+
+现在我们启动 `GenServer.start/3`，这将反过来启动我们的时钟信息。
 
 ```shell
 iex> GenServer.start(Example, [])
@@ -109,6 +118,8 @@ The time is now: 02:23:04.909642
 The time is now: 02:23:14.910623
 ```
 
-Tada!
-Every 10 seconds we see an updated time.
-No CRON, no background job framework, no external dependencies, just Elixir.
+Tada！
+
+每隔10秒我们就会看到一个更新的时间。
+
+没有CRON，没有后台任务框架，没有外部依赖，只有Elixir。

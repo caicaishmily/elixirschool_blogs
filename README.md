@@ -34,7 +34,7 @@
 - [ ] [supervisor strategies](./posts/2019-02-21-supervisor-strategies.md)
 - [ ] [在 heroku 上发布一个插件](./posts/2019-02-12-putting-a-plug-app-on-heroku.md)
 - [ ] [til genserver handle continue](./posts/2019-02-08-til-genserver-handle-continue.md)
-- [ ] [til send after](./posts/2019-02-06-til-send-after.md)
+- [x] [til send after](./posts/2019-02-06-til-send-after.md)
 - [ ] [用路由插件构建应用](./posts/2019-01-25-building-apps-with-plug-router.md)
 - [ ] [递归](./posts/2019-01-15-recursion.md)
 - [ ] [elixir kaffe codealong](./posts/2019-01-03-elixir-kaffe-codealong.md)
