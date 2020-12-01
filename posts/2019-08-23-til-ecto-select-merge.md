@@ -10,22 +10,24 @@ excerpt: >
   Before you reach for adding another association to your schema, consider using `Ecto.Query#select_merge/3` with a virtual field instead.
 ---
 
-Working with Elixir and Ecto, I've run into scenarios where I needed to retrieve data from a table plus maybe a field or two from an unassociated table. In the past, whenever this happened, I'd usually spin up something I wasn't totally satisfied with -- maybe updating the schema(s), breaking it up into multiple queries, or building a multi-select statement if I was feeling fancy.
+# til ecto 查询合并
 
-Happily, today I learned there's a better way. You can accomplish that same end result in a single query expression with `Ecto.Query#select_merge/3`.
+在使用 Elixir 和 Ecto 的过程中，我遇到过这样的情况：我需要从一个表中检索数据，也许还要从一个未关联的表中检索一两个字段。过去，每当发生这种情况时，我通常会做一些我不是很满意的事情--也许是更新模式，把它分成多个查询，或者是建立一个多查询语句，如果我觉得很有创意的话。
 
-Let's run through an example to see it in action.
+值得高兴的是，今天我知道了有一个更好的方法。你可以用 `Ecto.Query#select_merge/3` 用一个查询表达式来实现同样的最终结果。
 
-## Setup
+让我们通过一个例子来看看它的操作。
 
-Say you work at a school with an admissions department, and you've been tasked with displaying an event log showing all the events related to a given admission, organized into three columns: 1) date, 2) action taken, and 3) who the action was taken by.
+## 设置
+
+假设你在一所有招生部门的学校工作，你的任务是显示与某一招生有关的所有事件，组织成三列。1) 日期 2) 采取的行动 3) 谁采取的行动。
 
 | Date     | Action           | Taken By         |
 |----------|------------------|------------------|
 | 8/1/2019 | Student Admitted | Albus Dumbledore |
 
 
-To start with, we have an `AdmissionEvent` schema that looks like this:
+首先，我们有一个 `AdmissionEvent` schema，看起来像这样。
 
 ```elixir
 defmodule Registrar.Tracking.AdmissionEvent do
@@ -40,7 +42,7 @@ defmodule Registrar.Tracking.AdmissionEvent do
 end
 ```
 
-...and a User schema that looks like this:
+...然后 User schema 看起来像这样:
 
 ```elixir
 defmodule Registrar.User do
@@ -53,7 +55,7 @@ defmodule Registrar.User do
 end
 ```
 
-...and just for the sake of completeness, a super simple Admission schema:
+...为了完整起见，还提供了一个超级简单的 `Admission` schema:
 
 ```elixir
 defmodule Registrar.Admission do
@@ -67,7 +69,7 @@ defmodule Registrar.Admission do
 end
 ```
 
-The problem here is the admitter's full name lives on `User`, which isn't currently associated with `AdmissionEvent`. So if we did a straight-forward select query, we'd end up with the admission events we need to populate the table, but not the admitters' full names.
+这里的问题是，录取者的全名存在于 `User` 中，而用户目前并没有与 `AdmissionEvent` 关联。因此，如果我们直接执行选择查询，我们最终会得到我们需要填充表的录取事件，但不会得到录取者的全名。
 
 ```elixir
 defmodule Registrar.Tracking.AdmissionEvent do
@@ -109,11 +111,10 @@ iex> AdmissionEvent.for_admission(admission) |> Repo.all()
 ]
 ```
 
-So, how do we want to go about getting the full name? We've got lots of options to choose from, but for this post, we'll compare two: one folks might reach for first (adding an association and preloading the data) and one we'll hopefully reach for more often moving forward (`Ecto.Query#select_merge/3`).
+那么，我们要如何去获取全名呢？我们有很多选项可以选择，但在这篇文章中，我们将比较两个选项：一个是大家可能会首先使用的选项（添加关联和预加载数据），另一个是我们希望今后更经常使用的选项（`Ecto.Query#select_merge/3`）。
+## 选项 1: 添加关联和预加载数据
 
-## Option 1: Add an Association and Preload the Data
-
-If we associate User and AdmissionEvent, then we can preload the associated User record and read the full name directly from there.
+如果我们把 User 和 AdmissionEvent 关联起来，那么我们就可以预先加载关联的 User 记录，直接从那里读取全名。
 
 ```elixir
 defmodule Registrar.Tracking.AdmissionEvent do
@@ -173,11 +174,10 @@ iex> event.admitter.name
 "Albus Dumbledore"
 ```
 
-This approach gets the job done, but it's a little heavy. We only need the admitter's full name, so why retrieve an entire `User` struct? You can also see how this pattern could lead to a super cluttered User schema. Right now it has many `admission_events`, but soon it could have many `application_events`, `interview_events`, `billing_events`, etc.
+这种方法可以完成工作，但有点沉重。我们只需要录取者的全名，为什么要检索整个 `User` 结构？你也可以看到这种模式如何导致一个超级混乱的 User schema。现在它有很多 `admission_events` ，但很快它可能有很多`application_events`，`interview_events`，`billing_events` 等等。
+## 选项 2: ✨ 查询 合并 ✨
 
-## Option 2: ✨ Select Merge ✨
-
-`Ecto.Query#select_merge/3` gives us an option that's much more succinct and precise. Check out this slickness:
+`Ecto.Query#select_merge/3` 给了我们一个更简洁、更精确的选择。看看这个丝滑的例子。
 
 ```elixir
 defmodule Registrar.Tracking.AdmissionEvent do
@@ -239,15 +239,14 @@ iex> event.admitter_name
 "Albus Dumbledore"
 ```
 
-By adding a virtual field and populating it with `select_merge`, we end up with a much lighter-weight solution. We get exactly the data we need without adding any new associations, keeping our schemas decoupled. Plus we have a pattern to follow that's a little more extensible moving forward, should we need to introduce event logs for different types of events.
+通过添加一个虚拟字段并将其填充到 `select_merge` 中，我们最终得到了一个更轻量级的解决方案。我们不需要添加任何新的关联就能获得我们所需要的数据，保持我们的 schema 解耦。另外，如果我们需要为不同类型的事件引入事件日志，我们有一个可遵循的模式，这个模式的扩展性更强。
 
-## Summary
+## 总结
 
-`Ecto.Query#select_merge/3` allows us to populate a virtual field directly within a select query, giving us all kinds of flexibility when it comes to designing schemas and composing queries.
+`Ecto.Query#select_merge/3` 允许我们在选择查询中直接填充一个虚拟字段，使我们在设计 shcema 和组成查询时具有各种灵活性。
 
-10/10 Would compose again
+100% 会再次编写。
+## 资源
 
-## Resources
-
-- [Docs](https://hexdocs.pm/ecto/Ecto.Query.html#select_merge/3)
-- [Source code](https://github.com/elixir-ecto/ecto/blob/master/lib/ecto/query.ex#L1168-L1209)
+- [文档](https://hexdocs.pm/ecto/Ecto.Query.html#select_merge/3)
+- [源代码](https://github.com/elixir-ecto/ecto/blob/master/lib/ecto/query.ex#L1168-L1209)

@@ -22,7 +22,7 @@
 - [ ] [sorting a table with live view live links](./posts/2019-10-20-sorting-a-table-with-live-view-live-links.md)
 - [ ] [使用 docker 和 mix release 发布一个 umbrella app](./posts/2019-09-15-releasing-an-umbrella-app-with-docker-and-mix-release.md)
 - [ ] [elixirconf 2019 review](./posts/2019-09-12-elixirconf-2019-review.md)
-- [ ] [til ecto select merge](./posts/2019-08-23-til-ecto-select-merge.md)
+- [x] [til ecto select merge](./posts/2019-08-23-til-ecto-select-merge.md)
 - [ ] [elixirconf eu 2019 review](./posts/2019-06-06-elixir-conf-eu-2019-review.md)
 - [ ] [liveview with channels](./posts/2019-06-04-live-view-with-channels.md)
 - [ ] [liveview with presence](./posts/2019-05-06-live-view-with-presence.md)
