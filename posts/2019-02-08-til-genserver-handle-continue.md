@@ -9,12 +9,15 @@ excerpt: >
   Support non-blocking, async GenServer initialization callbacks with OTP 21's nifty `handle_continue/2`!
 ---
 
-What happens when starting up your GenServer requires executing a long-running process? We _don't_ want the execution of that process to block the GenServer from completing start-up. We also don't want to execute that process asynchronously in a way that creates a race condition between the running of the process and other messages arriving in our GenServer's inbox. In this post, we'll take a closer look at these two problems and understand how OTP 21's `GenServer.handle_continue/2` is the perfect solution.
+# GenServer handle_continue
 
-## Starting GenServers without Blocking
-Let's say that we are building a GenServer for a shopping list fulfillment application. Our GenServer will hold state describing a grocery shopping list _and_ be aware of the available inventory as it relates to that shopping list. When our GenServer starts up, it will receive a shopping list and put it in state. But wait! Our GenServer initialization process will _then_ need to take that shopping list and retrieve relevant inventory from another source.
+当你启动 GenServer 时需要执行一个长期运行的进程会发生什么？我们 _不_ 希望该进程的执行阻止 GenServer 完成启动。我们也不想在进程的运行和 GenServer 的收件箱中到达的其他消息之间创造一个竞赛条件从而异步执行那个进程。在这篇文章中，我们将仔细研究这两个问题，并了解 OTP 21 的 `GenServer.handle_continue/2` 如何成为完美的解决方案。
 
-Our first attempt at solving this problem could look something like this:
+## 启动 GenServers 而不被阻断
+
+比方说，我们正在为一个购物清单履行应用程序构建一个 GenServer。我们的 GenServer 将持有描述一个杂货店购物清单的状态，_并_ 知道与该购物清单相关的可用库存。当我们的 GenServer 启动时，它将接收一个购物单并将其放入状态。但是请稍等一下！我们的 GenServer 初始化过程 _然后_ 需要从另一个来源获取该购物清单和检索相关库存。
+
+我们解决这个问题的第一次尝试可能是这样的。
 
 ```elixir
 defmodule ShoppingListFulfillment do
@@ -39,14 +42,16 @@ defmodule ShoppingListFulfillment do
   end
 end
 ```
-Here, we're calling our "get inventory for shopping list items" code in the `init/1` callback that gets triggered when `start_link/1` is called.
 
-This problem with this approach is that `start_link/1` will block until `init/1` returns `{:ok, state}`. We won't return from `init/1` until _after_ the inventory-fetching code runs. That _could_ be time consuming. We don't want our GenServer blocked by this.
+这里，我们在 `init/1` 回调中调用了 "get inventory for shopping list item" 代码。当 `start_link/1` 被调用时，回调会被触发。
 
-Let's explore an asynchronous approach.
+这种方法的问题是 `start_link/1` 会阻塞，直到 `init/1` 返回 `{:ok, state}`。我们不会从 `init/1` 返回，直到库存获取代码运行 _之后_。这可能会很耗时。我们不希望我们的 GenServer 被这个阻塞。
 
-## Asynchronous Callbacks and Race Conditions
-We can use `Kernel.send/2` in our `init` callback to kick off some asynchronous work without blocking `GenServer.start_link/1`. When we use `send/2` and give it a first argument of `self`, i.e. the PID of our GenServer, our GenServer will handle that message with a `handle_info/2` function that matches the message we sent.
+让我们探索一种异步的方法。
+
+## 异步回调和竞赛条件
+
+我们可以在我们的 `init` 回调中使用 `Kernel.send/2` 来启动一些异步工作，而不会阻塞 `GenServer.start_link/1`。当我们使用 `send/2` 并传给它第一个参数`self`，即我们 GenServer 的 PID 时，我们的 GenServer 将用一个与我们发送的消息相匹配的 `handle_info/2` 函数来处理该消息。
 
 ```elixir
 defmodule ShoppingListFulfillment do
@@ -82,23 +87,23 @@ defmodule ShoppingListFulfillment do
 end
 ```
 
-This approach un-blocks `GenServer.start_link/1`. It no longer needs to _wait_ for the work of getting inventory. Now that happens asynchronously and updates state once we have finished fetching inventory info.
+这种方法解除了 `GenServer.start_link/1` 的阻塞。它不再需要 _等待_ 获取库存的工作。现在，一旦我们获取完库存信息，就会异步更新状态。
 
-There is a downside to this approach though. Just because we send the `:get_inventory` message inside the `init` function, doesn't mean that `:get_inventory` is the first message our GenServer will receive and process. This could lead to a race condition!
+不过这种方法也有一个缺点。因为我们在 `init` 函数中发送 `:get_inventory` 消息，这并不意味着 `:get_inventory` 是 GenServer 将接收和处理的第一个消息。这可能会导致一个竞赛条件！
 
-What happens if our GenServer receives a message asking for the availability of an item on the shopping list _before_ it receives and finishes processing the message to get the inventory? That could cause a false negative! We would see that `inventory` in state is empty, and tell the sender that their item is not available. Oh no!
+如果我们的 GenServer 收到一个消息，询问购物清单上的一个项目是否有货，在它收到并完成处理消息以获得库存 _之前_，会发生什么？这可能会导致一个假否定! 我们会看到状态中的 `inventory` 是空的，并告诉发送者他们的物品不可用。哦不!
 
-If only there was some way to fetch inventory asynchronously, without blocking `start_link/1`, while _still_ ensuring that it executes _before_ any other messages received by our GenServer are responded to...
+如果有什么方法可以异步获取库存，而不阻塞 `start_link/1`，_同时_ 确保它在 GenServer 收到的任何其他消息被响应 _之前_ 执行......
 
-## Using `handle_continue/2`
+## 使用 `handle_continue/2`
 
-The release of OTP 21 a few months back gives us a way to solve this problem. The [`GenServer.handle_continue/2`](https://hexdocs.pm/elixir/GenServer.html#c:handle_continue/2) callback is called by a GenServer process whenever a previous callback returns `{:continue, :message}`.
+几个月前发布的 OTP 21 给我们提供了一个解决这个问题的方法。每当前一个回调返回 `{:continue, :message}` 时，GenServer 进程就会调用 [`GenServer.handle_continue/2`](https://hexdocs.pm/elixir/GenServer.html#c:handle_continue/2) 回调。
 
-> `handle_continue/2` is invoked immediately after the previous callback, which makes it useful for performing work after initialization or for splitting the work in a callback in multiple steps, updating the process state along the way. [*](http://erlang.org/doc/man/gen_server.html#Module:handle_continue-2)
+> `handle_continue/2` 在前一个回调之后立即被调用，这使得它对于在初始化之后执行工作或者将回调中的工作分成多个步骤，沿途更新进程状态非常有用。[*](http://erlang.org/doc/man/gen_server.html#Module:handle_continue-2)
 
-This approach ensures that our GenServer won't handle any other messages until `handle_continue/2` is finished. No more race conditions!
+这种方法确保我们的 GenServer 不会处理任何其他消息，直到 `handle_continue/2` 完成。没有更多的竞赛条件!
 
-Let's take a look:
+让我们来看看。
 
 ```elixir
 defmodule ShoppingListFulfillment do
@@ -133,8 +138,7 @@ defmodule ShoppingListFulfillment do
 end
 ```
 
-Now, `init/2` returns `{:ok, state, {:continue, :get_inventory}}`. This immediately triggers the callback `handle_continue(:get_inventory, state)`. This callback is guaranteed to finish running before our GenServer moves on to processing any other messages.
+现在，`init/2` 返回 `{:ok, state, {:continue, :get_inventory}}`。这将立即触发回调 `handle_continue(:get_inventory, state)`。这个回调保证在我们的 GenServer 继续处理任何其他消息之前完成运行。
 
-## Conclusion
-
-OTP 21's `handle_continue/2` callback allows us to handle expensive GenServer initialization work in a non-blocking, asynchronous manner that avoids race conditions. If you're building a GenServer that needs to handle an initialization callback, consider reaching for `handle_continue/2`.
+## 结语
+OTP 21 的 `handle_continue/2` 回调允许我们以非阻塞、异步的方式处理昂贵的 GenServer 初始化工作，避免了竞赛条件。如果你正在构建一个需要处理初始化回调的GenServer，可以考虑使用 `handle_continue/2`。
