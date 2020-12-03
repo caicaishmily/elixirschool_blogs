@@ -10,11 +10,13 @@ excerpt: >
   Use Joken and JOSE for a light-weight implementation of JWT Auth in your Elixir web application.
 ---
 
-[JSON Web Tokens](https://jwt.io/introduction/), or JWTs, allow us to authenticate requests between the client and the server by encrypting authentication information into a secure, compact JSON object that is digitally signed. In this post, we'll use the [Joken](https://github.com/bryanjos/joken) library to implement JWT auth in a Phoenix app. We'll focus on JWTs that are signed using a ECDSA private/public key pair, although you can also sign JWTs using an HMAC algorithm.
+# JWT auth with joken
 
-## Getting Started
+[JSON Web Tokens](https://jwt.io/introduction/)，即 JWTs，允许我们通过将认证信息加密到一个安全、紧凑的 JSON 对象中，并进行数字签名来验证客户端和服务器之间的请求。在这篇文章中，我们将使用 [Joken](https://github.com/bryanjos/joken) 库在 Phoenix 应用中实现 JWT auth。我们将专注于使用 ECDSA 私钥/公钥对签署的 JWT，尽管你也可以使用 HMAC 算法签署 JWT。
 
-First things first, we need to include the Joken package in our application's dependencies:
+## 起步
+
+首先，我们需要将 Joken 包添加在我们应用程序的依赖关系中。
 
 ```elixir
 def deps do
@@ -23,13 +25,12 @@ def deps do
 end
 ```
 
-Run `mix deps.get` and you're ready to use Joken!
+运行 `mix deps.get` 然后使用 Joken 的工作已准备就绪
+## 关于加密的说明
 
-## A Note on Encryption
+**我们将对使用 ECDSA 私钥/公钥对生成的令牌进行解密**，这意味着我们需要访问公钥才能进行解密。这意味着我们需要访问公钥来进行解密，在哪里存储公钥由你来决定。你可以把它存储在一个 `.pem` 文件中，你的应用程序可以访问它；你可以从一端起个服务；你可以把它存储在一个环境变量中--这只是一些选择。
 
-**We'll be decrypting tokens that were generated using an ECDSA private/public key pair.** This means that we'll need access to the public key in order to enact the decryption. Where you store that public key is up to you. You can store it in a `.pem` file, accessible to your application; you can serve it from an endpoint; you can store it in an environment variable--to name a few options.
-
-This post assumes that your code has access to the public portion of the ECDSA private/public key pair in the form of a string that looks something like this:
+这篇文章假设你的代码可以访问 ECDSA 私钥/公钥对的公共部分，其形式是一个类似于这样的字符串。
 
 ```
 -----BEGIN PUBLIC KEY-----
@@ -38,9 +39,9 @@ yaddayaddayadda
 -----END PUBLIC KEY-----
 ```
 
-## The Decryption Module
+## 解密模块
 
-We'll define a module, `JwtAuthToken` that is responsible for decrypting a JWT given the token and the public key.
+我们定义一个 `JwtAuthToken` 模块，负责对给定令牌和公钥的 JWT 进行解密；
 
 ```elixir
 defmodule MyAppWeb.JwtAuthToken do
@@ -50,20 +51,20 @@ defmodule MyAppWeb.JwtAuthToken do
 end
 ```
 
-The public API of our module is simple. It exposes a function `decode/2` which takes in the arguments of the JWT string and the ECDSA public key string. It will use the public key to decrypt the JWT.
+我们模块的 公共 API 很简单。它暴露了一个函数 `decode/2`，它接收 JWT 字符串和 ECDSA 公钥字符串的参数。它将使用公钥来解密 JWT。
 
-### How Does Joken Decode and Verify?
+### Joken如何解码和验证？
 
-In order to decode and verify our JWT string, Joken needs two things:
+为了解码和验证我们的 JWT 字符串， Joken 需要两个结构：
 
-* A `Joken.Token` struct
-* A `Joken.Signer` struct
+* 一个 `Joken.Token` 结构
+* 一个 `Joken.Signer` 结构
 
-So, we need to use our token _string_ to generate a `Joken.Token` and we need to use our ECDSA public key PEM file to generate a `Joken.Signer` struct. Then, we'll call `Joken.verify/2` with these two structs as arguments.
+因此，我们需要使用 token _字符串_ 生成一个 `Joken.Token`，我们需要使用 ECDSA 公钥 PEM 文件生成一个 `Joken.Signer` 结构。然后，我们将使用这两个结构作为参数调 用`Joken.verify/2`。
 
-### Generating the `Joken.Token`
+### 生成 `Joken.Token`
 
-In order to generate this struct, we'll call `Joken.token/1`. We pass in an argument of the JWT string:
+为了生成这个结构，我们将调用 `Joken.token/1`。我们传递一个 JWT 字符串作为参数。
 
 ```elixir
 defmodule MyAppWeb.JwtAuthToken do
@@ -73,10 +74,13 @@ defmodule MyAppWeb.JwtAuthToken do
   end
 end
 ```
-This will return the `Joken.Token` struct in the following format:
+
+这将返回如下格式的 `Joken.Token` 结构：
 
 ```elixir
-%Joken.Token{                                                                                                            claims: %{},                                                                                                           claims_generation: %{},
+%Joken.Token{
+  claims: %{},
+  claims_generation: %{},
   error: nil,
   errors: [],
   header: %{},
@@ -87,9 +91,9 @@ This will return the `Joken.Token` struct in the following format:
 }
 ```
 
-#### Validating Token Expiration
+#### 验证 token 到期时间
 
-We're not quite done with our token struct though. Notice that the `:validations` key points to an empty map. The data stored under `:validations` key of the token struct will be used by `Joken.verify/2` to determine the validity of a decoded token's claims. Our token's encoded claims will include an *expiration date*, under a key of `"exp"`. We *only* want a decoded token to be considered valid if the `"exp"` in the claims has is not in the past. So, we'll leverage `Joken.with_validation` to write a validation function that returns true if the token's claims' `"exp"` is _not_ in the past:
+我们还没有完全完成我们的 token 结构。请注意，`:validations` 键指向一个空的映射。存储在 token 结构 `:validations` 键下的数据将被 `Joken.verify/2` 使用，以确定解码后的 token 声明的有效性。我们 token 的编码要求将包括一个 *失效日期* ，键为 `"exp"`。我们只希望解码后的 token 被认为是有效的，如果声明中的 `"exp"` 没有过期。因此我们将利用 `Joken.with_validation` 来编写一个验证函数，如果 token 的 claims `"exp"` 没有过期，则返回 true。
 
 ```elixir
 defmodule MyAppWeb.JwtAuthToken do
@@ -101,7 +105,7 @@ defmodule MyAppWeb.JwtAuthToken do
 end
 ```
 
-Now our token struct looks like this:
+现在我们的 token 结构看上去像这样：
 
 ```elixir
 %Joken.Token{
@@ -117,9 +121,9 @@ Now our token struct looks like this:
 }
 ```
 
-Such that when we later call `Joken.verify/2`, Joken will execute the function stored under the `"exp"` key of the `:validations` struct with an argument of the value stored under the `"exp"` of the decoded token's claims.
+这样，当我们稍后调用 `Joken.verify/2` 时，Joken 会执行储存在 `:validations` 结构 `"exp"` 键下的函数，其参数是储存在解密 token claims `"exp"` 下的值。
 
-If this function returns `true`, Joken will expose the decoded token's claims:
+如果该函数返回 `true`，Joken 将公开解密 token 的 claims。
 
 ```elixir
 %Joken.Token{
@@ -144,7 +148,7 @@ If this function returns `true`, Joken will expose the decoded token's claims:
 }
 ```
 
-If it returns `false`, Joken will return the token struct _without_ the decoded claims and _with_ an error message:
+如果返回的是 `false`, Joken 将返回 token 结构，_不包含_ 解码后的 claims字段 和 _错误信息_。
 
 ```elixir
 %Joken.Token{
@@ -162,9 +166,8 @@ If it returns `false`, Joken will return the token struct _without_ the decoded 
 }
 ```
 
-Now that we have our token struct ready to go, we can generate the `Joken.Signer` struct.
-
-### Generating the `Joken.Signer`
+现在我们已经准备好了我们的 token 结构，我们可以生成 `Joken.Signer` 结构。
+### 生成 `Joken.Signer`
 
 In order to generate the signer struct, we need to build our ECDSA public key struct. We can doing this using `JOSE`.
 
@@ -207,9 +210,9 @@ Where the second element of the tuple is the ECDSA public key map. Joken will us
 
 #### Generating the Signer
 
-`Joken.Signer` is the JWK (JSON Web Key) and JWS (JSON Web Signature) configuration of Joken. The signer allows us to generate a token signature or read the token signature during decryption. We want to generate an ECDSA signer with our public key. Then, we can use this signer to decrypt our token.
+`Joken.Signer` 是 Joken 的 JWK（JSON Web Key）和 JWS（JSON Web Signature）配置。签名器允许我们在解密过程中生成 token 签名或读取 token 签名。我们要用我们的公钥生成一个 ECDSA 签名器。然后，我们可以使用这个签名器来解密我们的 token。
 
-We'll define another private helper function, `signer/1`, to do this:
+我们将定义另一个私有辅助函数 `signer/1` 来实现这一目的。
 
 ```elixir
 defmodule MyAppWeb.JwtAuthToken do
@@ -229,11 +232,11 @@ defmodule MyAppWeb.JwtAuthToken do
 end
 ```
 
-Here, we use the `Joken.es256` function, with the argument of our public key map, to generate an ECDSA token signer. The `es256` function wraps a call to [`Joken.Signer.es/2`](https://hexdocs.pm/joken/Joken.Signer.html#es/2) which takes in the algorithm type and the key map and returns the signer.
+在这里，我们使用 `Joken.es256` 函数，并以我们的公钥作为参数，生成 ECDSA 令牌签名器。`es256` 函数封装了对 [`Joken.Signer.es/2`](https://hexdocs.pm/joken/Joken.Signer.html#es/2) 的调用，它接收算法类型和密钥映射，并返回签名器。
 
-Now that we have our ECDSA signer, we're ready to decode our token!
+现在我们有了 ECDSA 签名器，我们准备好解码我们的 token 了。
 
-### Decoding the Token with the Token and the Signer
+### 使用 Token 和 Signer 解码 token
 
 ```elixir
 defmodule MyApp.Web.JwtAuthToken do
@@ -260,7 +263,7 @@ defmodule MyApp.Web.JwtAuthToken do
 end
 ```
 
-Now we can easily decrypt JWTs like this:
+现在我们可以很容易的解密 JWTs，就像这样：
 
 ```elixir
 JwtAuthToken.decode(jwt_string, public_key)
@@ -273,11 +276,11 @@ JwtAuthToken.decode(jwt_string, public_key)
    }
 ```
 
-Let's use our decoder in a custom plug to prevent anyone without a valid JWT from accessing our app's endpoints.
+让我们在自定义的插件中使用我们的解码器，以防止任何没有有效 JWT 的人访问我们应用程序的端点。
 
-## The Auth Plug
+## 认证插件
 
-We'll build a custom plug, `JwtAuthPlug`, that we'll place in the pipeline of our authenticated routes:
+我们将构建一个自定义插件， `JwtAuthPlug` 我们将把它放在认证路由的管道中。
 
 ```elixir
 # router.ex
@@ -288,18 +291,18 @@ pipeline :api do
 end
 ```
 
-Our plug is pretty simple, it will:
+我们的插件很简单，它将：
 
-1. Grab the JWT from the request's cookie
-2. Call on our `JwtAuthToken.decode/2` function to decode it
+1. 从请求的 cookie 中抓取 JWT。
+2. 调用我们的 `JwtAuthToken.decode/2` 函数对其进行解码。
 
-If it can successfully decode the JWT, it will allow the request through. If not, it will return a `401` unauthorized status
+如果它能成功解码 JWT，它将允许请求通过。如果不能，它将返回一个 `401` 未授权状态。
 
-Let's get started!
+让我们开始吧!
 
-### Defining the Custom Plug
+### 定义自定义插件
 
-Defining a custom plug is pretty simple. We need to `import Plug.Conn` to get access to some helpful connection-interaction functions. Then, we need an `init` function and a `call` function.
+定义一个自定义插件非常简单。我们需要 `import Plug.Conn` 来访问一些有用的连接-交互函数。然后，我们需要一个 `init` 函数和一个 `call` 函数。
 
 ```elixir
 defmodule MyAppWeb.JwtAuthPlug do
@@ -314,9 +317,9 @@ defmodule MyAppWeb.JwtAuthPlug do
 end
 ```
 
-### Getting the JWT from the Cookie
+### 从 cookie 中获取 JWT
 
-We'll define a helper function, `jwt_from_cookie`, that will pluck the JWT string from the request cookie:
+我们将定义一个辅助函数，`jwt_from_cookie` 将从请求 cookie 中提取 JWT 字符串。
 
 ```elixir
 defmodule MyAppWeb.JwtAuthPlug do
@@ -349,11 +352,11 @@ defmodule MyAppWeb.JwtAuthPlug do
 end
 ```
 
-Here, we use a convenient `Plug.Conn` function to get value of the Cookie request header: `Plug.Conn.get_req_header`. Then, we use another function, `Plug.Conn.Cookies.decode` to turn that value (a string separated by `,`, `, ` or `;`) into a map. Lastly, we pattern-match the JWT out of the map.
+这里，我们使用了一个 `Plug.Conn` 中便捷的 `Plug.Conn.get_req_header` 函数来获取 Cookie 请求头的值。 然后，我们使用另一个函数 `Plug.Conn.Cookies.decode` 将该值（由 `,` , `, `, 或 `;` 分隔的字符串）变成一个映射。最后，我们将 map 中的 JWT 进行模式匹配。
 
-Now that we have our JWT, let's decode it!
+现在我们有了 JWT，让我们对它进行解码吧!
 
-### Decoding the JWTs
+### 解码 JWTs
 
 ```elixir
 defmodule MyAppWeb.JwtAuthPlug do
@@ -380,8 +383,8 @@ defmodule MyAppWeb.JwtAuthPlug do
 end
 ```
 
-And that's it!
+就是这样！
 
-## Conclusion
+## 结语
 
-Joken makes it easy to decode JWTs in your Phoenix application. By generating your own ECDSA signer using `JOSE`, and building a simple custom plug, you can keep your routes secure. Happy coding!
+Joken 让您在 Phoenix 应用中轻松解码 JWTs。通过使用 `JOSE` 生成您自己的 ECDSA 签名器，并构建一个简单的自定义插件，您可以保证您的路由安全。祝您编码愉快!
