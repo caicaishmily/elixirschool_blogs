@@ -46,7 +46,7 @@
 - [x] [til capture log in exunit tests](./posts/2018-12-12-til-capture-log-in-exunit-tests.md)
 - [x] [til io inspect labels](./posts/2018-12-04-til-io-inspect-labels.md)
 - [x] [jwt auth with joken](./posts/2018-11-29-jwt-auth-with-joken.md)
-- [ ] [elixircards 审视](./posts/2018-11-14-elixir-cards-review.md)
+- [x] [elixircards 审视](./posts/2018-11-14-elixir-cards-review.md)
 - [x] [雨伞是下雨时用的](./posts/2018-10-23-umbrellas-just-when-it-rains.md)
 - [x] [ecto multi](./posts/2018-10-10-ecto-multi.md)
 - [x] [asdf 版本管理](./2018-10-01-asdf-version-management.md)

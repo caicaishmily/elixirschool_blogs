@@ -9,28 +9,31 @@ excerpt: >
   Elixircards show us how modern learning tools should work through their Elixir Decks.
 ---
 
-For the next part of this series, we are reviewing 6 decks from [Elixircards](https://elixircards.co.uk/)
+# elixir cards review
 
-My first contact with Elixircards was from a demo deck they gave away at ElixirConf EU 2018.
+在本系列的下一部分，我们将对 [Elixircards](https://elixircards.co.uk/) 的 6 张卡牌进行评测。
+
+我与 Elixircards 的第一次接触是来自他们在 ElixirConf EU 2018 上赠送的一套演示卡组。
 
 ![demo_image](https://user-images.githubusercontent.com/4966172/46304306-f7634d00-c5b6-11e8-9906-72ab1e24b00a.jpg)
 
-I really liked the idea but the deck only had a handful of cards in it and the quality of them was not there.  Unfortunately, the demo wasn't a good enough sample to really motivate me to buy a set.
+我真的很喜欢这个想法，但卡组中只有少数几张卡，而且它们的质量不在那里。 不幸的是，演示并不是一个足够好的样本，无法真正激励我购买一套。
 
-For this review, Elixircards was kind enough to send us 6 decks to review and study. I have to say that my impression from ElixirConf EU were off-base, I was wrong to not purchase the cards sooner.
+这次评测，Elixircards 很贴心的送了 6 张卡牌给我们评测和研究。我不得不说，ElixirConf EU 给我的印象是偏离了基础，我没有早点购买卡牌是错误的。
 
-## Author
+## 作者
 
-Elixircards are produced by the team at CleverBunny, who are passionate programers and have been excited and supportive of Elixir for more than 3 years. They have been using Elixir in production for 2 years now. Elixircards is their way to have fun and give back to the community.
+Elixircards 是由 CleverBunny 的团队制作的，他们是充满激情的程序员，3 年多来一直对 Elixir 感到兴奋和支持。他们在生产中使用 Elixir 已经有 2 年了。Elixircards 是他们享受乐趣和回馈社区的方式。
 
-## Target
+## 目标
 
-Elixircards are great whether you're a beginner just finding your feet, or a seasoned pro looking to sharpen your claws.
-Flashcards are proven strategy for identifying and filling in gaps in your knowledge. Fundamentals 1 and 2 gives you a full taste of Elixir and covers the basics. Other packs, such as Enum range cover the Elixir API on module basis, which allows you to reinforce your knowledge and discover new functions. The best way to use flashcards is to play games with your peers, as they often spark interesting discussions.
+Elixircards 是伟大的，无论你是一个初学者刚刚找到你的脚，或一个经验丰富的专业人员寻找磨砺你的爪子。
 
-## Review
+闪卡是一种行之有效的策略，可用于识别和填补您的知识空白。基础知识 1 和 2 让您充分体验 Elixir，并涵盖基础知识。其他包，如 Enum 系列以模块为基础涵盖了 Elixir API，这可以让你强化你的知识并发现新的功能。使用闪卡的最好方法是与你的同伴玩游戏，因为它们经常引发有趣的讨论。
 
-The decks we received to review were the following:
+## 回顾
+
+我们收到的评测卡牌有以下几种。
 
 1. **Fundamentals 1**
 2. **Kernel 1**
@@ -39,7 +42,7 @@ The decks we received to review were the following:
 5. **Agent**
 6. **Regex**
 
-In addition to these there’s 5 more decks available for purchase:
+除了这些还有 5 张卡牌可以购买。
 
 1. **Fundamentals 2**
 2. **Kernel 2**
@@ -47,72 +50,70 @@ In addition to these there’s 5 more decks available for purchase:
 4. **Enum 2**
 5. **Enum 3**
 
-My experience with the 6 decks I received should be same for the others but each deck varies slightly.
-
-### Packaging
+我收到的 6 个卡牌的经验应该与其他卡牌相同，但每个卡牌略有不同。
+### 包装
 
 ![packaging image](https://user-images.githubusercontent.com/4966172/46304259-dd296f00-c5b6-11e8-8258-c0f2ffbf97eb.jpg)
 
-The decks arrived in a very sturdy small box which also contained a small envelope with my name on it! Made for a nice personal touch and it contained a few stickers (YAAAAY!), a thank you card, some promo cards for their other projects and a small game idea pamphlet.
+卡牌装在一个非常坚固的小盒子里，里面还有一个小信封，上面写着我的名字。它包含了一些贴纸（YAAAAY！），一张感谢卡，一些他们其他项目的宣传卡和一个小游戏的想法小册子。
 
-The packaging was quite effective, the tuck boxes were not damaged at all.
+包装相当有效，包装盒完全没有损坏。
 
-### Tuck Boxes
+### 储物箱
 
 ![tuck_box_image](https://user-images.githubusercontent.com/4966172/46622435-4703c480-cb33-11e8-9324-781edeea47c5.jpg)
 
-The tuck boxes are standard card deck tuck boxes but are very nicely done with information written on all sides in a _Elixirish_ purple color. You need to be a bit careful taking the cards out, since the cards take 100% of the space of the tuck box, you’re getting your money’s worth. I have to say they make a very nice bookshelf decoration when not in use, so kudos!
+储物盒是标准的卡牌储物盒，但是做得非常漂亮，四面都写着信息，颜色为 _Elixirish_ 紫色。你需要小心翼翼的把卡牌拿出来，因为卡牌占据了储物盒 100% 的空间，所以你的钱是值得的。我不得不说，它们在不用的时候是一个非常好的书架装饰，所以点赞!
 
-### Cards
+### 卡片
 
 ![contents_image](https://user-images.githubusercontent.com/4966172/46304302-f6322000-c5b6-11e8-8f9a-be2e9897318c.jpg)
 
-The cards themselves were a design treat. They are of very fine quality paper with a nice grippy touch and feel.
+卡片本身是一种设计上的享受。它们的纸张质量非常好，有很好的抓握感和手感。
 
-The front side has a pleasant purple background with a very nice combination of vertical and horizontal lines, which kind of reminds me of a computer circuit in a way.  The lines are a variation of purple which make for a nice aesthetic.  The text is in white with each card having the deck identifier on it on the bottom right (e.g. F1 for Fundamentals 1) so when you mix and match decks, you can always identify from where the card originates.
+正面有一个令人愉快的紫色背景，垂直和水平线的组合非常好，这有点让我想起电脑电路的方式。 线条是紫色的变化，让人觉得很有美感。 文字是白色的，每张牌的右下角都有牌组识别码（如 F1 代表基础知识 1），所以当你混搭牌组时，你可以随时识别出牌的来源。
 
-The back is similar; only reversed with the background in white and purple text. On the bottom right each card has a number reflecting its index in the deck.
+背面也是类似的，只是反过来，背景是白色和紫色的文字。在右下角，每张牌都有一个数字，反映了它在牌组中的索引。
 
-One improvement I’m very happy with is when compared to the test deck I got at ElixirConfEU, these cards have a matte finish making them much easier to read.
+我非常满意的一个改进是，与我在 ElixirConf EU上 拿到的测试卡组相比，这些卡有一个哑光的表面，使它们更容易阅读。
 
-## Deck Analysis
+## 卡牌分析
 
 ### Fundamentals 1
 
-This deck contains introductory content about Elixir. It is a good jack-of-all trades with the cards being a mix of Kernel, List, and String functions, conditionals and more. These cards are going to be mostly helpful to beginners of the language, experienced users are probably not going to get much from them besides a refresher.
+这套牌包含了关于 Elixir 的介绍内容。它是一个很好的万能卡牌，卡牌中包含了 Kernel、List、String函数、条件等内容。这些卡片主要是对语言的初学者有帮助，有经验的用户除了复习之外，可能不会从这些卡片中得到什么。
+
 
 ### Kernel 1
 
-This deck contains cards that cover the Kernel functions, some arithmetic expressions, logical expressions, and regular expressions.  All these cards can easily be practiced in _iex_. They are a bit repetitive on some topics but that repetition paid off, as it did clear up certain things for me. 
-
+这副牌包含了 Kernel 函数、一些算术表达式、逻辑表达式和正则表达式的卡片。 所有这些卡片都可以在 _iex_ 中轻松练习。它们在一些题目上有些重复，但这种重复是有回报的，因为它确实为我澄清了某些事情。
 ### Enum 1
 
-This is the first deck of a series that cover the Enum module. These decks are probably the only ones that you should buy together as a set, as you are not going to have the complete experience with just the one. The 1st deck starts with two cards about `map/2` then proceeds to  walk through the `Enum` functions alphabetically; from `all?/2` to `drop_every/2` with a few additional cards on `take` and `take_every`. We’re not entirely sure about the reasoning behind this, if it’s an inconsistency or an attempt to capture some of the most useful functions in the module while still maintaining the alphabetical list.  
+这是涵盖 Enum 模块系列中的第一套卡牌。这些卡组可能是你唯一应该作为一套购买的卡组，因为你不会只用一套就能获得完整的经验。第 1 副牌从两张关于 `map/2` 的卡片开始，然后继续按字母顺序讲解 `Enum` 函数；从 `all?/2` 到 `drop_every/2`，另外还有几张关于 `take` 和 `take_every` 的卡片。我们并不完全清楚这背后的原因，是不一致，还是想在保持字母表的同时，抓住模块中最有用的一些函数。 
 
-The information contained in these collections are great and you will learn a lot about `Enum` and the collection of functions it provides.  With the importance of enumeration in functional programming this is definitely a set to consider as a must-have.
+这些集合中包含的信息是非常棒的，你会学到很多关于 `Enum` 和它所提供的函数集合的知识。 由于枚举在函数式编程中的重要性，这绝对是一个必须考虑的集合。
 
 ### GenServer
 
-I don't know if this deck was supposed to be part of a series at some point, as the deck I received was labeled as __GenServer 1__ but is now listed on the website simply as  __GenServer__. This deck is magnificent, period.  It has so much information on GenServers, starting from initialization and covering topics like writing your own, termination, edge cases, hibernation, and more. You may find some cards are a bit repetitive but since this is a very tough, but important, component of the ecosystem the repetition and edge cases they contain are probably needed.
+我不知道这套卡组是否在某些时候应该是一个系列的一部分，因为我收到的卡组被标为 __GenServer 1__，但现在在网站上被简单地列为 __GenServer__。这套卡组非常华丽，就是这样。 它有很多关于 GenServers 的信息，从初始化开始，涵盖了诸如编写你自己的、终止、边缘情况、休眠等主题。你可能会发现有些卡牌有点重复，但由于这是生态系统中一个非常艰难但重要的组成部分，它们包含的重复和边缘案例可能是需要的。
 
-If you’ve never written a GenServer or you’re just looking to re-enforce your understanding, this deck should be on your list.
+如果你从来没有写过 GenServer，或者你只是想重新加强你的理解，这套卡组应该在你的列表中。
 
-### Agent
+### 代理
 
-To be honest, I didn't expect to learn much or enjoy this deck, as I have not worked with Agents much. I was wrong!  This deck opened my eyes and helped me see how to use Agents. It is a deck crammed with information, and if you need to work with Agents and your knowledge of them is limited, this deck will definitely help you.
+说实话，我没期望能从不怎么喜欢的这套卡组中学到很多东西，因为我没怎么用过 agent。但是我错了！这套卡组让我大开眼界，帮助我了解了如何使用代理。 这套卡组让我大开眼界，帮助我了解如何使用代理。这是一套充满信息的卡组，如果你需要与 agent 合作，而你对他们的了解有限，这套卡组绝对会帮助你。
+### 正则
 
-### Regex
+我觉得这套卡组很有帮助，也学到了不少东西，但说实话，我不确定 Regex 是否重要到可以专门为它准备一套卡组。 更何况正则表达式的领域非常广泛，远远超出了 Elixir 的范畴。 虽然我觉得这套卡组很有用，但我觉得可以把精力放在 Elixir 其他更重要的领域。
 
-I found this deck helpful and learned quite a bit but I’ll be honest, I’m not sure Regex is important enough to dedicate a deck to.  Not to mention the very field of regular expression is vast, far beyond that of Elixir.  While I found this deck useful I think more important areas of Elixir could be focused on instead.
+## 结语
 
-## Conclusion
+Elixircards 是个好主意。如果 "学习 2.0" 是一个东西，这些闪存卡会发现自己在那里。
 
-Elixircards is a great idea. If  “Learning 2.0” was a thing these flashcard would find themselves there.
+我发现大部分的卡片都非常有用，而且价格也非常合理，可以帮助你在旅途中练习 Elixir 的知识。 考虑到 elixir 社区的创造力，我相信我们可以用 elixircards 想出一些很棒的游戏。
 
-I found most of the cards very helpful and really nicely priced for the knowledge / help they provide in practicing your Elixir knowledge on-the-go.  Given how creative the Elixir community is, I’m sure we can come up with some great games using the elixircards.
+只要稍加加工和添加一些内容，elixircards 就会自成一派。 例如，我认为 `Enum` 应该用不同的方式来处理，这样就不需要一次购买所有的卡牌来获得最大的用途。 或许可以将三个独立的卡牌的难度和功能混合在一起？
 
-With a little work and some additions the elixircards would be in a class of their own.  For instance, I think `Enum` should be approached differently so as not to require the purchase of all decks at once to get the most use out of them.  Perhaps mixing the difficulty and functions across the three separate decks? 
+我很希望看到 GenServer 卡牌像其他一些卡牌一样扩展，并专注于一般的 OTP，OTP 1 是基础知识，OTP 3 是更高级的主题。 增加关于任务和监督的内容也是一个受欢迎的补充。
 
-I would love to see the GenServer deck expanded like some of the others and focus on OTP in general, with OTP 1 being the basics and OTP 3 being the more advanced topics.  Adding content on Tasks and Supervision would be a welcomed addition as well.
-
-Last but not least, I would love to use this flashcard style of learning to learn other aspects of Elixir such as Phoenix, Ecto, Nerves, and the newest addition Scenic.  Given how excellent these cards are I can only begin to imagine how useful and educational those decks would be.
+最后但并非最不重要的是，我很想用这种闪卡式的学习方式来学习 Elixir 的其他方面的内容，比如Phoenix、Ecto、Nerves，以及最新加入的 Scenic。 鉴于这些卡牌是多么的优秀，我只能开始想象这些卡牌将是多么的有用和教育。
