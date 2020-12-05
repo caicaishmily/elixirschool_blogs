@@ -7,29 +7,38 @@ layout: post
 title: Building web apps with Plug.Router
 ---
 
-When it comes to building a web application with Elixir many people will immediately reach for Phoenix.
-However, did you know `Plug.Router` is just as viable an option?
-Sometimes, it can be even faster.
+# 使用 Plug.Router 构建 web 应用
 
-## The project
+当谈到用 Elixir 构建 Web 应用程序时，许多人都会立即想到 Phoenix。
+
+然而，你知道 `Plug.Router` 也是一种可行的选择吗？
+
+有时，它甚至可以更快。
+
+## 项目
 
 For this project we'll build a simple single page portfolio site.
 We can expect our site to load and display our portfolio from a file, database, or somewhere else dynamically. As well as allowing users to submit contact information via a web form.
 
-__Please note__: To keep the application and tutorial concise, we will forego database backing and stub this out in favor of concentrating on the web portions.
+在这个项目中，我们将建立一个简单的单页投资组合网站。
 
-Want to skip the reading and just look at a code?
-Head over to [elixirschool/router_example](https://github.com/elixirschool/router_example).
+我们希望我们的网站能从文件、数据库或其他地方动态地加载和显示我们的投资组合。以及允许用户通过网页表单提交联系信息。
 
-## Getting started
+__请注意__: 为了保持应用和教程的简洁性，我们不考虑后端数据库的相关内容，只专注于网络部分。
 
-To get started we need to do a couple of things:
+想跳过阅读，只看一段代码？
 
-1. Generate a new project with `mix new --sup`
-1. Add the `plug_cowboy` dependency to `mix.exs`
-1. Put our router into the supervision tree of our application
+请到 [elixirschool/router_example](https://github.com/elixirschool/router_example)
 
-Without further delay, let's get this show on the road and generate our new project:
+## 起步
+
+一开始我们需要做以下的事情：
+
+1. 使用 `mix new --sup` 生成一个新项目
+2. 往 `mix.exs` 中添加 `plug_cowboy` 依赖
+3. 将我们的路由放入应用程序的监管树中
+
+事不宜迟，让我们开始吧，生成我们的新项目。
 
 ```shell
 $ mix new router_example --sup
@@ -54,8 +63,9 @@ You can use "mix" to compile it, test it, and more:
 Run "mix help" for more commands.
 ```
 
-Let's head into our new directory and open `mix.exs` in the editor of your choice.
-Here we'll make small a small change by adding the `plug_cowboy` dependency:
+让我们进入我们的新目录，在你选择的编辑器中打开 `mix.exs`。
+
+在这里，我们将通过添加 `plug_cowboy` 依赖关系来做一个小小的改变。
 
 ```elixir
 defp deps do
@@ -65,11 +75,15 @@ defp deps do
 end
 ```
 
-With that change in place we can fetch our dependencies with `mix deps.get` and proceed.
-Though we have not yet created our router, let's get the supervisor setup out of the way.
-We'll need to open `lib/router_example/application.ex` next so we can update our supervisor's children.
-The `plug_cowboy` package makes this step easy with the included `Plug.Cowboy.child_spec/3` function.
-Let's update our application's `start/2` function:
+有了这个变化，我们就可以用 `mix deps.get` 来获取我们的依赖关系，然后继续。
+
+虽然我们还没有创建我们的路由，但我们还是先把 supervisor 设置好吧。
+
+接下来我们需要打开 `lib/router_example/application.ex`，这样我们就可以更新我们的 supervisor 的子程序。
+
+`plug_cowboy` 包中包含的 `Plug.Cowboy.child_spec/3` 函数让这一步变得简单。
+
+让我们更新一下我们应用程序的 `start/2` 函数。
 
 ```elixir
 def start(_type, _args) do
@@ -82,15 +96,17 @@ def start(_type, _args) do
 end
 ```
 
-Our setup is complete!
-Before we can run our application we'll need to create our `RouterExample.Router` module which we'll do next.
+我们的起步设置完成了！
 
-## Stubs
+在运行我们的应用程序之前，我们接下来需要创建我们的 `RouterExample.Router` 模块。
 
-As was mentioned in the introduction for the sake of keeping the tutorial short and focused, we'll be stubbing the functions that would otherwise retrieve data from our datastore and persist it there.
-We won't waste too much time on this file we just need two functions: one to give us a collection of results (stubbing a database lookup) and a second to take our parameters and write them to the terminal (instead of persisting them to a store).
+## 存根
 
-Let's create a new file `lib/router_example/stubs.ex` and copy the following code into it:
+正如前言中提到的，为了使教程简短而有针对性，我们将对那些从我们的数据存储中检索数据并将其持久化的函数进行存根处理。
+
+我们不会在这个文件上浪费太多时间，我们只需要两个函数：一个是给我们结果集合（存根数据库查询），第二个是将我们传递的参数写入终端（而不是将其持久化到存储中）。
+
+让我们创建一个新的文件 `lib/router_example/stubs.ex`，并将下面的代码复制到其中。
 
 ```elixir
 defmodule RouterExample.Stubs do
@@ -104,21 +120,25 @@ defmodule RouterExample.Stubs do
 end
 ```
 
-_Note_: If you're unfamiliar with the `:label` option in `IO.inspect/2`, check out our other blog post [TIL IO.inspect labels](https://elixirschool.com/blog/til-io-inspect-labels/).
+_注_: 如果你对 `IO.Inspect/2` 中的 `:label` 选项不熟悉，请查看我们的另一篇博文[TIL IO.Inspect labels](https://elixirschool.com/blog/til-io-inspect-labels/).
 
-## The Router
+## 路由
 
-One small line of code, `use Plug.Router`, unlocks great potential by bringing the power of `Plug.Router` into our application.
-Need a refresher on `use/1`?
-Head on over to Elixir School's [section on `use`](https://elixirschool.com/en/lessons/basics/modules/#use).
+一行小小的代码，`use Plug.Router`，将 `Plug.Router` 的力量带入我们的应用中，释放出巨大的潜力。
 
-So what _is_ `Plug.Router` afterall?
+需要复习一下 `use/1` 吗？
 
-Stated simply `Plug.Router` is a collection of macros that make it easy to match request paths and their type.
-If you're familiar with with Ruby's [Sinatra](http://sinatrarb.com/), Python's [Flask](http://flask.pocoo.org/), Java's [Jersey](https://jersey.github.io/), or any of the other "micro frameworks" then this will look familiar.
+请前往 Elixir School 的 [关于 `use` 的部分](https://elixirschool.com/en/lessons/basics/modules/#use)。
 
-Create a new file for our router and open it: `lib/router_example/router.ex`.
-Let's copy the basic router code below into our new file and then look at the individual pieces:
+那么 `Plug.Router` 到底 _是_ 什么呢？
+
+简单地说，`Plug.Router` 是一个宏的集合，它使请求路径和它们的类型很容易匹配。
+
+如果你熟悉 Ruby 的 [Sinatra](http://sinatrarb.com/)，Python 的 [Flask](http://flask.pocoo.org/)，Java 的[Jersey](https://jersey.github.io/)，或者任何其他的 "微框架"，那么这看起来会很熟悉。
+
+为我们的路由创建一个新文件并且打开它。`lib/router_example/router.ex`。
+
+让我们把下面的基本路由代码复制到我们的新文件中，然后看看各个部分。
 
 ```elixir
 defmodule RouterExample.Router do
@@ -133,37 +153,40 @@ defmodule RouterExample.Router do
 end
 ```
 
-The first thing we notice after the `use` is a series of plugs: `match` and `dispatch`.
-These are included for us and match the incoming request to a function and invoke it respectively.
+我们首先注意到的是在 `use` 之后的一系列插件：`match` 和 `dispatch`。
 
-The next thing we see is our first route!
-It's a simple health check but it's significant none-the-less, it shows us the format all of our routes will follow: HTTP verb, path, and block of code.
-As one migth imagine there is more than `get/1`, we also have `post/1`, `patch/1`, `put/1`, `delete/1`, `option/1`, and `match/1`.
+这些都是为我们所包含的，分别将传入的请求匹配到一个函数并调用它。
 
-In the next few sections we'll explore some of these other macros but first let's look at how we can handle rendering EEx templates and JSON.
+接下来我们看到的是我们的第一个路由!
 
-For more on `Plug.Router` check out the dedicated section in our [Plug lesson](https://elixirschool.com/en/lessons/specifics/plug/#plugrouter).
+这是一个简单的健康检查，但它还是很重要的，它向我们展示了我们所有的路由将遵循的格式。HTTP 动词，路径和代码块。
 
-### Rendering templates
+正如人们所想象的那样，不止有 `get/1`，我们还有 `post/1`、`patch/1`、`put/1`、`delete/1`、`option/1` 和 `match/1`。
 
-Elixir includes EEx, Embedded Elixir, which lets us parse strings and files and evaluate the embedded Elixir.
-For our purposes we'll focus on `EEx.eval_file/2` and use it as the basis for our own `render/3` function.
+在接下来的几节中，我们将探索一些其他的宏，但首先让我们看看如何处理渲染 EEx 模板和 JSON。
 
-For our `render/3` function we'll pass in our connection struct, a template without the ".eex" extension, and any variable bindings we may want to provide to the embedded Elixir.
-We want a function invocation that will look something like this:
+关于 `Plug.Router` 的更多内容请查看我们的[Plug 课程](https://elixirschool.com/en/lessons/specifics/plug/#plugrouter)中的专门章节。
+
+### 渲染模板
+
+为了我们的目的，我们将专注于 `EEx.eval_file/2`，并将其作为我们自己的 `render/3` 函数的基础。
+
+对于我们的 `render/3` 函数，我们将传递我们的连接结构、一个没有 ".eex" 扩展名的模板，以及我们可能想要提供给嵌入式 Elixir 的任何变量绑定。
+
+我们希望调用的函数看起来像这样。
 
 ```elixir
 render(conn, "index.html", portfolio: [])
 ```
 
-Now that we know what we want it's time to build it!
+现在我们知道了我们想要的东西，是时候创建它了。
 
-The `EEx.eval_file/2` function takes our template's filepath along with variable bindings and returns the computed string, our response body.
-With EEx doing all the heavy lifting our `render/3` function needs to do little more than build the complete filepath and send along the response with `send_resp/3`:
+`EEx.eval_file/2` 函数获取我们模板的文件路径以及变量绑定，并返回计算出的字符串，即我们的响应体。
+
+由于 EEx 做了所有繁重的工作，我们的 `render/3` 函数需要做的只是建立完整的文件路径，并通过 `send_resp/3` 发送响应。
 
 ```elixir
 @template_dir "lib/router_example/templates"
-
 ...
 
 defp render(%{status: status} = conn, template, assigns \\ []) do
@@ -177,24 +200,27 @@ defp render(%{status: status} = conn, template, assigns \\ []) do
 end
 ```
 
-We've set it up for EEx to look for our templates in the directory `lib/router_example/templates` so let's create that directory.
-Next we'll create two templates `index.html.eex` and `contact.html.eex`.
+我们已经设置好了让 EEx 在 `lib/router_example/templates` 目录下查找我们的模板，所以我们来创建这个目录。
 
-You can find the code for `index.html.eex` [here](https://raw.githubusercontent.com/elixirschool/router_example/master/lib/router_example/templates/index.html.eex) and `contact.html.eex` [here](https://raw.githubusercontent.com/elixirschool/router_example/master/lib/router_example/templates/contact.html.eex), we won't focus on HTML or CSS today.
+接下来我们将创建两个模板 `index.html.eex` 和 `contact.html.eex`。
 
-### Sending and receiving JSON
+你可以 [在这里](https://raw.githubusercontent.com/elixirschool/router_example/master/lib/router_example/templates/index.html.eex) 找到 `index.html.eex` 的代码和 `contact.html.eex` 的 [代码](https://raw.githubusercontent.com/elixirschool/router_example/master/lib/router_example/templates/contact.html.eex)，我们今天不重点讨论 HTML 和 CSS。
 
-Building JSON endpoints in Plug.Router is much less work than the template rendering we just covered.
+### 发送 & 接收 JSON
 
-The first thing we need is a library to parse and encode JSON, for our purpose we'll use `jason`:
+在 Plug.Router 中构建 JSON 端点，比我们刚才介绍的模板渲染要省事得多。
+
+首先我们需要一个库来解析和编码 JSON，出于这个目的，我们将使用 `jason`。
 
 ```elixir
 {:jason, "~> 1.1"}
 ```
 
-Now would be a good time to run `mix deps.get` before we forget.
-Once we've done that we can move on to updating our router to handle incoming JSON via the `Plug.Parsers` plug.
-Let's open `lib/router_example/router.ex` and update our plugs to include `Plug.Parsers` with `Jason` as our decoder:
+在避免我们忘记之前，现在是运行 `mix deps.get` 的好时机。
+
+一旦我们完成了这些，我们就可以继续更新我们的路由器，通过 `Plug.Parsers` 插件来处理传入的 JSON。
+
+让我们打开 `lib/router_example/router.ex` 并更新我们的插件，以 `Jason` 作为我们的解码器包含 `Plug.Parsers`。
 
 ```elixir
 plug Plug.Parsers, parsers: [:json],
@@ -204,16 +230,16 @@ plug :match
 plug :dispatch
 ```
 
-That's _really_ all we need to do for JSON.
+这就是我们需要为 JSON 做的所有事情。
 
-If we want to keep things simple, we can leverage `Jason.encode/1` or `Jason.encode!/1` along with `send_resp/3` and be done:
+如果我们想保持简单，我们可以利用 `Jason.encode/1` 或 `Jason.encode!/1` 以及 `send_resp/3` 就可以了。
 
 ```elixir
 {:ok, json} = Jason.encode(result)
 send_resp(conn, 200, json)
 ```
 
-Or if we want a little more polish we could make a `render_json/2`:
+或者，如果我们想要更精致一点，我们可以做一个 `render_json/2`。
 
 ```elixir
 defp render_json(%{status: status} = conn, data) do
@@ -222,19 +248,20 @@ defp render_json(%{status: status} = conn, data) do
 end
 ```
 
-For the remainder of the post we'll use the `render_json/2` approach.
+在本篇的其余部分，我们将使用 `render_json/2` 方法。
 
-_Note_: If you intend to use something like the [JSON:API specification](https://jsonapi.org), you may want an additional dependency like [jsonapi](https://github.com/jeregrine/jsonapi) to help.
+_注_：如果你打算使用类似 [JSON:API 规范](https://jsonapi.org) 的东西，你可能需要一个额外的依赖，比如 [jsonapi](https://github.com/jeregrine/jsonapi) 来帮忙。
+### 定义路由
 
-### Defining routes
+现在我们已经有了路由代码、渲染模板的代码和渲染 JSON 的代码，剩下的就是定义我们的路由了！
 
-We now have our router code in place, code to render templates, and code to render JSON, all that's left is for us to define our routes!
+我们之前创建了两个 EEx 模板，`index.html.eex`和`contact.html.eex`，所以我们将首先创建路由来处理这些请求。
 
-We previously created two EEx templates, `index.html.eex` and `contact.html.eex`, so we'll create routes to handle those requests first.
-From our healthcheck endpoint we know the format we expect but we can use our new `render/3` functions as well as our stubbed data.
+从我们的 healthcheck 端点，我们知道了我们期望的格式，但是我们可以使用我们新的 `render/3` 函数以及我们的存根数据。
 
-If you looked a `index.html.eex` then you know our EEx expects a `portfolio` capture populated with a list of maps containing `:name` and `:image`, the format we conveniently defined in our stubbed module!
-Let's bring all the pieces together inside `lib/router_example/router.ex`:
+如果你看了一个 `index.html.ex`，那么你就知道我们的 EEx 期望的是捕获一个 `portfolio`，其中包含 `:name` 和 `:image` 的地图列表，我们在我们的存根模块中方便地定义了格式。
+
+让我们在 `lib/router_example/router.ex` 中把所有的部分整合在一起。
 
 ```elixir
 get "/" do
@@ -246,11 +273,13 @@ get "/contact" do
 end
 ```
 
-We're getting there but we're not _quite_ done.
-We have to handle our contact form's AJAX requests.
+我们正在实现，但还没有完成。
 
-In the interest of staying focused we won't get sidetrack with validation today, instead we'll make use of our `Stubs.submit_contact/1` function.
-Let's create a new route with the `post/1` macro that uses the aforementioned function and sends a pleasant JSON message back using our `render_json/2` function:
+我们必须处理联系表单的 AJAX 请求。
+
+为了集中精力，我们今天不会在验证方面走弯路，而是利用 `Stubs.submit_contact/1` 函数。
+
+让我们用 `post/1` 宏创建一个新的路由，使用上述函数，并使用我们的 `render_json/2` 函数发送一个愉快的 JSON 消息。
 
 ```elixir
 post "/contact" do
@@ -259,17 +288,22 @@ post "/contact" do
 end
 ```
 
-That's it, we're done, right?!
-Well — we probably want to handle requests to routes we haven't defined yet.
-Let's do that next and then we can call it done.
+就这样，我们完成了，对吗？
 
-### Missing routes
+好吧--我们可能还想处理对我们还没有定义的路由的请求。
 
-Handling missing routes is a straight forward thanks to Elixir's powerful pattern matching.
-With the `match/3` macro and `_` we can match on all requests.
-By placing this at the bottom of our router we ensure if a request has not previously been matched it will be caught and handled.
+让我们接下来做这个，然后我们就可以称之为完成了。
 
-For now we'll implement a simple message, similar to how we implemented our "/ping" endpoint with `send_resp/3`:
+### 丢失的路由
+
+由于 Elixir 强大的模式匹配功能，处理丢失的路由是很直接的。
+
+通过 `match/3` 宏和 `_`，我们可以对所有请求进行匹配。
+
+通过将其放置在路由器的底部，我们可以确保如果一个请求之前没有被匹配，它将被捕获并处理。
+
+现在，我们将实现一个简单的消息，类似于我们如何用 `send_resp/3` 实现我们的 "/ping" 端点。
+
 
 ```elixir
 defmodule RouterExample.Router do
@@ -283,12 +317,13 @@ defmodule RouterExample.Router do
 end
 ```
 
-Tada!
-Our app is complete, time to wrap things up.
+哒哒哒哒！
 
-### Wrapping things up
+我们的应用已经完成了，该收尾了。
 
-We've come a long way in very small lines of code, let's look the entirety of our app:
+### 结束语
+
+在这段很小的代码行中，我们已经走了很长的路，让我们看看我们的应用程序的全部内容。
 
 ```elixir
 defmodule RouterExample.Router do
@@ -342,15 +377,18 @@ defmodule RouterExample.Router do
 end
 ```
 
-We're rendering EEx templates, receiving and sending JSON, and all the _entire_ app (`RouterExample.Router` + `RouterExample.Stubs`) is 58 lines of code!
+我们渲染 EEx 模板，接收和发送 JSON，_整个_ app (`RouterExample.Router` + `RouterExample.Stubs`) 只有 58 行代码！
 
-All that's really left for us to do is run it and enjoy our new website.
-To run our new app we'll use `mix run --no-halt`, the app can be found at [localhost:4001](localhost:4001).
+剩下要做的就是运行它，享受我们的新网站。
 
-There is no arguing this is a very basic implementation but it get's us started.
-With these simple pieces we have what we need build to something significant.
+我们将使用 `mix run --no-halt` 运行我们的应用，应用可以在 [localhost:4001](localhost:4001) 找到。
 
-We hope you've enjoyed!
-In future posts we'll explore improvements like grouping routes together into module, supporting Webpack, other refactors.
+毫无疑问，这是一个非常基本的实现，但它让我们开始了。
 
-The code for our application can be found at [elixirschool/router_example](https://github.com/elixirschool/router_example).
+有了这些简单的部分，我们就有了我们所需要的东西，可以建立一些重要的东西。
+
+我们希望你能喜欢它
+
+在未来的文章中，我们将探索一些改进，比如将路由组合成模块，支持 Webpack，其他重构等。
+
+我们应用的代码可以在 [elixirschool/router_example](https://github.com/elixirschool/router_example) 找到。

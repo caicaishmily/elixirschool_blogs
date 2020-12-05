@@ -35,7 +35,7 @@
 - [x] [putting a plug app on heroku](./posts/2019-02-12-putting-a-plug-app-on-heroku.md)
 - [x] [til genserver handle continue](./posts/2019-02-08-til-genserver-handle-continue.md)
 - [x] [til send after](./posts/2019-02-06-til-send-after.md)
-- [ ] [用路由插件构建应用](./posts/2019-01-25-building-apps-with-plug-router.md)
+- [x] [使用 Plug.Router 构建 web 应用](./posts/2019-01-25-building-apps-with-plug-router.md)
 - [ ] [递归](./posts/2019-01-15-recursion.md)
 - [x] [elixir kaffe codealong](./posts/2019-01-03-elixir-kaffe-codealong.md)
 
@@ -44,7 +44,7 @@
 - [x] [til how to run ecto migrations in production](./posts/2018-12-26-til-how-to-run-ecto-migrations-in-production.md)
 - [x] [til umbrella app child app tests](./posts/2018-12-17-til-umbrella-app-child-app-tests.md)
 - [x] [til capture log in exunit tests](./posts/2018-12-12-til-capture-log-in-exunit-tests.md)
-- [x] [til io inspect labels](./posts/2018-12-04-til-io-inspect-labels.md)
+- [x] [TIL IO.Inspect labels](./posts/2018-12-04-til-io-inspect-labels.md)
 - [x] [jwt auth with joken](./posts/2018-11-29-jwt-auth-with-joken.md)
 - [x] [elixircards 审视](./posts/2018-11-14-elixir-cards-review.md)
 - [x] [雨伞是下雨时用的](./posts/2018-10-23-umbrellas-just-when-it-rains.md)
