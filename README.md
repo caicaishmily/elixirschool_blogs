@@ -36,7 +36,7 @@
 - [x] [til genserver handle continue](./posts/2019-02-08-til-genserver-handle-continue.md)
 - [x] [til send after](./posts/2019-02-06-til-send-after.md)
 - [x] [使用 Plug.Router 构建 web 应用](./posts/2019-01-25-building-apps-with-plug-router.md)
-- [ ] [递归](./posts/2019-01-15-recursion.md)
+- [x] [递归](./posts/2019-01-15-recursion.md)
 - [x] [elixir kaffe codealong](./posts/2019-01-03-elixir-kaffe-codealong.md)
 
 ### 2018

@@ -17,9 +17,6 @@ title: Building web apps with Plug.Router
 
 ## 项目
 
-For this project we'll build a simple single page portfolio site.
-We can expect our site to load and display our portfolio from a file, database, or somewhere else dynamically. As well as allowing users to submit contact information via a web form.
-
 在这个项目中，我们将建立一个简单的单页投资组合网站。
 
 我们希望我们的网站能从文件、数据库或其他地方动态地加载和显示我们的投资组合。以及允许用户通过网页表单提交联系信息。

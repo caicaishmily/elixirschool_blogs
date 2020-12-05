@@ -9,13 +9,17 @@ excerpt: >
   De-mystify the concept of recursion and gain a deeper understanding of how and why to use it by writing our very own recursive function in Elixir.
 ---
 
-"Recursion" can be a scary word for those of us unfamiliar with its applications. In this post, we'll de-mystify the concept of recursion and gain a deeper understanding of how and why to use it by writing our very own recursive function in Elixir.
+# 递归
 
-## What is Recursion
+"递归" 对于我们这些不熟悉其应用的人来说，可能是一个可怕的词。在这篇文章中，我们将通过在 Elixir 中编写我们自己的递归函数，来消除递归概念的神秘感，并深入了解如何以及为什么要使用它。
 
-In short, "recursion" is when a function calls itself. First we'll look at a contrived example. Later on in this post we'll build a more practical recursive function.
+## 什么是递归
 
-Below we've defined a function `RecursionPractice.hello_world/0`, that calls itself:
+简而言之，“递归” 就是一个函数调用它自己。
+
+简而言之，"递归" 就是一个函数调用自己。首先我们来看一个人为的例子。在本篇文章的后面，我们将建立一个更实用的递归函数。
+
+下面我们定义了一个函数 `RecursionPractice.hello_world/0`，这个函数会调用自己。
 
 ```elixir
 defmodule RecursionPractice do
@@ -26,19 +30,19 @@ defmodule RecursionPractice do
 end
 ```
 
-If you think that invoking our `RecursionPractice.hello_world/0` function would cause `"Hello, World!"` to get puts'd out to the terminal infinitely--you're right! The `hello_world` function does two things:
+如果你认为调用我们的 `RecursionPractice.hello_world/0` 函数会导致 `"Hello, World!"` 被无限次地输出到终端上--你是对的! `hello_world` 函数有两个作用。
 
-1. Puts out "Hello, World!"
-2. Call `hello_world/0` (again)
+1. 输出 "Hello, World!"。
+2. 调用 `hello_world/0`（再次）。
 
-When `hello_world/0` is invoked again, it will do two things:
+当再次调用 `hello_world/0` 时，它会做两件事。
 
-1. Puts out "Hello, World!"
-2. Call `hello_world/0` (again)
+1. 输出 "Hello, World!"。
+2. 调用 `hello_world/0`（再次）。
 
-And so on. While "a function that calls itself" is the basic definition of recursion, its _not_ how we want to implement a recursive function.
+虽然 "一个调用自身的函数" 是递归的基本定义，但它 _并不是_ 我们想要实现递归函数的方式。
 
-Any recursive function needs a way to _stop calling itself_ under a certain condition. This condition is often referred to as the **base case**. Let's create a base case for our `RecursionPractice.hello_world/0` function. We'll count the number of times we call the function and stop calling it once we've reached 10.
+任何递归函数都需要在一定的条件下 _停止调用自己_ 的方法。这个条件通常被称为 **基例**。让我们为我们的 `RecursionPractice.hello_world/0` 函数创建一个基例。我们将计算我们调用函数的次数，一旦达到 10 次就停止调用。
 
 ```elixir
 def hello_world(count \\ 0) do
@@ -50,9 +54,9 @@ def hello_world(count \\ 0) do
 end
 ```
 
-The `if` condition controls our recursive function for us. _If_ the count is less than 10, increment the count by 1 and call `hello_world/1` again. Otherwise, _don't do anything_, i.e. stop calling the recursive function!
+`if` 条件控制我们的递归函数。如果计数小于 10，将计数增加 1，然后再次调用 `hello_world/1`。否则，_不做任何事情_，即停止调用递归函数!
 
-We can refactor this code with the help of [guard clauses](https://elixirschool.com/en/lessons/basics/functions/#guards). Instead of writing an `if` condition inside of our function, we'll define another version of the `RecursionPractice.hello_world/1` function to handle our base case. This version will run _when_ the count is greater than or equal to 10.
+我们可以借助 [guard 子句](https://elixirschool.com/en/lessons/basics/functions/#guards) 重构这段代码。我们不在函数里面写一个 `if` 条件，而是定义另一个版本的 `RecursionPractice.hello_world/1` 函数来处理我们的基本情况。这个版本将在计数大于或等于 10 的时候运行。
 
 ```elixir
 defmodule RecursionPractice do
@@ -67,51 +71,50 @@ defmodule RecursionPractice do
 end
 ```
 
-*Note that we've moved the default argument definition into a function head. If you're defining a function with multiple clauses and a default value, the default value definition belongs in a function head. Learn more about default arguments, function heads and function clauses in [this Elixir School lesson.](https://elixirschool.com/en/lessons/basics/functions/#default-arguments)*
+*请注意，我们已经将默认参数定义移到了一个函数头中。如果你正在定义一个有多个子句和默认值的函数，那么默认值的定义应该放在函数头中。在 [Elixir School 的这节课](https://elixirschool.com/en/lessons/basics/functions/#default-arguments) 中了解更多关于默认参数、函数头和函数子句的信息。*
 
+## 为什么它有用?
 
+当我们需要在某个条件下重复一个动作时，递归在任何时候都很有用。任何时候，只要你想使用 `while` 或 `until` 循环，你都可能用递归来实现。
 
-## Why is it Useful?
+如何决定到底是使用递归方法而不是 `while` 循环这样的迭代方法？编写递归函数时，达到递归比循环方式产生的代码更简单，更容易阅读。不过要注意，如果你写一个递归函数时没有 "基例"，或者没有停止点，你会以堆栈溢出错误告终--你会 _永远地_ 调用这个函数。
 
-Recursion is useful anytime we need to repeat an action under a certain condition. Anytime you want to use a `while` or `until` loop, you can probably implement your solution with recursion.
+## 使用 Elixir 构建递归函数
 
-How do you decide to use a recursive approach over an iterative approach like a `while` loop? Reach for recursion when writing a recursive function produces simpler, easier to read code than a looping approach. Be careful though, if you write a recursive function without a "base case", or stopping point, you'll end up with a stack overflow error--you'll call the function _forever_!
+现在我们对递归是什么以及它是如何工作的有了更好的理解，让我们建立一个更实用的递归函数。
 
-## Building a Recursive Function with Elixir
+Elixir 的 `List` 模块为我们提供了许多方便的函数，用于对列表进行操作，其中包括一个 `List.delete/2` 函数，它的工作原理如下。
 
-Now that we have a better understanding of what recursion is and how it works, let's build a more practical recursive function.
-
-Elixir's `List` module provides us with a number of handy functions for operating on lists, including a `List.delete/2` function that works like this:
-
-Given a list and an element in that list, return a new list that does not contain the _fist occurrence_ of the given element. For example:
+给定一个列表和该列表中的一个元素，返回一个新的列表，该列表不包含给定元素的 _第一次出现_。例如：
 
 ```elixir
 List.delete(["Apple", "Pear", "Grapefruit"], "Pear")
 => ["Apple", "Grapefruit"]
 ```
 
-However, we'll see that if the given list contains more than one appearance of `"Pear"`, `List.delete/2` only removes the _first_ `"Pear"`
+然而，我们将看到，如果给定的列表中包含一个以上的 `"Pear"`, `List.delete/2` 只删除 _第一个_ `"Pear"`
 
 ```elixir
 List.delete(["Apple", "Pear", "Grapefruit", "Pear"], "Pear")
 ["Apple", "Grapefruit", "Pear"]
 ```
 
-What if we want to remove _all_ occurrences of a particular element from our list? The `List` module doesn't implement such a function. Let's build our own!
+如果我们想从列表中删除所有出现的某个元素，该怎么办？`List` 模块没有实现这样的功能。让我们建立我们自己的函数吧!
 
-Our desired behavior looks like this:
+我们想要的行为是这样的。
 
 ```elixir
 List.delete(["Apple", "Pear", "Grapefruit", "Pear"], "Pear")
 ["Apple", "Grapefruit"]
 ```
 
-Before we start building our function, let's take a look at how we can use recursion and pattern matching to operate on Elixir lists.
+在开始构建我们的函数之前，我们先来看看如何使用递归和模式匹配来操作 Elixir 列表。
 
-### Using Recursion on a List
-> Lists in Elixir are effectively linked lists, which means they are internally represented in pairs containing the head and the tail of a list. - Hex Docs
+### 在一个列表上使用递归
 
-This means we can use [pattern matching](https://elixirschool.com/en/lessons/basics/pattern-matching/) to grab the first element, or the "head" of the list:
+> Elixir 中的列表是非常有效的链表，这意味着它们在内部以包含链表头和尾的对来表示。- Hex Docs
+
+这意味着我们可以使用 [模式匹配](https://elixirschool.com/en/lessons/basics/pattern-matching/) 来抓取第一个元素，也就是列表的 "head"。
 
 ```elixir
 iex> [head | tail] = [1,2,3]
@@ -121,7 +124,7 @@ iex> tail
 [2,3]
 ```
 
-Using this pattern matching approach, we can operate on each member of a list:
+利用这种模式匹配的方法，我们可以对列表的每个成员进行操作:
 
 ```
 iex> list = [1,2,3,4]
@@ -152,8 +155,9 @@ iex> tail
 []
 ```
 
-Using this approach, let's define a custom function to recurse over each element in a list.
-Our function will grab the `head` of the list and `puts` it out to the terminal. Then, we'll take the `tail` and split it up into its _own_ `head` and `tail`. We'll keep doing this until the list is empty.
+使用这种方法，让我们定义一个自定义函数，以递归一个列表中的每个元素。
+
+我们的函数将抓取列表中的 `head`，并将其 `puts` 到终端。然后我们将 `tail` 分割成它自己的 `head` 和 `tail`。我们会一直这样做，直到列表为空。
 
 ```elixir
 defmodule MyList do
@@ -166,9 +170,9 @@ defmodule MyList do
 end
 ```
 
-Our **base case** occurs when the `tail` is empty, i.e. when there are no more elements in the list. We can leverage [Elixir's ability to pattern match function arity](https://elixirschool.com/en/lessons/basics/functions/#functions-and-pattern-matching) to clean this up a bit.
+我们的 **基例** 发生在 `tail` 为空时，即列表中没有更多元素时。我们可以利用 [Elixir 的模式匹配函数 arity 的能力](https://elixirschool.com/en/lessons/basics/functions/#functions-and-pattern-matching) 来清理一下这个问题。
 
-Instead of implementing an `if` condition inside our recursive function, we'll define another version of our function that will get run when `my_each` is called with an argument of an empty list. So, if `my_each` is called with an argument of a list that isn't empty, the first version of the function will run. It will grab the `head` of the list and `puts` it out. Then it will call `my_each` _again_ with an argument of the `tail` of the list. If and when the tail is empty, the second version of the function will run. In this case, we will _not_ call `my_each` again.
+我们不在递归函数中实现 `if` 条件，而是定义另一个版本的函数，当调用 `my_each` 时，其参数为空列表，该函数将被运行。所以如果  `my_each` 被调用时的参数是一个非空的列表，第一个版本的函数将被运行。它将抓取列表的 `head` 并 `puts` 出来。然后它将用列表的 `head` 作为参数再次调用 `my_each`。如果尾部是空的，函数的第二个版本就会运行。在这种情况下，我们将不会再次调 用`my_each`。
 
 ```elixir
 defmodule MyList do
@@ -181,7 +185,7 @@ defmodule MyList do
 end
 ```
 
-Let's see it in action:
+我们来看看运行结果：
 
 ```elixir
 iex> MyList.my_each([1,2,3,4])
@@ -191,24 +195,23 @@ iex> MyList.my_each([1,2,3,4])
 4
 ```
 
-Now that we have a handle on using recursion and pattern matching with Elixir lists, let's get back to our recursive "delete all" function.
+现在我们已经掌握了如何使用递归和 Elixir 列表的模式匹配，让我们回到我们的 "全部删除" 递归函数。
 
-### Defining a Recursive `delete_all/2` Function
+### 定义一个 `delete_all/2` 递归函数
+#### 期望的行为
 
-#### Desired Behavior
+在我们开始编码之前，让我们先规划一下我们的函数需要如何表现。由于 Elixir 是一种函数式语言，我们不会对原始列表进行改变。取而代之的是，我们将建立一个由原始列表中的所有元素组成的新列表，减去与我们想要排除的元素相匹配的所有元素。
 
-Before we start coding, let's map out how our function needs to behave. Since Elixir is a functional language, we _won't_ be mutating the original list. Instead, we'll build a new list comprised of all of the elements from the original list, _minus_ all elements that match the element we want to exclude.
+我们的方法是这样的。
 
-Our approach will work something like this:
+* 看看列表的头部 如果该元素等于我们要移除的元素的出现值，我们将 *不* 抓取该元素添加到新列表中。
+* 如果该元素不等于我们要删除的值，我们将把它添加到新的列表中。
+* 无论在哪种情况下，我们都会抓取列表的尾部，然后重复上一步。
+* 一旦尾部为空，即我们已经查看了列表中的每个元素，就停止递归。
 
-* Look at the head of the list. If that element is equal to the value whose occurrences we want to remove, we will *not* grab the element to add to the new list.
-* If that element is *not* equal to the value we want to remove, we will add it to the new list.
-* In either case, we'll grab the tail of the list and repeat the previous step.
-* Once the tail is empty, i.e. we've looked at every element in the list, stop recursing.
+#### 让我们创建它!
 
-#### Let's Build It!
-
-First, we'll define a `MyList.delete_all/2` function that takes in two arguments: the original list and the element whose occurrences we want to delete.
+首先，我们要定义一个 `MyList.delete_all/2` 函数，它接收两个参数：原始列表和我们想要删除的元素
 
 ```elixir
 defmodule MyList
@@ -218,9 +221,9 @@ defmodule MyList
 end
 ```
 
-However, we need access to a new, empty list that we'll populate with the elements of the original list we're _not_ deleting. So, we'll define a version of `delete_all` that takes in _three_ arguments: the original list, the element who occurrences we want to delete, and the new empty list.
+然而，我们需要访问一个新的空列表，我们将用我们不删除的原始列表中的元素来填充。所以，我们将定义一个版本的 `delete_all` ，它将接受三个参数：原始列表、我们要删除的元素和新的空列表。
 
-`MyList.delete_all/2` will call the `MyList.delete_all/3` function. This saves the user from having to call `delete_all` with a third argument of an empty list and allows us to provide a nice tidy API.
+`MyList.delete_all/2` 将调用 `MyList.delete_all/3` 函数。这就省去了用户必须用空列表的第三个参数来调用 `delete_all`，并允许我们提供一个漂亮的整洁的 API。
 
 ```elixir
 defmodule MyList
@@ -233,9 +236,9 @@ defmodule MyList
 end
 ```
 
-The `MyList.delete_all/3` function's first job is to determine whether or not the first element in the current list, the `head` of the list, is the same value as the element we want to remove.
+`MyList.delete_all/3` 函数的第一项工作是确定当前列表中的第一个元素，即列表的 `head` 是否与我们要删除的元素值相同。
 
-If so, we *won't* add it to our new list. Instead, we'll call `MyList.delete_all/3` again with the remainder of the current list, the `tail`, and pass in our `new_list` unchanged. We can accomplish this with a guard clause:
+如果是，我们 *不* 会将它添加到我们的新列表中。相反，我们将再次调用 `MyList.delete_all/3` 与当前列表的剩余部分，即 `tail`，并传入我们的没改变的 `new_list`。我们可以通过一个卫兵子句来实现。
 
 ```elixir
 def delete_all([head | tail], el, new_list) when head === el do
@@ -243,9 +246,9 @@ def delete_all([head | tail], el, new_list) when head === el do
 end
 ```
 
-If the head of the current list is *not* equal to the value we want to remove, however, we *do* want to add it to our `new_list` before moving on.
+如果当前列表的头部 *不* 等于我们要删除的值，但是，我们 *希望* 在继续前进之前将其添加到 `new_list` 中。
 
-We'll define another `delete_all/3` function, this time without a guard clause, to meet this condition:
+我们将定义另一个 `delete_all/3` 函数，这次不使用卫兵子句，以满足这个条件。
 
 ```elixir
 def delete_all([head | tail], el, new_list) do
@@ -253,15 +256,15 @@ def delete_all([head | tail], el, new_list) do
 end
 ```
 
-We add the current `head` to our new list like this:
+我们将当前 `head` 添加至我们新的列表中。像这样：
 
 ```elixir
 [ head | new_list ]
 ```
 
-and we call `delete_all/3` again, passing it the remainder of the list (`tail`), the element to delete and the updated `new_list`.
+然后我们再次调用 `delete_all/3`，将列表的剩余部分（`tail`）、要删除的元素和更新后的 `new_list` 传递给它。
 
-When should we stop recursing? In other words, what is the base case that will cause us to stop calling `delete_all/3`? When we've recursed over all of the elements in the original list, such that the `tail` is empty, we'll _stop_ calling `delete_all/3` and instead return the new list. Let's define one final `delete_all/3` function to match this condition:
+什么时候我们应该停止递归？换句话说，什么情况下会导致我们停止调用 `delete_all/3` 呢？当我们已经递归了原始列表中的所有元素，使 `tail` 为空时，我们将停止调用 `delete_all/3` 并返回新的列表。让我们定义一个最后的 `delete_all/3` 函数来匹配这个条件。
 
 ```elixir
 def delete_all([], el, new_list) do
@@ -269,15 +272,15 @@ def delete_all([], el, new_list) do
 end
 ```
 
-The only problem with this approach is that it builds and returns a new list in which all of the elements we kept from the original list are populated in reverse order. This is because by building out our new list like this:
+这种方法唯一的问题是，它建立并返回一个新的列表，在这个列表中，我们从原始列表中保留的所有元素都以相反的顺序填充。这是因为通过这样构建出我们的新列表。
 
 ```elixir
 [ head | new_list ]
 ```
 
-We are adding the element we want to keep to the _front_ of our new list, instead of the end.
+我们将我们想保留的元素添加到新列表的前面，而不是最后。
 
-We can fix this by using `Enum.reverse` on the `new_list` once we've reached our empty list base case:
+一旦我们达到空列表的基本情况，我们可以通过在 `new_list` 上使用 `Enum.reverse` 来解决这个问题。
 
 ```elixir
 def delete_all([], el, new_list) do
@@ -285,7 +288,7 @@ def delete_all([], el, new_list) do
 end  
 ```
 
-If we put it all together, we'll have:
+如果我们把所有的代码放在一起，我们就有了：
 
 ```elixir
 defmodule MyList do
@@ -307,7 +310,7 @@ defmodule MyList do
 end
 ```
 
-We can even take this one step further and replace our guard clause with Elixir's ability to pattern match function arity. Instead of using the guard clause to run a certain version of our function when `head === el`, we can write the function like this:
+我们甚至可以更进一步，用 Elixir 的模式匹配函数 arity 的能力来替换我们的守护子句。当 `head === el` 时，我们可以像这样写函数，而不是使用卫兵子句来运行某个版本的函数。
 
 ```elixir
 def delete_all([el | tail], el, new_list) do
@@ -315,11 +318,11 @@ def delete_all([el | tail], el, new_list) do
 end
 ```
 
-Now we should be able to call our function:
+现在我们可以调用我们的函数：
 
 ```elixir
 iex> MyList.delete_all(["Apple", "Pear", "Grapefruit", "Pear"], "Pear")
 ["Apple", "Grapefruit"]
 ```
 
-And that's it!
+就是这样！
