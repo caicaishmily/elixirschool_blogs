@@ -37,7 +37,7 @@
 - [x] [til send after](./posts/2019-02-06-til-send-after.md)
 - [ ] [用路由插件构建应用](./posts/2019-01-25-building-apps-with-plug-router.md)
 - [ ] [递归](./posts/2019-01-15-recursion.md)
-- [ ] [elixir kaffe codealong](./posts/2019-01-03-elixir-kaffe-codealong.md)
+- [x] [elixir kaffe codealong](./posts/2019-01-03-elixir-kaffe-codealong.md)
 
 ### 2018
 

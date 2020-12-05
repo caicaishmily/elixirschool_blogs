@@ -9,198 +9,221 @@ excerpt: >
   A codealong to help connect Kafka to your Elixir project with the wrapper Kaffe.
 ---
 
-If we want to use the popular messaging system Kafka with our Elixir projects, we have a few wrappers we can choose from. This blogpost covers integrating one of them, [Kaffe](https://github.com/spreedly/kaffe), which doesn't have a lot of resources and therefore can be tricky to troubleshoot.
+# Elixir Kaffe Codealong
 
-In this codealong we'll build a simple Elixir application and use Kaffe to connect it to a locally running Kafka server. Later we'll cover a couple of variations to connect a dockerized Kafka server or an umbrella Elixir app.
+如果我们要在 Elixir 项目中使用流行的消息传递系统 Kafka，我们可以选择几种包装器。此博客文章介绍如何集成其中一个，[Kaffe](https://github.com/spreedly/kaffe)，该资源不多，因此很难进行故障排除。
 
-This post assumes basic knowledge of Elixir and no knowledge of Kafka or Kaffe. Here is the repo with the full project: [Elixir Kaffe Codealong](https://github.com/elixirschool/elixir_kaffe_codealong).
+在此代码中，我们将构建一个简单的 Elixir 应用程序，并使用 Kaffe 将其连接到本地运行的 Kafka 服务器。 稍后我们将介绍几个变体，以连接 docker 化的 Kafka 服务器或 umbrella Elixir 应用程序。
 
+这篇文章假设你已经拥有 Elixir 的基本知识，而没有 Kafka 或 Kaffe 的知识。 这是完整项目的地址：[Elixir Kaffe Codealong](https://github.com/elixirschool/elixir_kaffe_codealong)。
 
-## What is Kafka, briefly?
-Kafka is a messaging system. It does essentially three things:
-1. Receives messages from applications
-2. Keeps those messages in the order they were received in
-3. Allows other applications to read those messages in order
+## Kafka 是啥, 简单点?
+Kafka 是一个消息传递系统。 它实际上完成了三件事：
 
-*A use case for Kafka:*
-Say we want to keep an activity log for users. Every time a user triggers an event on your website - logs in, makes a search, clicks a banner, etc. - you want to log that activity. You also want to allow multiple services to access this activity log, such as a marketing tracker, user data aggregator, and of course your website's front-end application. Rather than persisting each activity to your own database, we can send them to Kafka and allow all these applications to read only what they need from it.
+1. 接收来自应用程序的消息
+2. 保持这些消息的接收顺序
+3. 允许其他应用程序按顺序读取这些消息
 
-Here's a basic idea of how this might look:
+*一个使用 Kafka 的情境:*
 
-![Kafka Flow Example]({% asset kafka-flow-example.png @path %})
+假设我们要为用户保留活动日志。 每当用户在您的网站上触发事件（登录，搜索，单击 banner 等）时，您都希望记录该活动。 您还希望允许多个服务访问此活动日志，例如市场营销跟踪器，用户数据聚合器，当然还有您网站的前端应用程序。 我们可以将每个活动发送到 Kafka，而不是将每个活动都保存到您自己的数据库中，并允许所有这些应用程序仅从其中读取所需内容。
 
-The three services reading from Kafka would only take the pieces of data that they require. For example, the first service would only read from the `banner_click` topic while the last only from `search_term`. The second service that cares about active users might read from both topics to capture all site activity.
+这是基本工作流：
 
-## Basic Kafka terminology
+![Kafka Flow 示例](https://elixirschool.com/assets/kafka-flow-example-54e132a09ce085f3d3dcfb48120bd04b1b470935b807d1cfe0fdfc35d4c9c9fa.png)
 
-Before we jump into the codealong let's clarify a few common Kafka terms you'll run into as you're learning more about this service:
+从 Kafka 读取的三个服务将仅获取它们所需的数据。 例如，第一个服务只能从 `banner_click` topic 中读取，而最后一个只能从 `search_term` 中读取。 关心活跃用户的第二项服务可能会从这两个 topic 中读取信息，以捕获所有站点活动。
 
-- **consumer:** what is receiving messages from Kafka
-- **producer:** what is sending messages to Kafka
-- **topic:** a way to organize messages and allow consumers to only subscribe to the ones they want to receive
-- **partition:** allows a topic to be split among multiple machines and retain the same data so that more than one consumer can read from a single topic at a time
-- **leader/replica:** these are types of partitions. There is one leader and multiple replicas. The leader makes sure the replicas have the same and newest data. If the leader fails, a replica will take over as leader.
-- **offset:** the unique identifier of a message that keeps its order within Kafka
+## Kafka 基本术语
 
-## Codealong: basic Elixir app & Kafka running locally
+在开始进入代码之前，让我们先澄清一些常见的 Kafka 术语，这些术语在您学习有关此服务的更多知识时会遇到：
 
-### Set up Kafka Server
-Follow the first two steps of the [quickstart instructions](http://kafka.apache.org/documentation/#quickstart) from Apache Kafka:
-1. [Download the code](https://www.apache.org/dyn/closer.cgi?path=/kafka/2.1.0/kafka_2.11-2.1.0.tgz)
-2. Start the servers
-Zookeeper (a service that handles some coordination and state management for Kafka)
-`bin/zookeeper-server-start.sh config/zookeeper.properties`
-Kafka
-`bin/kafka-server-start.sh config/server.properties`
+- **消费者：** 从 Kafka 接收邮件
+- **生产者：** 向 Kafka 发送消息
+- **主题：** 一种组织消息并允许消费者仅订阅他们想要接收的消息的方法
+- **分区：** 允许将主题在多台计算机之间拆分并保留相同的数据，以便一次有多个消费者可以从一个主题中读取内容
+- **领导者/副本：** 这些是分区的类型。 有一个领导者和多个副本。 领导者确保副本具有相同和最新的数据。 如果领导者失败，则副本将接管领导者。
+- **偏移量：** 消息的唯一标识符，可在 Kafka 中保持其顺序
+## 代码: 基础的 elixir 应用 & 本地运行的 Kafka 
+### 设置 Kafka 服务器
+请遵循 Apache Kafka 的[快速开始说明](http://kafka.apache.org/documentation/#quickstart) 的前两个步骤：
 
+1. [下载代码](https://www.apache.org/dyn/closer.cgi?path=/kafka/2.1.0/kafka_2.11-2.1.0.tgz)
 
-### Set up Elixir App
+2. 启动服务器  
 
-* **1. Start new project**
-`mix new elixir_kaffe_codealong`
+    Zookeeper（一项为 Kafka 处理某些协调和状态管理的服务）  
 
-* **2. Configure kaffe**
-- **2.a:** In `mix.exs` add `:kaffe` to the list of extra applications:
-```elixir
-def application do
-  [
-    extra_applications: [:logger, :kaffe]
-  ]
-end
-```
+    `bin / zookeeper-server-start.sh config / zookeeper.properties`  
 
-- **2.b:** Add kaffe to list of dependencies:
-```elixir
-defp deps do
-  [
-    {:kaffe, "~> 1.9"}
-  ]
-end  
-```
+    Kafka  
 
-- **2.c:** Run `mix deps.get` in the terminal to lock new dependencies.
+    `bin / kafka-server-start.sh config / server.properties`
 
-* **3. Configure producer**
-in `config/config.exs` add:
-```elixir
-config :kaffe,
-  producer: [
-    endpoints: [localhost: 9092],
-    # endpoints references [hostname: port]. Kafka is configured to run on port 9092.
-    # In this example, the hostname is localhost because we've started the Kafka server
-    # straight from our machine. However, if the server is dockerized, the hostname will
-    # be called whatever is specified by that container (usually "kafka")
-    topics: ["our_topic", "another_topic"], # add a list of topics you plan to produce messages to
-  ]
-```
+### 设置 Elixir 应用
 
-* **4. Configure consumer**
+* **1. 创建一个新项目**
 
-- **4.a:** add `/lib/application.ex` with the following code:
-```elixir
-defmodule ElixirKaffeCodealong.Application do
-  use Application # read more about Elixir's Application module here: https://hexdocs.pm/elixir/Application.html
+  `mix new elixir_kaffe_codealong`
 
-  def start(_type, args) do
-    import Supervisor.Spec
-    children = [
-      worker(Kaffe.Consumer, []) # calls to start Kaffe's Consumer module
-    ]
-    opts = [strategy: :one_for_one, name: ExampleConsumer.Supervisor]
-    Supervisor.start_link(children, opts)
-  end
-end
-```
-- **4.b:** back in `mix.exs`, add a new item to the application function:
-```elixir
-def application do
-  [
-    extra_applications: [:logger, :kaffe],
-    mod: {ElixirKaffeCodealong.Application, []}
-    # now that we're using the Application module, this is where we'll tell it to start.
-    # We use the keyword `mod` with applications that start a supervision tree,
-    # which we configured when adding our Kaffe.Consumer to Application above.
-  ]
-end
-```
-- **4.c:** add a consumer module to accept messages from Kafka as `/lib/example_consumer.ex` with the following code:
-```elixir
-defmodule ExampleConsumer do
-  # function to accept Kafka messaged MUST be named "handle_message"
-  # MUST accept arguments structured as shown here
-  # MUST return :ok
-  # Can do anything else within the function with the incoming message
+* **2. 配置 kaffe**
 
-  def handle_message(%{key: key, value: value} = message) do
-    IO.inspect(message)
-    IO.puts("#{key}: #{value}")
-    :ok
-  end
-end
-```
-- **4.d:** configure the consumer module in `/config/config.exs`
-```elixir
-config :kaffe,
-  consumer: [
-    endpoints: [localhost: 9092],               
-    topics: ["our_topic", "another_topic"],     # the topic(s) that will be consumed
-    consumer_group: "example-consumer-group",   # the consumer group for tracking offsets in Kafka
-    message_handler: ExampleConsumer,           # the module that will process messages
-  ]
-```
+  - **2.a:** 在 `mix.exs` 中添加 `:kaffe` 至额外的应用列表中:
 
-* **5. Add a producer module (optional, can also call Kaffe from the console)**
-We're going to wrap the functions Kaffe provides us in our own methods for ExampleProducer. Calling on Kaffe directly would also work; the `produce_sync` function is what ultimately sends our message to Kafka.
+    ```elixir
+    def application do
+      [
+        extra_applications: [:logger, :kaffe]
+      ]
+    end
+    ```
 
-add `/lib/example_producer.ex` with the following code:
-```elixir
-defmodule ExampleProducer do
-  def send_my_message({key, value}, topic) do
-    Kaffe.Producer.produce_sync(topic, [{key, value}])
-  end
+  - **2.b:** 添加 kaffe 到依赖列表中:
 
-  def send_my_message(key, value) do
-    Kaffe.Producer.produce_sync(key, value)
-  end
+      ```elixir
+      defp deps do
+        [
+          {:kaffe, "~> 1.9"}
+        ]
+      end  
+      ```
 
-  def send_my_message(value) do
-    Kaffe.Producer.produce_sync("sample_key", value)
-  end
-end
-```
+  - **2.c:** 在命令行终端运行 `mix deps.get` 以锁定新的依赖.
 
-* **6. Send and receive messages in the console!**
+* **3. 配置 producer**
 
-Now we have everything configured and can use the modules we've created to send and read messages through Kafka!
+  在 `config/config.exs` 中添加:
 
-1. We're going to call on our producer to send a message to the Kafka server.
-2. The Kafka server receives the message.
-3. Our consumer, which we configured to subscribe to the topic called "another_topic", will receive the message we've sent and print it to the console.
+    ```elixir
+    config :kaffe,
+      producer: [
+        endpoints: [localhost: 9092],
+        # endpoints references [hostname: port]. Kafka is configured to run on port 9092.
+        # In this example, the hostname is localhost because we've started the Kafka server
+        # straight from our machine. However, if the server is dockerized, the hostname will
+        # be called whatever is specified by that container (usually "kafka")
+        topics: ["our_topic", "another_topic"], # add a list of topics you plan to produce messages to
+      ]
+    ```
 
-Start an interactive elixir shell with `iex -S mix` and call the following:
-```sh
-iex> ExampleProducer.send_my_message({"Metamorphosis", "Franz Kafka"}, "another_topic")
-...>[debug] event#produce_list topic=another_topic
-...>[debug] event#produce_list_to_topic topic=another_topic partition=0
-...>:ok
-iex> %{
-...> attributes: 0,
-...> crc: 2125760860, # will vary
-...> key: "Metamorphosis",
-...> magic_byte: 1,
-...> offset: 1, # will vary
-...> partition: 0,
-...> topic: "another_topic",
-...> ts: 1546634470702, # will vary
-...> ts_type: :create,
-...> value: "Franz Kafka"
-...> }
-...> Metamorphosis: Franz Kafka
-```
+* **4. 配置 consumer**
 
-## Variations: Docker & Umbrella Apps
-- If you're running Kafka from a docker container (most common in real applications), you will use that hostname in the config file rather than `localhost`
-- In an umbrella app you'll configure Kaffe in the child application running it. If you have apps separated by environment, you can start the consumer by structuring it as a child like this:
+    - **4.a:** 在 `/lib/application.ex` 中添加以下代码:
+
+      ```elixir
+      defmodule ElixirKaffeCodealong.Application do
+        use Application # read more about Elixir's Application module here: https://hexdocs.pm/elixir/Application.html
+
+        def start(_type, args) do
+          import Supervisor.Spec
+          children = [
+            worker(Kaffe.Consumer, []) # calls to start Kaffe's Consumer module
+          ]
+          opts = [strategy: :one_for_one, name: ExampleConsumer.Supervisor]
+          Supervisor.start_link(children, opts)
+        end
+      end
+      ```
+
+    - **4.b:** 回到 `mix.exs`, 在 application 函数中新增一个条目：
+        
+      ```elixir
+      def application do
+        [
+          extra_applications: [:logger, :kaffe],
+          mod: {ElixirKaffeCodealong.Application, []}
+          # now that we're using the Application module, this is where we'll tell it to start.
+          # We use the keyword `mod` with applications that start a supervision tree,
+          # which we configured when adding our Kaffe.Consumer to Application above.
+        ]
+      end
+      ```
+  - **4.c:** 在 `/lib/example_consumer.ex` 添加一个 consumer 模块接收来自 Kafka 的消息
+
+    ```elixir
+    defmodule ExampleConsumer do
+      # function to accept Kafka messaged MUST be named "handle_message"
+      # MUST accept arguments structured as shown here
+      # MUST return :ok
+      # Can do anything else within the function with the incoming message
+
+      def handle_message(%{key: key, value: value} = message) do
+        IO.inspect(message)
+        IO.puts("#{key}: #{value}")
+        :ok
+      end
+    end
+    ```
+  - **4.d:** 在 `/config/config.exs` 中配置 consumer 模块
+
+    ```elixir
+    config :kaffe,
+      consumer: [
+        endpoints: [localhost: 9092],               
+        topics: ["our_topic", "another_topic"],     # the topic(s) that will be consumed
+        consumer_group: "example-consumer-group",   # the consumer group for tracking offsets in Kafka
+        message_handler: ExampleConsumer,           # the module that will process messages
+      ]
+    ```
+
+* **5. 添加生产者模块（可选，也可以从控制台调用 Kaffe）**
+
+  我们将在自己的 ExampleProducer 方法中包装 Kaffe 提供的功能。 直接调用 Kaffe 也可以； `produce_sync` 函数最终将我们的消息发送给 Kafka。
+
+  在 `/lib/example_producer.ex` 中增加以下代码:
+
+    ```elixir
+    defmodule ExampleProducer do
+      def send_my_message({key, value}, topic) do
+        Kaffe.Producer.produce_sync(topic, [{key, value}])
+      end
+
+      def send_my_message(key, value) do
+        Kaffe.Producer.produce_sync(key, value)
+      end
+
+      def send_my_message(value) do
+        Kaffe.Producer.produce_sync("sample_key", value)
+      end
+    end
+    ```
+
+* **6. 在控制台中发送和接收消息！**
+
+  现在，我们已经完成了所有配置，可以使用我们创建的模块通过 Kafka 发送和读取消息！
+
+  1. 我们将调用生产者将消息发送到 Kafka 服务器。
+  2. Kafka 服务器收到消息。
+  3. 我们配置为订阅名为 `another_topic` 的主题的使用者，将收到我们发送的消息并将其打印到控制台。
+
+  使用 `iex -S mix` 启动一个 elixir 交互式命令行，然后调用以下命令：
+
+  ```sh
+  iex> ExampleProducer.send_my_message({"Metamorphosis", "Franz Kafka"}, "another_topic")
+  ...>[debug] event#produce_list topic=another_topic
+  ...>[debug] event#produce_list_to_topic topic=another_topic partition=0
+  ...>:ok
+  iex> %{
+  ...> attributes: 0,
+  ...> crc: 2125760860, # will vary
+  ...> key: "Metamorphosis",
+  ...> magic_byte: 1,
+  ...> offset: 1, # will vary
+  ...> partition: 0,
+  ...> topic: "another_topic",
+  ...> ts: 1546634470702, # will vary
+  ...> ts_type: :create,
+  ...> value: "Franz Kafka"
+  ...> }
+  ...> Metamorphosis: Franz Kafka
+  ```
+
+## 变体: Docker & Umbrella Apps
+
+- 如果您是从 docker 容器（在实际应用中最常见）运行 Kafka，则将在配置文件中使用该主机名，而不是 `localhost`
+
+- 在 umbrella app 中，您将在运行它的子应用程序中配置 Kaffe。 如果您的应用程序被环境分隔开，则可以通过将其构造为子级来启动使用者，如下所示：
+
 ```elixir
     children = case args do
       [env: :prod] -> [worker(Kaffe.Consumer, [])]
@@ -210,23 +233,29 @@ iex> %{
     end
 ```
 
-## Troubleshooting Errors
-- **No leader error**
-```
-** (MatchError) no match of right hand side value: {:error, :LeaderNotAvailable}
-```
-Solution: Try again. It just needed a minute to warm up.
+## 排除错误
 
-- **Invalid Topic error**
-```
-** (MatchError) no match of right hand side value: {:error, :InvalidTopicException}
-```
-Solution: Your topic shouldn't have spaces in it, does it?
+- **没有 leader 错误**
 
-## The end
-This should have given you the basic setup for you to start exploring more of this on your own, but there's lots more you can do with Kaffe so check out sending multiple messages, consumer groups, etc. If you come up with any more troubleshooting errors you've solved, let us know by [creating an issue here](https://github.com/elixirschool/elixirschool/issues).
+  ```
+  ** (MatchError) no match of right hand side value: {:error, :LeaderNotAvailable}
+  ```
 
-## Resources
+  解决方案：再试一次。 只需一分钟即可预热。
+
+- **无效的 Topic 错误**
+
+  ```
+  ** (MatchError) no match of right hand side value: {:error, :InvalidTopicException}
+  ```
+
+  解决方案：您的 topic 中不应有空格，对吗？
+
+## 结束语
+
+这篇文章应该已经为您提供了基本设置，让您可以自己开始探索更多功能，但是使用 Kaffe 可以做更多的事情，因此请检查发送多条消息，使用 consumer 组等。如果您遇到其他您已解决的错误 ，请通过 [在此处创建问题](https://github.com/elixirschool/elixirschool/issues) 告诉我们。
+
+## 资源
 - [Elixir Kaffe Codealong](https://github.com/elixirschool/elixir_kaffe_codealong)
 - [Kaffe on Github](https://github.com/spreedly/kaffe)
 - [Kaffe on Hexdocs](https://hexdocs.pm/kaffe/Kaffe.html#content)
