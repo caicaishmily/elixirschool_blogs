@@ -9,36 +9,38 @@ title:  Walk-Through of Phoenix LiveView
 excerpt: >
   Learn how to use Phoenix LiveView for real-time features without complicated JS frameworks.
 ---
-It's here! Phoenix LiveView leverages server-rendered HTML and Phoenix's native WebSocket tooling so you can build fancy real-time features without all that complicated JavaScript. If you're sick to death of writing JS (I had a bad day with Redux, don't ask), then this is the library for you!
+# Walk-Through of Phoenix LiveView
 
-Phoenix LiveView is brand brand new so I thought I'd provide a short write-up of a super simple demo I built for anyone looking to get up and running. Keep in mind that the library is still a release candidate and as such, is subject to change.
+它来了！利用服务器渲染的 HTML 和 Phoenix 原生 WebSocket 工具的 Phoenix LiveView 来了，您可以在不使用复杂的 JavaScript 情况下构建花哨的实时功能。如果你厌倦了写JS（我今天和 Redux 的相处的不好，别问了），这就是你要的库。
 
-## What is LiveView?
+Phoenix LiveView 是一个全新的产品，所以我想我会提供一个简短的 demo，为任何想要开始尝试它的人构建一个超级简单的演示。请记住，该库仍然是一个候选版本，因此可能会发生变化。
 
-Chris McCord said it best in his [announcement](https://dockyard.com/blog/2018/12/12/phoenix-liveview-interactive-real-time-apps-no-need-to-write-javascript) back in December:
+## 什么是 LiveView?
 
-> Phoenix LiveView is an exciting new library which enables rich, real-time user experiences with server-rendered HTML. LiveView powered applications are stateful on the server with bidirectional communication via WebSockets, offering a vastly simplified programming model compared to JavaScript alternatives.
+Chris McCord 在 12 月的 [公告](https://dockyard.com/blog/2018/12/12/phoenix-liveview-interactive-real-time-apps-no-need-to-write-javascript) 中已经阐述的很好了。
 
-## Kill Your JavaScript
+> Phoenix LiveView 是一个令人兴奋的新库，它通过服务器渲染的 HTML 实现了丰富的实时用户体验。LiveView 驱动的应用程序在服务器上是有状态的，并通过 WebSockets 进行双向通信，与 JavaScript 替代品相比，它提供了一个非常简化的编程模型。
 
-If you've waded through an overly complex SPA that Reduxes all the things (for example), you've felt the maintenance and iteration costs that often accompany all that fancy JavaScript.
+## 杀掉你的 JavaScript
 
-Phoenix LiveView feels like a perfect fit for the 90% of the time that you do want some live updates but don't actually need the wrecking ball of many modern JS frameworks.
+如果您经历了过于复杂的 SPA（例如，Redux 的所有东西），那么您会感觉到所有花哨的 JavaScript 常常伴随着维护和迭代成本。
 
-Let's get LiveView up and running to support a feature that pushes out live updates as our server enacts a step-by-step process of creating a GitHub repo.
+Phoenix LiveView 感觉非常适合。 90％ 的时间里，您确实希望进行一些实时更新，但实际上并不需要许多现代 JS 框架的破坏球。
 
-Here's the functionality we're building:
+让我们启动并运行 LiveView，以支持一项功能，该功能在我们的服务器执行创建 GitHub 存储库的分步过程时推送实时更新。
+
+下面是我们正在构建的功能。
 
 <div class="responsive-embed">
   <iframe width="560" height="315" src="https://www.youtube.com/embed/8M-Hjj7IBu8" frameborder="0" allowfullscreen></iframe>
 </div>
 <br />
 
-## Getting Started
+## 起步
 
-The following steps are detailed in Phoenix LiveView [Readme](https://github.com/phoenixframework/phoenix_live_view).
+Phoenix LiveView 的 [Readme](https://github.com/phoenixframework/phoenix_live_view) 中详细介绍了以下步骤：
 
-* Install the dependency in your `mix.exs` file:
+* 在你的 `mix.exs` 文件中安装依赖:
 
 ```elixir
 def deps do
@@ -48,7 +50,7 @@ def deps do
 end
 ```
 
-* Update your app's endpoint configuration with a signing salt for your live view connection to use:
+* 使用签名盐更新应用程序的端点配置，以供实时查看连接使用：
 
 ```elixir
 # Configures the endpoint
@@ -58,16 +60,16 @@ config :my_app, MyApp.Endpoint,
     signing_salt: "YOUR_SECRET"
   ]
 ```
-*Note: You can generate a secret by running `mix phx.gen.secret` from the command line.*
+*注: 你可以在命令行使用 `mix phx.gen.secret` 生成一个秘钥*
 
-* Update your configuration to enable writing LiveView templates with the  `.leex` extension.
+* 更新您的配置，以启用扩展名为 `.leex` 的 LiveView 模板。
 
 ```elixir
 config :phoenix,
   template_engines: [leex: Phoenix.LiveView.Engine]
 ```
 
-* Add the live view flash plug to your browser pipeline, after `:fetch_flash`
+* 在 `：fetch_flash` 之后，将 LiveView.Flash 插件添加到浏览器管道中。
 
 ```elixir
 pipeline :browser do
@@ -77,7 +79,7 @@ pipeline :browser do
 end
 ```
 
-* Import the following in your `lib/app_web.ex` file:
+* 将以下内容导入您的 `lib/app_web.ex` 文件中：
 
 ```elixir
 def view do
@@ -95,7 +97,7 @@ def router do
 end
 ```
 
-* Expose a socket for LiveView to use in your endpoint module:
+* 在端点模块中暴露一个 socket，以供 LiveView 使用：
 
 ```elixir
 
@@ -108,7 +110,7 @@ defmodule MyAppWeb.Endpoint do
 end
 ```
 
-* Add LiveView to your NPM dependencies:
+* 在你的 NPM 依赖中添加 LiveView
 
 ```elixir
 # assets/package.json
@@ -119,9 +121,10 @@ end
   }
 }
 ```
-You'll need to run `npm install` after this step.
 
-* Use the LiveView JavaScript library to connect to the LiveView socket in `app.js`
+在这一步之后你需要运行 `npm install`
+
+* 在 `app.js` 中使用 LiveView JavaScript 库连接到 LiveView socket
 
 ```javascript
 import LiveSocket from "phoenix_live_view"
@@ -130,7 +133,7 @@ let liveSocket = new LiveSocket("/live")
 liveSocket.connect()
 ```
 
-* Your live views should be saved in the `lib/my_app_web/live/` directory. For live page reload support, add the following pattern to your `config/dev.exs`:
+* 你的 live views 应保存在 `lib/my_app_web/live/` 目录中。 为了支持页面实时重新加载，请将以下正则添加到您的 `config/dev.exs`中：
 
 ```elixir
 config :demo, MyApp.Endpoint,
@@ -142,11 +145,11 @@ config :demo, MyApp.Endpoint,
   ]
 ```
 
-Now we're ready to build and render a live view!
+现在我们已经准备好构建和渲染一个 live view 了
 
-### Rendering a Live View from the Controller
+### 从控制器渲染一个 Live View
 
-You can [serve live views directly from your router](https://github.com/phoenixframework/phoenix_live_view/blob/master/lib/phoenix_live_view.ex#L86). However, in this example we'll teach our controller to render a live view. Let's take a look at our controller:
+您可以 [直接从路由器提供实时视图](https://github.com/phoenixframework/phoenix_live_view/blob/master/lib/phoenix_live_view.ex#L86)。 但是，在此示例中，我们将让我们的控制器渲染 live view。 让我们来看看我们的控制器：
 
 ```elixir
 defmodule MyApp.PageController do
@@ -159,15 +162,15 @@ defmodule MyApp.PageController do
 end
 ```
 
-We're calling on the `live_render/3` function which takes in an argument of the `conn`, the live view we want to render, and any session info we want to send down into the live view.
+我们调用 `live_render/3` 函数，该函数接受 `conn` 的参数，要呈现的 live view 以及我们要发送到实时视图中的任何会话信息。
 
-Now we're ready to define our very own live view.
+现在，我们准备定义自己的 live view。
 
-### Defining the Live View
+### 定义 Live View
 
-Our first live view will live in `my_app_web/live/github_deploy_view.ex`. This view is responsible for handling an interaction whereby a user "deploys" some content to GitHub. This process involves creating a GitHub organization, creating the repo and pushing up some contents to that repo. We won't care about the implementation details of this process for the purpose of this example.
+我们的第一个 live view 位于 `my_app_web/live/github_deploy_view.ex` 中。该视图负责处理用户将某些内容 “部署” 到 GitHub 的交互。 此过程涉及创建 GitHub 组织，创建存储库并向该存储库推送一些内容。 就本示例而言，我们将不在乎此过程的实现细节。
 
-Our live view will use `Phoenix.LiveView` and must implement two functions: `render/1` and `mount/2`.
+我们的 live view 将使用 `Phoenix.LiveView`，并且必须实现两个功能：`render/1` 和 `mount/2`。
 
 ```elixir
 defmodule MyAppWeb.GithubDeployView do
@@ -189,17 +192,17 @@ defmodule MyAppWeb.GithubDeployView do
 end
 ```
 
-Now that we have the basic pieces in place, let's break down the live view process.
+现在我们已经有了基本的部件，让我们来分析一下 live view 的过程。
 
-### How It Works
+### 它如何工作
 
-The live view connection process looks something like this:
+live view 的连接过程是这样的:
 
-![]({% asset live_view.png @path %})
+![live_view](https://elixirschool.com/assets/live_view-6a1ff8ddee59b55d1ee0b72dc8d47c55e55bdcaf6b788cc65af31afec66836d3.png)
 
-When our app receives an HTTP request for the index route, it will respond by rendering the static HTML defined in our live view's `render/1` function. It will do so by first invoking our view's `mount/2` function, only then rendering the HTML populated with whatever default values `mount/2` assigned to the socket.
+当我们的应用程序接收到 index 路由的 HTTP 请求时，它将通过渲染 live view 的 `render/1` 函数中定义的静态 HTML 来进行响应。它将通过首先调用我们视图的 `mount/2` 函数来实现这一目的，然后再渲染由 `mount/2` 分配给 socket 的任何默认值填充的 HTML。
 
-The rendered HTML will include the signed session info. The session is signed using the signing salt we provided to our live view configuration in `config.exs`. That signed session will be sent back to the server when the client opens the live view socket connection. If you inspect the page rendering your live view in the browser, you'll see that signed session:
+渲染的 HTML 将包括已签名的会话信息。会话将使用我们在 `config.exs` 中提供给 live view 配置的签名盐进行签名。当客户端打开 live view socket 连接时，签名的会话将被送回服务器。如果你在浏览器中检查渲染 live view 的页面，你会看到那个签名的会话。
 
 ```html
 <div
@@ -210,7 +213,7 @@ The rendered HTML will include the signed session info. The session is signed us
 </div>
 ```
 
-Once that static HTML is rendered, the client will send the live socket connect request thanks to this snippet:
+一旦渲染了静态 HTML，由于以下代码段，客户端将发送实时 socket 连接请求：
 
 ```javascript
 import LiveSocket from "phoenix_live_view"
@@ -219,15 +222,15 @@ let liveSocket = new LiveSocket("/live")
 liveSocket.connect()
 ```
 
-This initiates a stateful connection that will cause the view to be re-rendered anytime the socket updates. Since the page first renders as static HTML, we can rest assured that our page will always render for our user, even if JavaScript is disabled in the browser.
+这将启动一个有状态连接，该状态连接将导致 socket 更新时重新渲染视图。 由于页面首先呈现为静态 HTML，因此即使在浏览器中禁用了JavaScript，我们也可以放心，页面将始终为用户呈现。
 
-Now that we understand how the live view is first rendered and how the live view socket connection is established, let's render some live updates.
+现在，我们了解了如何首先呈现 live view 以及如何建立实时视图 socket 连接，让我们渲染一些实时更新。
 
-### Rendering Live Updates
+### 渲染实时更新
 
-LiveView is listening to updates to our socket and will re-render _only the portions of the page that need updating_. Taking a closer look at our `render/1` function, we see that it renders the values of the keys assigned to our socket.
+LiveView 监听套接字的更新，并且只重新渲染页面中需要更新的部分。 仔细研究我们的 `render/1` 函数，我们看到它渲染了分配给套接字的键的值。
 
-Where `mount/2` assigned the values `:deploy_step`, our `render/1` function renders them like this:
+在 `mount/2` 赋值 `:deploy_step` 的情况下，我们的 `render/1` 函数将其渲染为：
 
 ```elixir
 def render(assigns) do
@@ -241,11 +244,11 @@ def render(assigns) do
 end
 ```
 
-*Note: The [`~L`](https://github.com/phoenixframework/phoenix_live_view/blob/master/lib/phoenix_live_view.ex#L159) sigil represents Live EEx. This is the built-in LiveView template. Unlike `.eex` templates, LEEx templates are capable of tracking and rendering only necessary changes. So, if the value of `@deploy_step` changes, our template will re-render only that portion of the page.*
+*注意: [`~L`](https://github.com/phoenixframework/phoenix_live_view/blob/master/lib/phoenix_live_view.ex#L159) 魔符代表 Live EEx。这是内置的 LiveView 模板。与 `.ex` 模板不同的是，LEEx 模板只能够跟踪和渲染必要的变化。因此，如果 `@deploy_step` 的值发生变化，我们的模板将只重新渲染页面的那一部分。*
 
-Let's give our user a way to kick off the "deploy to GitHub" process and see the page update as each deploy step is enacted.
+让我们给用户提供一种方法来启动 "deploy to GitHub" 的过程，并在每个部署步骤被执行时看到页面更新。
 
-LiveView supports DOM element bindings to give us the ability to respond to client-side events. We'll create a "deploy to GitHub" button and we'll listen for the click of that button with the phx-click event binding.
+LiveView 支持 DOM 元素绑定，让我们有能力响应客户端事件。我们将创建一个 "deploy to GitHub" 按钮，并使用 phx-click 事件绑定监听该按钮的点击事件。
 
 ```elixir
 def render(assigns) do
@@ -262,11 +265,11 @@ def render(assigns) do
 end
 ```
 
-The `phx-click` binding will send our click event to the server to be handled by `GithubDeployView`. Events are handled in our live views by the `handle_event/3` function. This function will take in an argument of the event name, a value and the socket.
+`phx-click` 绑定将会把我们的点击事件发送到服务器，由 `GithubDeployView` 处理。在我们的实时视图中，事件由 `handle_event/3` 函数处理。这个函数会接收一个参数，即事件名称、一个值和 socket。
 
-There are a [number of ways to populate the `value` argument](https://github.com/phoenixframework/phoenix_live_view/blob/master/lib/phoenix_live_view.ex#L228), but we won't use that data point in this example.
+有 [许多方法可以填充 `value` 参数](https://github.com/phoenixframework/phoenix_live_view/blob/master/lib/phoenix_live_view.ex#L228)，但我们在这个例子中不会使用这个数据点。
 
-Let's build out our `handle_event/3` function for the `"github_deploy"` event:
+让我们为 "github_deploy" 事件构建 `handle_event/3` 函数。
 
 ```elixir
 def handle_event("github_deploy", _value, socket) do
@@ -275,9 +278,9 @@ def handle_event("github_deploy", _value, socket) do
 end
 ```
 
-Our function is responsible for two things. First, it will kick off the deploy process (coming soon). Then, it will update the value of the `:deploy_step` key in our socket. This will cause our template to re-render the portion of the page with `<%= @deploy_step %>`, so the user will see `Status: Ready!` change to `Status: Starting deploy...`.
+我们的函数负责两件事。首先，它将启动部署过程（coming soon）。然后，它将更新套接字中 `:deploy_step` 键的值，这将导致我们的模板重新渲染页面中 `<%= @deploy_step %>` 的部分。所以用户将看到 `Status: Ready！` 改为 `Status: Starting deploy...`。
 
-Next up, we need the "deploying to GitHub" process to be capable of updating the socket's `:deploy_step` at each turn. We'll have our view's `handle_event/3` function send a message to itself to enact each successive step in the process.
+接下来，我们需要 "部署到 GitHub" 的过程能够在每一次更新 socket 的 `:deploy_step`。我们将让视图的 `handle_event/3` 函数向自己发送一条消息，以推送过程中的每一个连续步骤。
 
 ```elixir
 def handle_event("github_deploy", _value, socket) do
@@ -309,15 +312,15 @@ def handle_info(:done, socket) do
 end
 ```
 
-*This code is dummied-up––we're not worried about the implementation details of deploying our GitHub repo, but we can imagine how we might add error handling and other responsibilities into this code flow.*
+*这段代码很简单--我们并不担心部署 GitHub repo 的实现细节，但我们可以想象如何在这个代码流中添加错误处理和其他责任。*
 
-Our `handle_event/3` function kicks off the deploy process by sending the `:create_org` message to the view itself. Our view responds to this message by calling on code that enacts that step and by updating the socket. This will cause our template to re-render once again, so the user will see `Status: Starting deploy...` change to `Status: Creating GitHub org...`. In this way, the view enacts each step in the GitHub deploy process, updating the socket and causing the template to re-render each time.
+我们的 `handle_event/3` 函数通过发送 `:create_org` 消息给视图本身来启动部署过程。我们的视图通过调用执行该步骤的代码和更新套接字来响应此消息。这将导致我们的模板再次重新渲染，所以用户会看到 `Status: Starting deploy...` 改为 `Status: Creating GitHub org...`。这样，视图就会执行 GitHub 部署过程中的每一步，更新 socket，并使模板每次都重新渲染。
 
-Now that we have our live updates working, let's refactor the HTML code out of our `render/1` function and into its own template file.
+现在我们的实时更新已经开始工作了，让我们把 HTML 代码从 `render/1` 函数中重构一下，放到自己的模板文件中。
 
-### Rendering a Template File
+### 渲染一个模板文件
 
-We'll define our template in `lib/my_app_web/templates/page/github_deploy.html.leex`:
+我们将模板定义在 `lib/my_app_web/templates/page/github_deploy.html.leex`:
 
 ```html
 <div>
@@ -330,8 +333,7 @@ We'll define our template in `lib/my_app_web/templates/page/github_deploy.html.l
 </div>
 ```
 
-Next, we'll have our live view's `render/1` function simply tell our `PageView` to render this template:
-
+接下来，我们只需要简单地让 live view 的 `render/1` 函数告诉我们的 `PageView` 去渲染这个模板。
 
 ```elixir
 defmodule MyApp.GithubDeployView do
@@ -344,8 +346,8 @@ defmodule MyApp.GithubDeployView do
 end
 ```
 
-Now our code is a bit more organized.
+现在我们的代码更有条理了。
 
-## Conclusion
+## 结语
 
-From even this limited example, we can see what a powerful offering this is. We were able to implement this real-time feature with only server-side code, and not that many lines of server-side code at that! I really enjoyed playing around with Phoenix LiveView and I'm excited to see what other devs build with it. Happy coding!
+从这个有限的例子中，我们可以看到这是一个多么强大的产品。我们只用服务器端的代码就能实现这个实时功能，而且服务器端的代码还不多。我真的很喜欢玩 Phoenix LiveView，我很高兴看到其他开发人员用它构建的东西。祝你编码愉快!
