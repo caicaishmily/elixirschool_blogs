@@ -69,7 +69,7 @@ config :phoenix,
   template_engines: [leex: Phoenix.LiveView.Engine]
 ```
 
-* 在 `：fetch_flash` 之后，将 LiveView.Flash 插件添加到浏览器管道中。
+* 在 `:fetch_flash` 之后，将 LiveView.Flash 插件添加到浏览器管道中。
 
 ```elixir
 pipeline :browser do

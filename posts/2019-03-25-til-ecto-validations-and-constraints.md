@@ -10,16 +10,19 @@ excerpt: >
   Let's take a look at how Ecto handles these two ways of ensuring data integrity
 ---
 
-Developers want to create the best applications they can for their users. In the process, they want to make sure to give good feedback to their users when data doesn't get saved into the database. In Elixir, there is a great tool on top of the database that helps -- Ecto! It can put validations and constraints onto specific fields to ensure data integrity.
+# TIL Ecto 约束和验证
 
-However, did you know they are differences between validations and constraints? I didn't. In the process of building a side project, I ran into the problem a few times! Let's discuss the purpose of each approach and see the differences between them. We'll dive into **why we need each** towards the end.
+开发人员希望为用户创造最好的应用。在这个过程中，他们希望确保在数据没有被保存到数据库中时，能够给用户提供良好的反馈。
 
-## Data Integrity is Rule #1
+在 Elixir 中，数据库之上有一个很好的工具可以帮助他们-- Ecto! 它可以对特定字段进行验证和约束，以确保数据的完整性。
 
-> Data Integrity is the maintenance of, and the assurance of the accuracy and consistency of, data over its entire lifecycle
-> - [Wikipedia](https://en.wikipedia.org/wiki/Data_integrity)
+然而，你知道验证和约束之间有区别吗？我不知道。在建立一个副项目的过程中，我遇到了几次问题！我想说的是，这两种方法都是为了确保数据的完整性。让我们讨论一下每种方法的目的，看看它们之间的区别。我们会在最后深入探讨**为什么我们需要它们**。
 
-So we're building a super cool app with users that can login and logout. We'd probably have some schema like this:
+## 数据完整性是规则 #1
+
+> 数据完整性是指在数据的整个生命周期中维护和保证数据的准确性和一致性。 -- [维基百科](https://en.wikipedia.org/wiki/Data_integrity)
+
+因此，我们正在构建一个超级酷的应用程序，用户可以登录和登出。我们可能会有这样的一些模式。
 
 ```elixir
 # Using Phoenix 1.4 with Contexts but still applies all the same
@@ -38,7 +41,7 @@ defmodule MyCoolWebApp.Accounts.User do
 end
 ```
 
-Inside of our schema, we'd want to describe the `changeset`. Ecto.Changesets allow us to filter, cast, validate, and constrain the structs created by our schema that represents the database records. Let's take a look at a changeset that _only_ casts:
+在我们的 schema 里面，我们要描述 `changeset`。Ecto.Changesets 允许我们过滤、铸造、验证和约束由我们的模式创建的代表数据库记录的结构。让我们来看看一个 _只_ 铸造的 changeset。
 
 ```elixir
 def changeset(user, attrs) do
@@ -47,15 +50,15 @@ def changeset(user, attrs) do
 end
 ```
 
-If this was all we had, we might have a few headaches come our way. It is very easy to prematurely submit a form without filling all the fields out. Potentially, now the user's profile has a lovely email or password of `nil`, or worse `""`, in the database. This would suck, for the user(s) and the developer(s).
+如果我们只有这些，可能就会有一些让人头疼的事情发生。很容易在没有填写所有字段的情况下过早地提交表格。潜在地，现在数据库中用户的个人资料里电子邮件或密码拥有一个可爱的 `nil`，或者更糟的 `""`。这对用户和开发者来说都是很糟糕的事情。
 
-So in order to fix, we'd use a validation!
+因此，为了解决这个问题，我们将使用一个验证!
 
-### Validations
+### 验证
 
-Many of the validations we have in Ecto will be executed without needing to interact with the database. That means the validation will be executed prior to the attempt of inserting or updating something in the database. If we wanted to insert a new user into our database, we'd first want to make sure there is data inside of the changeset.
+Ecto 中的许多验证将在不需要与数据库交互的情况下被执行，这意味着验证将在尝试插入或更新数据库之前被执行。如果我们想在数据库中插入一个新的用户，我们首先要确保 changeset 里面有数据。
 
-Let's add the [`validate_required/3`](https://hexdocs.pm/ecto/Ecto.Changeset.html#validate_required/3) into our `changeset`:
+让我们往 `changeset` 添加 [`validate_required/3`](https://hexdocs.pm/ecto/Ecto.Changeset.html#validate_required/3):
 
 ```elixir
 def changeset(user, attrs) do
@@ -65,7 +68,7 @@ def changeset(user, attrs) do
 end
 ```
 
-And for free, Ecto adds descriptive errors to our changeset:
+而且，Ecto 免费为我们的 changeset 增加了描述性错误。
 
 ```elixir
 iex> %User{} |> User.changeset(%{})
@@ -82,17 +85,16 @@ iex> %User{} |> User.changeset(%{})
 >
 ```
 
-There are a ton of validations out there that can enhance your app! Take a look at the documentation for [Ecto.Changeset](https://hexdocs.pm/ecto/Ecto.Changeset.html#summary). In the next section, we'll look at why we need to apply constraints and how to use them.
+有很多验证可以增强你的应用程序！请看一下 [Ecto.Changeset](https://hexdocs.pm/ecto/Ecto.Changeset.html#summary) 的文档。在下一节，我们将看看为什么需要应用约束，以及如何使用它们。
+### 约束
 
-### Constraints
+如果我们使用了验证，那为什么还需要约束呢？让我们想想我们之前使用的很多应用。当我们注册一个应用程序时，我们是否可以用与另一个用户相同的电子邮件来注册？（提示：答案应该永远是否定的）。
 
-If we use validations, why would we also need constraints? Let's think about many apps that we use. When we sign up for an application, are we allowed to signup with the same email as another user? (Hint: the answer should always be no.)
+那么，为什么我们就不能有一个唯一性的验证呢？记住，根据定义，验证是 _在检查数据库之前_ 执行的。如果我们有一个唯一性的验证，那就意味着所有的东西都是唯一的，即使你添加了重复的内容，因为它不检查数据库。
 
-So why couldn't we just have a validation for uniqueness? Remember that, by definition validations are executed _prior to checking the database_. If we were to have a validation for uniqueness, that would mean everything is unique even if you're adding duplicates since it doesn't look at the database.
+约束是一个由 **数据库** 执行的规则。你的应用程序将首先运行 Ecto.Changeset 的验证，而不是和数据库交互。然后它将通过检查数据库来执行任何约束。
 
-A constraint is a rule that is enforced **by the database**. Your application will run through Ecto.Changeset's validations first without interacting with the database. Then it will execute any constraints by checking the database.
-
-Let's add our first constraint to enforce a user's unique email!
+让我们添加我们的第一个约束来强制用户使用唯一的电子邮件!
 
 ```elixir
 user
@@ -101,7 +103,7 @@ user
 |> unique_constraint(:email)
 ```
 
-If we try to add the user to our database, all looks good the first time:
+如果我们试着往数据库中添加用户，第一次看上去都一切都很好：
 
 ```elixir
 iex> user = %User{}
@@ -120,7 +122,7 @@ iex> user |> User.changeset(attrs) |> Repo.insert()
  }}
 ```
 
-We want to make sure no duplicates get saved, so let's try sending the same thing again:
+我们要确保没有重复的东西被保存下来，所以我们再试着发送同样的东西。
 
 ```elixir
 iex> user = %User{}
@@ -139,10 +141,11 @@ iex> user |> User.changeset(attrs) |> Repo.insert()
  }}
 ```
 
-That's weird. It didn't show us an error? That's because Ecto doesn't know it is an error. In fact,
-it saved the record to the database thinking that it was safe! If you add a constraint to your `changeset/3`, you **must** enforce the constraint at a database level for it to properly throw the uniqueness error. So for our `unique_constraint`, we need to make sure to create a `unique_index` for the email field. Even though you wrote `unique_constraint` in the `changeset/3`, it doesn't check for that constraint unless there is a `unique_index` applied to the database.
+这很奇怪。它没有显示错误？那是因为事实上 Ecto 不知道这是一个错误。
 
-So we need to create and run the migration:
+它认为数据是安全的，然后把记录保存到数据库中! 如果你在 `changeset/3` 中添加了一个约束，你 **必须** 在数据库级别强制执行这个约束，这样它才能正确地抛出唯一性错误。所以对于我们的 `unique_constraint`，我们需要确保为 email 字段创建一个 `unique_index`。即使你在 `changeset/3` 中写了 `unique_constraint`，除非有一个 `unique_index` 约束应用到数据库中，否则它不会检查该约束。
+
+所以我们需要创建并运行 migration：
 
 ```elixir
 defmodule MyCoolWebApp.Repo.Migrations.UpdateUniqueEmailsToUsers do
@@ -158,7 +161,7 @@ end
 $ mix ecto.migrate
 ```
 
-Now if we try again we'll see that our record did not get saved:
+现在如果我们再试一遍，我们将会看到记录没有被保存：
 
 ```elixir
 iex> user = %User{}
@@ -182,19 +185,18 @@ iex> user |> User.changeset(attrs) |> Repo.insert()
  >}
 ```
 
-Now we have an application that makes sure that no two users can share the same email! Constraints are important to ensure that at a database level the data still has integrity.
+现在，我们有了一个确保没有两个用户共享相同电子邮件的应用程序! 约束是很重要的，可以确保在数据库层面上，数据仍然具有完整性。
 
-One caveat to talk about is that where validations can be checked simultaneously, constraints fail one-by-one. If your table has several constraints and each gets violated, your database will only give you an error to the first one it notices. It would be best to catch as much as you can in validations first before applying the constraints.
+不过这里要谈一个注意事项，在验证可以同时检查的情况下，约束会逐一失效。如果你的表有好几个约束，每个约束都被违反，你的数据库只会给你一个它发现的第一个约束错误。最好是在应用约束之前，先在验证中尽可能多的捕获错误。
 
-### Validation, Constraint, or Both?
+### 验证, 约束, 还是两者兼而有之?
 
-Validations and constraints have the same goal of making sure that your data has integrity. Two good questions we should ask ourselves when considering each:
+验证和约束有同样的目标，即确保你的数据具有完整性。在考虑应用哪一个时，我们应该问自己两个问题。
 
-1. Are you trying to prevent bad data from being written to your database? Then you **must** have a constraint.
-2. Are you preventing user errors in the app that they can fix themselves? You can use a validation.
+1. 你是想防止脏数据写入数据库吗？那你**必须**要有一个约束。
+2. 你是想要让用户在应用中发现他们自己可以修复的错误吗？这时你可以使用验证。
 
-We need both when we need to check the data in different ways to ensure that integrity. In this example, we needed to check if the user sent non-empty data before we saved to the database and we also wanted to make sure that they didn't have any duplicate data. They can't know they had a user in our database with that email, so we have a constraint. However, they can fix a field they forgot to fill in, so we have a validation.
+当我们需要以不同的方式检查数据以确保数据的完整性时，我们需要这两者。在这个例子中，我们需要在保存到数据库之前检查用户是否发送了非空数据，我们还想确保他们没有任何重复的数据。他们不能知道在我们的数据库中已经有一个他们的电子邮件，所以我们有一个约束。然而，他们可以修正他们忘记填写的字段，所以我们有一个验证。
+### 结语
 
-### Conclusion
-
-Ecto is a powerful tool for developers to make it easier to interface with the database. However, it is so important for us to understand what it is doing for us so that we use it properly. As you're thinking of your database design, make sure to start off and think about the validations and constraints you need to enforce!
+Ecto 对于开发人员来说是一个强大的工具，它可以让他们更容易地与数据库对接。然而，了解它的重要性，这样我们才能正确使用它。当你在考虑你的数据库设计时，一定要先考虑一下你需要执行的验证和约束!
