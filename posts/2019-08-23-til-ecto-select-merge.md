@@ -10,7 +10,7 @@ excerpt: >
   Before you reach for adding another association to your schema, consider using `Ecto.Query#select_merge/3` with a virtual field instead.
 ---
 
-# til ecto 查询合并
+# TIL 如何使用 Ecto.Query 选择合并
 
 在使用 Elixir 和 Ecto 的过程中，我遇到过这样的情况：我需要从一个表中检索数据，也许还要从一个未关联的表中检索一两个字段。过去，每当发生这种情况时，我通常会做一些我不是很满意的事情--也许是更新模式，把它分成多个查询，或者是建立一个多查询语句，如果我觉得很有创意的话。
 

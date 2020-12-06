@@ -9,7 +9,7 @@ title:  Walk-Through of Phoenix LiveView
 excerpt: >
   Learn how to use Phoenix LiveView for real-time features without complicated JS frameworks.
 ---
-# Walk-Through of Phoenix LiveView
+# 直通 Phoenix LiveView
 
 它来了！利用服务器渲染的 HTML 和 Phoenix 原生 WebSocket 工具的 Phoenix LiveView 来了，您可以在不使用复杂的 JavaScript 情况下构建花哨的实时功能。如果你厌倦了写JS（我今天和 Redux 的相处的不好，别问了），这就是你要的库。
 

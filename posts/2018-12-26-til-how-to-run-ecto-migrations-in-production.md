@@ -10,7 +10,7 @@ excerpt: >
   What to do when you can't use `mix ecto.migrate`
 ---
 
-# til 如何在生产环境运行 ecto migrations
+# TIL 如何在生产环境运行 Ecto Migrations
 
 你可能认为这个问题的答案只需要简单的谷歌搜索就能找到。不幸的是，情况并非如此，今天下午我正在处理一个带有新添加的 Ecto 后台的 Phoenix 项目。为了让其他人（说实话，未来的我）免于同样的挫折，这里是我找到的最直接的解决方案。
 

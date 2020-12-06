@@ -10,7 +10,7 @@ excerpt: >
   Capture the output from Logger to clean up your test runs
 ---
 
-# til capture log in exunit tests
+# TIL 关于 ExUnit 的 capture_log 选项。
 
 你是否曾经运行过 `mix test`，看到红色的错误信息被记录下来，而事实上，你的所有测试都通过了？当在 "sad path" 代码流中调用 `Logger.error/1` 增加测试覆盖范围时，经常会出现这种情况。
 

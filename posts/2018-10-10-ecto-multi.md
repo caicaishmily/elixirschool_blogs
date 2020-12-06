@@ -9,7 +9,7 @@ title:  A brief guide to Ecto.Multi
 excerpt: Learn how to compose and execute batches of queries using Ecto.Multi.
 ---
 
-# Ecto multi
+# Ecto.Multi 简单指导
 
 Ecto.Multi 是一套旨在合成和执行原子操作的实用程序，通常（但并不总是，你很快就会看到）针对数据库执行。此外，它还能处理回滚，提供成功或错误的结果，扁平化嵌套代码，并节省多次往返数据库的时间。
 

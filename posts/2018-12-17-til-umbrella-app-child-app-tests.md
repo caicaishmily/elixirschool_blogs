@@ -10,7 +10,7 @@ excerpt: >
   Run all of the tests, or just a specific tests, for a given child app in an umbrella application with this handy command.
 ---
 
-# til umbrella app child app tests
+# TIL 在 Umbrella 子应用中如何运行测试
 
 如果你正在开发一个有多个子应用的 Elixir umbrella 应用，那么你就会知道，为整个 umbrella 应用运行测试并不总是那么理想。它可能需要一段时间才能运行，而且在仅对子应用进行开发时，很难对某一特定的故障集进行归类。
 

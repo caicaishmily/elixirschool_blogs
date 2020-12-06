@@ -9,7 +9,7 @@ excerpt: >
   Elixircards show us how modern learning tools should work through their Elixir Decks.
 ---
 
-# elixir cards review
+# Reviewing Elixircards
 
 在本系列的下一部分，我们将对 [Elixircards](https://elixircards.co.uk/) 的 6 张卡牌进行评测。
 

@@ -9,7 +9,7 @@ excerpt: >
   Take a dive into flexible version management of Elixir, Erlang, and OTP with `asdf`!
 ---
 
-# asdf 版本管理
+# 使用 asdf 进行不可知版本管理
 ## 它是啥？
 
 很多时候我们需要使用多个版本的工具。

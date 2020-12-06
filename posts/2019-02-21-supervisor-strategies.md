@@ -7,7 +7,7 @@ excerpt: >
   Learn the ins and outs of Elixir's 3 supervisor strategies
 ---
 
-# 监督策略
+# ELixir 监督策略
 
 OTP 和 Elixir 的独特之处在于，应用程序可以采取与它们启动的不同进程的监督者行为模式。
 

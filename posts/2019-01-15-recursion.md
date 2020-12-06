@@ -9,7 +9,7 @@ excerpt: >
   De-mystify the concept of recursion and gain a deeper understanding of how and why to use it by writing our very own recursive function in Elixir.
 ---
 
-# 递归
+# 理解 Elixir 中的递归
 
 "递归" 对于我们这些不熟悉其应用的人来说，可能是一个可怕的词。在这篇文章中，我们将通过在 Elixir 中编写我们自己的递归函数，来消除递归概念的神秘感，并深入了解如何以及为什么要使用它。
 

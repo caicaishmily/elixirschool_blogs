@@ -10,7 +10,7 @@ excerpt: >
   Use Joken and JOSE for a light-weight implementation of JWT Auth in your Elixir web application.
 ---
 
-# JWT auth with joken
+# JWT Auth in Elixir with Joken
 
 [JSON Web Tokens](https://jwt.io/introduction/)，即 JWTs，允许我们通过将认证信息加密到一个安全、紧凑的 JSON 对象中，并进行数字签名来验证客户端和服务器之间的请求。在这篇文章中，我们将使用 [Joken](https://github.com/bryanjos/joken) 库在 Phoenix 应用中实现 JWT auth。我们将专注于使用 ECDSA 私钥/公钥对签署的 JWT，尽管你也可以使用 HMAC 算法签署 JWT。
 

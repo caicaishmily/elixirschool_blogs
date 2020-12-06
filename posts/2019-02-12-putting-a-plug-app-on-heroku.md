@@ -9,7 +9,7 @@ excerpt: >
   Want to put your app in the real world? Today we do it with Heroku!
 ---
 
-# putting a plug app on heroku
+# 在 Heroku 上部署我们的 `Plug.Router` 应用
 
 在上一篇文章 [用 Plug.Router 构建 Web 应用](https://elixirschool.com/blog/building-apps-with-plug-router/)中，我们只用 `Plut.Router` 构建了一个网站。
 

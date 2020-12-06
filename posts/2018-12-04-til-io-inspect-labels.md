@@ -9,7 +9,7 @@ excerpt: >
   Did you know you could label your output?  Neither did we!  Check out today's TIL to learn more.
 ---
 
-# TIL IO.Inspect labels
+# TIL about `IO.inspect/2`'s `:label` opt
 
 如果你曾经发现自己在调试 Elixir，那么你可能很熟悉 `IO.inspect/2`，但为了以防万一，让我们看看一个如何使用它的例子。
 

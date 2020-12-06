@@ -10,7 +10,7 @@ excerpt: >
   A look at umbrella applications and how they can help us write cleaner maintainable code.
 ---
 
-# 雨伞是下雨时用的
+# 雨伞：只有在下雨的时候才用？
 
 umbrella 应用是许多用户不熟悉的功能强大的工具。
 
