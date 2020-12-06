@@ -31,7 +31,7 @@
 - [ ] [liveview with pubsub](./posts/2019-04-11-live-view-with-pub-sub.md)
 - [ ] [til ecto validations and constraints](./posts/2019-03-25-til-ecto-validations-and-constraints.md)
 - [ ] [phoenix liveview](./posts/2019-03-18-phoenix-live-view.md)
-- [ ] [supervisor strategies](./posts/2019-02-21-supervisor-strategies.md)
+- [x] [supervisor strategies](./posts/2019-02-21-supervisor-strategies.md)
 - [x] [putting a plug app on heroku](./posts/2019-02-12-putting-a-plug-app-on-heroku.md)
 - [x] [til genserver handle continue](./posts/2019-02-08-til-genserver-handle-continue.md)
 - [x] [til send after](./posts/2019-02-06-til-send-after.md)
