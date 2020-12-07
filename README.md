@@ -26,7 +26,7 @@
 - [ ] [elixirconf eu 2019 review](./posts/2019-06-06-elixir-conf-eu-2019-review.md)
 - [ ] [liveview with channels](./posts/2019-06-04-live-view-with-channels.md)
 - [ ] [liveview with presence](./posts/2019-05-06-live-view-with-presence.md)
-- [ ] [elixirconf announcement](./posts/2019-05-01-elixirconf-announcement.md)
+- [x] [2019 ElixirConf 公告](./posts/2019-05-01-elixirconf-announcement.md)
 - [x] [TIL 使用 Erlang 端口](./posts/2019-04-17-til-ports.md)
 - [x] [使用 Phoenix LiveView 和 PubSub 构建实时功能](./posts/2019-04-11-live-view-with-pub-sub.md)
 - [x] [TIL Ecto 约束和验证](./posts/2019-03-25-til-ecto-validations-and-constraints.md)
