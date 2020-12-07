@@ -9,36 +9,38 @@ title:  Building Real-Time Features with Phoenix Live View and PubSub
 excerpt: >
   Integrate Phoenix PubSub with LiveView to build real-time features capable of broadcasting updates across a set of clients.
 ---
+# 使用 Phoenix LiveView 和 PubSub 构建实时功能
 
-In an [earlier post](https://elixirschool.com/blog/phoenix-live-view/), we used the brand new (still pre-release at time of writing) Phoenix LiveView library to build a real-time feature with very little backend code and even less JavaScript. LiveView allowed us to easily connect our client to the server via a socket and push updates down to our client. In an app that allows users to "deploy" a repo to GitHub, we achieved the following real-time functionality:
+<!-- TODO: replace href link -->
+在一篇 [早期文章](./2019-03-18-phoenix-live-view.md) 中，我们使用了全新的（在写文章时还未发布）Phoenix LiveView 库来构建一个实时功能，只需要很少的后台代码和更少的 JavaScript。LiveView 允许我们通过套接字轻松地将客户端连接到服务器，并将更新推送到客户端。在一个允许用户将 repo "部署" 到 GitHub 的应用中，我们实现了以下实时功能。
 
 <div class="responsive-embed">
   <iframe width="560" height="315" src="https://www.youtube.com/embed/8M-Hjj7IBu8" frameborder="0" allowfullscreen></iframe>
 </div>
 <br />
 
-But what happens when we have a set of clients that _all_ need to see the _same_ real-time updates? Phoenix Channels might seem like the right fit, but wouldn't it be nice if we could get our existing LiveView to simply broadcast updates to a set of subscribing clients? We can use Phoenix's PubSub module to do exactly that!
+但是，当我们有一组客户 _他们所有人_ 都需要看到 _相同的_ 实时更新时，会发生什么？Phoenix Channels 可能看起来很合适，但如果我们能让现有的 LiveView 简单地将更新广播到一组订阅的客户端，那不是很好吗？我们可以使用Phoenix 的 PubSub 模块来实现这一点!
 
-In this post, we'll learn how to use PubSub to make real-time updates available to all of our LiveView clients, not just the person who clicked the "Deploy to GitHub" button. Our finished product will look like this:
+在这篇文章中，我们将学习如何使用 PubSub 将实时更新展示给所有的 LiveView 客户端，而不仅仅是点击 "部署到 GitHub" 按钮的人。我们的成品将是这样的。
 
 <div class="responsive-embed">
   <iframe width="560" height="315" src="https://www.youtube.com/embed/QLwfYNgVuu0" frameborder="0" allowfullscreen></iframe>
 </div>
 <br />
 
-Let's get started!
+让我们开始吧！
 
-## What is PubSub and Why Do We Need It?
+## PubSub 是什么 & 为什么我们需要它?
 
-PubSub ("publish/subscribe") describes a pattern in which we publish messages to a "topic", such that those messages can be consumed by any number of subscribers. In the context of our web app, a set of clients connected to our server become the subscribers of a given topic. One particular client (the one who clicks the "Deploy to GitHub" button) will publish, or broadcast, messages to that topic, to be picked up and operated on by the other subscribing clients.
+PubSub（"publish/subscribe"，即："发布/订阅"）描述了一种模式，在这种模式中，我们将消息发布到一个 "主题"，这样这些消息就可以被任何数量的订阅者消费。在我们的网络应用中，一组连接到我们服务器的客户端成为一个特定主题的订阅者。其中一个特定的客户端（点击 "部署到 GitHub" 按钮的客户端）将向该主题发布或广播消息，以便被其他订阅客户端接收和操作。
 
-[Phoenix's PubSub library](https://hexdocs.pm/phoenix/1.1.0/Phoenix.PubSub.html) will allow us to set up our own publish/subscribe flow. It's important to note that Phoenix's PubSub library takes advantage of Distributed Elixir––clients across distributed nodes of our app can subscribe to a shared topic and broadcast to that shared topic because PubSub can directly exchange notifications between servers when configured to use the `Phoenix.PubSub.PG2` adapter (more on that later).
+[Phoenix PubSub 库](https://hexdocs.pm/phoenix/1.1.0/Phoenix.PubSub.html) 允许我们设置自己的发布/订阅流程。需要注意的是，Phoenix 的 PubSub 库利用了 Elixir 分布式的优势--我们应用的分布式节点上的客户端可以订阅一个共享话题，并向该共享话题广播，因为 PubSub 在配置使用 `Phoenix.PubSub.PG2` 适配器时，可以直接在服务器之间交换通知（后面会详细介绍）。
 
-First, we'll subscribe our LiveView processes to a shared topic. Then we'll use each live view's socket to push changes out to each subscriber when they receive a broadcast from that topic. In this way, we'll combine the real-time capability provided by LiveView, with the ability to pass messages across a distributed set of clients provided by PubSub.
+首先，我们将我们的 LiveView 进程订阅一个共享主题。然后，我们将使用每个 live view 的套接字，在每个订阅者收到该主题的广播时，将变化推送给他们。通过这种方式，我们将结合 LiveView 提供的实时能力，以及 PubSub 提供的在分布式客户端上传递消息的能力。
 
-## Configuring Phoenix PubSub
+## 配置 Phoenix PubSub
 
-We'll configure our app's endpoint with the `Phoenix.PubSub.PG2` adapter. This way, we'll be able to subscribe clients across distributed nodes of our application, should we deploy it that way. The following configuration in our `config/config.exs` will ensure that the pubsub backend starts up and and exposes its functions via the endpoint module.
+我们使用 `Phoenix.PubSub.PG2` 适配器配置应用程序的端点。如果我们以这种方式部署的话，这样一来，我们就能够在应用的分布式节点上订阅客户端。在 `config/config.exs` 中以下配置将确保 pubsub 在后台启动，并通过端点模块暴露其功能。
 
 ```elixir
 config :my_app, MyAppWeb.Endpoint,
@@ -46,14 +48,12 @@ config :my_app, MyAppWeb.Endpoint,
   ...
 ```
 
-Next up, we'll teach our clients to subscribe to a shared topic in our LiveView.
+接下来，我们将在 LiveView 中教客户端订阅一个共享的主题。
+## 订阅一个主题
 
-## Subscribing to a Topic
+客户端啥时候应该订阅一个主题呢？我们已经有了一个负责渲染视图，接收点击事件并将更改推送到前端的 LiveView。这个 LiveView 还应该订阅一个共享的主题，并向该主题广播，以便实时更新可以在 LiveView 的所有实例中共享。
 
-When should a client subscribe to a topic? We already have a LiveView that is responsible for rendering our view, receiving a click event and pushing out changes to the front-end. This LiveView should also subscribe to a shared topic and broadcast to that topic so that real-time updates can be shared across all instances of the LiveView.
-
-Each LiveView process should subscribe to the topic when the LiveView mounts. We can do that with the `Phoenix.PubSub.subscribe/3` function:
-
+当 LiveView 挂载时，每个 LiveView 进程都应该订阅该主题。我们可以通过 `Phoenix.PubSub.subscribe/3` 函数来实现。
 
 ```elixir
 defmodule MyAppWeb.GithubDeployView do
@@ -73,15 +73,15 @@ defmodule MyAppWeb.GithubDeployView do
 end
 ```
 
-Now that our LiveView instances are subscribed to the topic, we're ready to start broadcasting.
+现在我们的 LiveView 实例已经订阅了该主题，我们准备好开始广播。
 
-## Broadcasting to the Subscribers
+## 广播至订阅者
 
-### A LiveView Refresher
+### 一个 LiveView 刷新器
 
-When do we want to broadcast to our subscribing clients? Before we answer this question, let's take a look at our (slightly refactored) LiveView code. Recall that we are working on an app that allows a user to "deploy" a repo with some contents to GitHub. A user clicks a button which kicks off the several step deployment process (creating an org, creating a repo, pushing some contents).
+什么时候我们需要给订阅客户端广播呢？ 在回答这个问题之前，让我们看一下我们的（稍微重构的）LiveView 代码。 回想一下，我们正在开发一个应用程序，该应用程序允许用户将包含某些内容的存储库 “部署” 到 GitHub。 用户单击一个按钮即可启动几步部署过程（创建组织，创建存储库，推送一些内容）。
 
-So, when a user clicks the "Deploy to GitHub" button on our LiveView's template:
+因此，当用户单击 LiveView 模板上的 “部署到 GitHub” 按钮时：
 
 ```elixir
 <div class="">
@@ -94,18 +94,18 @@ So, when a user clicks the "Deploy to GitHub" button on our LiveView's template:
 </div>
 ```
 
-It will call `MyAppWeb.GithubDeployView.handle_event` with a first argument of our `phx-click`' event, `"deploy"`.
+它将调用 `MyAppWeb.GithubDeployView.handle_event`，第一个参数是我们的 `phx-click` 事件，`"deploy"`。
 
-Our live view will then call on some code that enacts each step in the deployment process by looking up the next step in the `@deployment_steps` module attribute and passing the next message to the live view.
+然后，我们的 live view 将调用一些代码，通过在 `@deployment_steps` 模块属性中查找下一步，并将下一条消息传递给 live view，从而执行部署过程中的每一步。
 
-So when the `"deploy"` event gets fired by the user's button click, our `handle_event/3` function will respond by:
+因此，当用户点击 `deploy` 按钮触发事件时，我们的 `handle_event/3` 函数将通过以下方式进行响应： 
 
-* Looking up the next step, `"create-org"`
-* Looking up the text that we'd like to display, `"Creating org"`
-* Sending the `"create-org"` message to itself
-* Updating the socket's state to point the `step` key to `"create-org"` and the `text` key to `"Creating org"`. This will cause the live view's template to re-render with the new text.
+* 查找下一步，`"create-org"`。
+* 查找我们想显示的文本，`"创建org"`。
+* 向自己发送 `"create-org"` 信息。
+* 更新套接字的状态，将 `step` 键指向 `"create-org"`，将 `text` 键指向 `"create org"`。这将导致 live view 的模板用新的文本重新渲染。
 
-Sending the `"create-org"` message to itself will cause the live view's `handle_info/2` function to be invoked. The live view will in turn look up the next step, pass that next message to itself and update the socket once again. All the way until we reach the `"done"` message.
+向自己发送 `"create-org"` 消息将导致 live view 的 `handle_info/2` 函数被调用。live view 又会查找下一步，将下一步消息传递给自己，并再次更新 socket。一直到消息 `"done"` 为止。
 
 ```elixir
 defmodule MyAppWeb.GithubDeployView do
@@ -151,11 +151,11 @@ defmodule MyAppWeb.GithubDeployView do
 end
 ```
 
-This works great when we're only concerned about pushing updates down the socket of _one_ LiveView process. But what about all of the other users who have loaded our Github Deploy page and are operating on their own LiveView processes? What if we want all such users to see the updates caused by one person's button click? Here's where our PubSub code comes to the rescue.
+当我们只关心将更新推送到一个 LiveView 进程的套接字上时，这个方法很好用。但是，其他所有加载了我们的 Github Deploy 页面并在自己的 LiveView 进程上操作的用户呢？如果我们希望所有这样的用户都能看到由一个人的按钮点击引起的更新呢？这时我们的 PubSub 代码就能派上用场了。
 
-## Enacting the Broadcasts
+## 发布广播
 
-Every time an instance of `GithubDeployView` mounts, we subscribe it to the _same_ topic:
+每次一个 `GithubDeployView` 实例挂载，我们就订阅 _相同的_ 主题：
 
 ```elixir
 @topic "deployments"
@@ -166,12 +166,11 @@ def mount(_session, socket) do
 end
 ```
 
-So, if a given LiveView process *broadcasts* to that topic, all of our subscribers will receive that message. We want our live view to broadcast whenever it will update the state of its socket. This way, we can tell all subscribing LiveView processes to update their own socket's state, which will then cause that LiveView's template to re-render. The flow will work like this:
+因此，如果一个给定的 LiveView 进程 *广播* 该主题，我们所有的订阅者都会收到该消息。我们希望我们的 LiveView 每更新其 socket 的状态时，就进行广播。这样，我们就可以告诉所有订阅的 LiveView 进程更新自己的 socket 的状态，然后会导致该 LiveView 的模板重新渲染。流程将像这样工作。
 
-![]({% asset live_view_pub_sub.png @path %})
+![live_view_pub_sub](https://elixirschool.com/assets/live_view_pub_sub-34d2a313aa84af95d437c7120197633465900ee7a4cdabc49232d7c5c8396c0e.png)
 
-Let's add a broadcast when our LiveView first receives the `"deploy"` event and when it receives each subsequent deployment step event:
-
+让我们在 LiveView 第一次接收到 `"deploy"` 事件时，以及在它接收到每个后续部署步骤事件时，添加一个广播。
 
 ```elixir
 defmodule MyAppWeb.GithubDeployView do
@@ -219,9 +218,9 @@ defmodule MyAppWeb.GithubDeployView do
 end
 ```
 
-By using the `Phoenix.PubSub.broadcast_from/4` function, we broadcast a message describing the new socket state to all subscribers of a topic, *excluding the process from which we call broadcast*. We don't need the live view that received the click event to broadcast to itself, since it is already sending itself the next message via `send(self(), next_step)` and already updating its own socket's state via `assign(socket, state)`.
+通过使用 `Phoenix.PubSub.broadcast_from/4` 函数，我们向一个主题的所有订阅者广播一条描述新套接字状态的消息，*不包括我们调用广播* 的进程。我们不需要收到点击事件的 live view 向自己广播，因为它已经通过 `send(self(), next_step)` 向自己发送了下一条消息，并且已经通过 `assign(socket, state)` 更新了自己 socket 的状态。
 
-Now that we are successfully broadcasting the message, we need to teach our LiveView how to handle the receipt of the message. We can do this be defining another `handle_info/2` function that will pattern match against the broadcast struct:
+现在我们已经成功地广播了消息，我们需要教 LiveView 如何处理接收的消息。我们可以通过定义另一个 `handle_info/2` 函数来实现，该函数将对广播结构进行模式匹配。
 
 ```elixir
 def handle_info(%{topic: @topic, payload: state}, socket) do
@@ -230,11 +229,11 @@ def handle_info(%{topic: @topic, payload: state}, socket) do
 end
 ```
 
-This `handle_info/2` function will get invoked when our LiveView subscribers receive a broadcast. Each subscriber will then update its own socket via `assign(socket, state)`, causing each subscriber's template to re-render.
+当我们的 LiveView 订阅者接收到广播时，将会调用这个 `handle_info/2` 函数。每个订阅者将通过 `assign(socket, state)` 更新自己的 socket，导致每个订阅者的模板重新渲染。
 
-If we start up our app, open two browser windows, and click "Deploy to GitHub", we should see both browsers update:
+如果我们启动应用程序，打开两个浏览器窗口，然后点击 "部署到 GitHub"，我们应该看到两个浏览器窗口都更新了。
 
-And we can see via our `puts` statements that, only one of our two clients is receiving the broadcasts while the other (the one that initiated the click event), is sending messages directly to itself:
+而且我们可以通过 `puts` 语句看到，两个客户端中只有一个客户端接收到了广播，而另一个客户端（发起点击事件的那个客户端）则直接向自己发送消息。
 
 ```bash
 [info] GET /
@@ -259,8 +258,8 @@ HANDLE BROADCAST FOR push-contents
 Done!
 ```
 
-## Conclusion
+## 结语
 
-Another approach to building this broadcast functionality would be to use an Elixir [Registry](https://hexdocs.pm/elixir/master/Registry.html). It wouldn't give us the ability to broadcast across distributed nodes as easily as PubSub, but I'd be curious to see it implemented to solve this problem.
+另一种构建这种广播功能的方法是使用一个 Elixir [Registry](https://hexdocs.pm/elixir/master/Registry.html)。不过它不会给我们提供像 PubSub 那样轻松地跨分布式节点广播的能力，但我很想看到它解决这个问题的实现。
 
-The Phoenix PubSub library, however, allowed us to build a real-time feature that broadcasts shared updates to a set of users with just an additional five lines of code. Our Phoenix app was already configured to use Phoenix PubSub, and already had the pubsub backend up and running thanks to some out-of-the-box configuration. Integrating it with our existing LiveView code proved to be pretty straightforward, and we had even more advanced real-time functionality up and running in no time.
+Phoenix PubSub 库允许我们构建一个实时功能，只需额外的五行代码就能将共享更新广播给一组用户。我们的 Phoenix 应用已经被配置为使用 Phoenix PubSub，并且由于一些开箱即用的配置，已经有了 pubsub 后台。事实证明，将它与我们现有的 LiveView 代码集成是非常简单直接的，短时间内就拥有了更多先进的实时功能。
