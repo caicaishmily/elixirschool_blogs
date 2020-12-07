@@ -8,7 +8,7 @@ excerpt: >
   Join us this year at ElixirConf 2019 for the first ever Elixir School workshop!
 ---
 
-# 2019 ElixirConf 公告
+# ElixirConf 2019 公告
 
 今天我们要宣布一些 _非常_ 激动人心的消息!
 
