@@ -20,7 +20,7 @@
 - [ ] [LiveView 组件](./posts/2019-12-29-live-view-live-component.md)
 - [ ] [building admissions](./posts/2019-10-23-building-admissions.md)
 - [ ] [sorting a table with live view live links](./posts/2019-10-20-sorting-a-table-with-live-view-live-links.md)
-- [ ] [使用 docker 和 mix release 发布一个 umbrella app](./posts/2019-09-15-releasing-an-umbrella-app-with-docker-and-mix-release.md)
+- [x] [使用 docker 和 mix release 发布一个 umbrella app](./posts/2019-09-15-releasing-an-umbrella-app-with-docker-and-mix-release.md)
 - [x] [来自 ElixirConf 2019 的快讯](./posts/2019-09-12-elixirconf-2019-review.md)
 - [x] [TIL 如何使用 Ecto.Query 选择合并](./posts/2019-08-23-til-ecto-select-merge.md)
 - [x] [ElixirConf EU 2019 回顾](./posts/2019-06-06-elixir-conf-eu-2019-review.md)

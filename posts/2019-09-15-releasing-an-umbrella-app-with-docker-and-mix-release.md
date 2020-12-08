@@ -10,36 +10,37 @@ excerpt: >
   The release of Elixir 1.9 gave us `mix release` and the ability to support basic releases, runtime configuration and more, natively in Elixir. Learn how we were able to build a production release of an Elixir umbrella app with Docker, `mix release` and the new `Config` module.
 ---
 
-The prelease of Elixir 1.9 earlier this year introduced some [powerful new tools](http://blog.plataformatec.com.br/2019/04/whats-new-in-elixir-apr-19/). `mix release` allows us to build a release without Distillery; configuration for our umbrella child apps has been moved to the parent application; the addition of the `Config` module deprecates `Mix.Config` and makes it easy to configure our releases, and configuration has been further simplified with the addition of functions like `System.fetch_env!`.
+# 使用 Docker, Mix Release, Config 发布一个 Umbrella App
 
-Let's take advantage of _all_ of these new features in order to build a release of an Elixir umbrella app with the help of Docker.
+今年早些时候发布的 Elixir 1.9 引入了一些 [强大的新工具](http://blog.plataformatec.com.br/2019/04/whats-new-in-elixir-apr-19/)。`mix release` 允许我们在没有 Distillery 的情况下构建一个版本；我们的伞形子应用的配置已经被移到了父应用中；增加的 `Config` 模块取代了 `Mix.Config` ，使我们的版本配置变得简单，并且通过增加 `System.fetch_env!` 等功能进一步简化了配置。
 
-## Background: Our Build + Deploy Process
+让我们利用 _这些_ 新特性，借助 Docker 来构建一个 Elixir umbrella 应用。
 
-First, a little background on the build and deployment process for the app in question. At The Flatiron School, we maintain an app, Registrar, to handle our student admissions and billing. The Registrar app is an Elixir umbrella app that is built and deployed using a CI/CD pipeline managed by CircleCi and AWS Fargate. Registrar is built by circle and the resulting image is pushed to ECR (Elastic Container Repository). Fargate pulls down the image and runs the containerized release in ECS.
+## 背景: 我们的构建 + 部署流程
 
-If that setup is confusing or unfamiliar to you--no problem! The only thing you need to understand for the purposes of this blog post is that our applicaton's environment variables are _not_ available when we build our release but they _are_ available at runtime.
+首先，介绍一下相关应用的构建和部署过程的背景。在 The Flatiron School，我们维护了一个应用程序，即 Registrar，处理我们的学生入学和计费。Registrar 应用是一个 Elixir 伞形应用，使用 CircleCI 和 AWS Fargate 管理的 CI/CD 管道进行构建和部署。Registrar 由 CircleCI 构建，生成的镜像会被推送到 ECR（Elastic Container Repository）。Fargate 将镜像拉下来，并在 ECS 中运行容器化发布。
 
-## Initializing the Release
+如果这样的设置让你感到困惑或陌生--没有问题！你唯一需要了解的是，在 ECS 中，你可以使用 Fargate 来发布镜像。在这篇博文中，你唯一需要理解的是，当我们构建发布版本时，我们的应用程序的环境变量是不可用的，但它们在运行时是可用的。
 
-Before we get started, we'll run `mix release.init` from the root of our umbrella app. This will generate the following files:
+## 初始化 Release
+
+在我们开始前，我们需要在我们的伞形应用根目录运行 `mix release.init`。 这将生成下面的文件：
 
 * `rel/env.sh`
 * `rel/env.bat`
 * `rel/vm.args`
 
-More on these files later.
+稍后将详细介绍这些文件。
 
+## 使用 `Config` 模块配置伞形应用程序。
 
-## Configuring the Umbrella App with the `Config` Module
+首先，我们需要做的是确保我们 Elixir umbrella app 的子程序能够通过新的 `Config` 模块进行正确的配置。
 
-The first thing we need to do is make sure our Elixir umbrella app's children are properly configured with the new `Config` module.
+以前我们的伞形应用的帮助每个子应用的配置在该子应用的 `config/` 子目录中，现在我们直接在父应用中配置每个子应用。所以，config 目录顶层应用 `registrar_umbrella`，是所有操作发生的地方。
 
-Where our umbrella app's formerly help the configuration for each child in the `config/` subdirectory of that child app, we are now configuring each child application in the parent app directly. So, the config directory top-level app, `registrar_umbrella`, is where all the action happens.
+我们先来看看 `registrar_umbrella/config/config.exe` 文件。
 
-We'll start by taking a look at the `registrar_umbrella/config/config.exs` file.
-
-Where we have an umbrella app, `registrar_umbrella`, with two children, `registrar` and `registrar_web`, our `config.exs` file might look something like this:
+如果我们有一个伞形应用 `registrar_umbrella`，有两个子应用 `registrar` 和 `registrar_web`，我们的 `config.exs` 文件可能看起来像这样。
 
 ```elixir
 # registrar_umbrella/config/config.exs
@@ -71,27 +72,27 @@ config :registrar_web, RegistrarWeb.Endpoint,
 import_config "#{Mix.env}.exs"
 ```
 
-Let's break this down.
+让我们来分析一下。
 
-### The `Config` Module
+### `Config` 模块
 
-Note that we've included `import Config` at the top of the file. Elixir 1.9 soft-deprecates the usage of `use Mix.Config` and here's why. Releases will have their own configuration, including a runtime configuration determined by the `config/releases.exs` file (more on that later). Mix, however, is a build tool. As such, it is not available in your release. So, we don't want to rely on it and can instead use the (new!) native Elixir `Config` module for all of our configuration needs.
+请注意，我们在文件顶部加入了 `import Config`。Elixir 1.9 软取消了 `use Mix.Config` 的用法，原因如下。发布版有自己的配置，包括由 `config/releases.exe` 文件确定的运行时配置（稍后再谈）。然而，Mix 是一个构建工具。因此，它在你的版本中是不可用的。因此，我们不想依赖它，而是可以使用（新的！）原生 Elixir `Config` 模块来满足我们所有的配置需求。
 
-### Environment-specific Configuration
+### 特定环境的配置
 
-We can continue to set environment-specific config in the `config/dev.exs`, `config/test.exs` and `config/prod.exs`. The `import_config "#{Mix.env}.exs"` line will import the appropriate configuration file at compile-time.
+我们可以继续在 `config/dev.exs`、`config/test.exs` 和 `config/prod.exs` 中设置特定环境的配置。`import_config "#{Mix.env}.exs"` 这一行将在编译时导入相应的配置文件。
 
-### Using `System.get_env/1`
+### 使用 `System.get_env/1`
 
-In our `config.exs` file, we're using `System.get_env/1`. This will return the value of the given environment variable, _if it is present on the system at compile time_. Otherwise it will return `nil`. Using `System.get_env/1` will work for us just fine in the development and test environments, but it _won't_ fly in our production environment. This is because, for our particular app's build and deployment pipeline, we are building the release in an environment whose system does _not_ contain the environment variables our app needs, like `"STRIPE_SECRET_KEY"` for example. Our production release's _runtime_ environment will have those variables, however.
+在我们的 `config.exs` 文件中，我们使用 `System.get_env/1`。这将返回给定环境变量的值，_如果它在编译时存在于系统中_。否则将返回 `nil`。在开发和测试环境中使用 `System.get_env/1` 可以很好地工作，但在生产环境中却无法实现。这是因为，对于我们特定的应用程序的构建和部署管道，我们是在一个环境中构建发行版，而这个环境的系统并不包含我们的应用程序所需要的环境变量，例如 `"STRIPE_SECRET_KEY"`。然而，我们的生产版本的 _运行时_ 环境会有这些变量。
 
-Now that we've seen how to configure the child app's of our umbrella with the help of the `Config` module and `System.get_env/1`, let's take a look at our release configuration.
+现在我们已经看到了如何在 `Config` 模块和 `System.get_env/1` 的帮助下配置保护伞的子应用程序，让我们来看看我们的发布配置。
 
-## Configuring The Release
+## 配置 Release
 
-### Defining The Release in `config/mix.exs`
+### 在 `config/mix.exs` 中定义 Release
 
-We'll start by configuring our release in the top-level `mix.exs` file under the `:releases` key inside the `project/0` function:
+我们先在顶层的 `mix.exs` 文件中，在 `project/0` 函数中的 `:reases` 键下配置我们的 release。
 
 ```elixir
 # registrar_umbrella/mix.exs
@@ -119,13 +120,12 @@ defmodule Registrar.Umbrella.Mixfile do
 end
 ```
 
-We can define multiple releases by adding subsequent keys under `:releases`––for example if we want to create a release that runs _just_ the `registrar` application. For now, we're defining just one release, `registrar_umbrella`. For an umbrella app's release configuration, we _must_ specify which child apps to start when the release starts. We do this by listing the child apps we want to start under the `:applications` key.
+我们可以通过在 `:release` 下添加后续键来定义多个 release --例如，如果我们想创建一个只运行 `registrar` 应用程序的 release。现在，我们只定义了一个版本，`registrar_umbrella`。对于 umbrella 应用程序的 release 配置，我们必须指定当 release 启动时要启动哪些子应用程序。我们通过在 `:applications` 键下列出我们想要启动的子应用程序来实现。
 
-There are a number of additional release configuration options that you can check out [here](https://hexdocs.pm/mix/Mix.Tasks.Release.html#module-customization), but we'll keep our configuration pretty barebones for now.
+有许多额外的发布配置选项，你可以查看[这里](https://hexdocs.pm/mix/Mix.Tasks.Release.html#module-customization)，但我们现在将保持我们的配置非常简单。
+### 在 `config/releases.exs` 中配置运行时
 
-### Runtime Configuration with `config/releases.exs`
-
-Since our build and deployment pipeline requires that our app's environment variables be present at _runtime_, rather than build time, we need our release to have runtime configuration. To enable runtime configuration for our release, we create a file, `config/releases.exs`.
+由于我们的构建和部署管道要求我们的应用程序的环境变量在 _运行时_ 而不是构建时存在，我们需要 release 拥有运行时配置。为了使我们的发布版本具有运行时配置，我们创建一个文件 `config/releases.xs`。
 
 ```elixir
 # registrar_umbrella/config/config.exs
@@ -146,13 +146,13 @@ config :registrar_web, RegistrarWeb.Endpoint,
   secret_key_base: System.fetch_env!("SECRET_KEY_BASE")
 ```
 
-Here we're configuring all of our runtime application environment variables with the help of `System.fetch_env!/1`. This function will raise an error if the given environment variable is not present in the system at runtime. We want this kind of validation in place so that our app fails to start up if its missing necessary environment variables--no silent failures downstream.
+这里我们借助 `System.fetch_env!/1` 来配置所有的运行时应用环境变量。如果给定的环境变量在运行时不存在于系统中，这个函数将引发一个错误。我们希望这样的验证能够到位，这样我们的应用程序在缺少必要的环境变量时就无法启动--下游不会出现无声的失败。
 
-Its important to understand that we are still leveraging a `config/prod.exs` file (not included here) to do things like configure our `ReigstrarWeb.Endpoint` for production. This file is specifically for our runtime release configuration.
+重要的是，我们仍然利用 `config/prod.exs` 文件（这里不包括）来做一些事情，比如为生产配置 `ReigstrarWeb.Endpoint`。这个文件是专门为我们的运行时发布配置的。
 
-One last thing to point out before we move on.
+在我们继续之前，还有最后一件事要指出。
 
-Let's say we have the following application environment variable getting set in our release at runtime:
+比方说，我们在运行时发布的版本中设置了以下应用环境变量。
 
 ```elixir
 # registrar_umbrella/config/config.exs
@@ -163,7 +163,7 @@ config :registrar,
   stripe_api_base_url: System.fetch_env!("STRIPE_BASE_URL")
 ```
 
-And we have a module, `Registrar.StripeApiClient` that uses a module attribute to look up and store the value of that application environment variable:
+我们有一个模块，`Registrar.StripeApiClient`，它使用模块属性来查找和存储该应用环境变量的值。
 
 ```elixir
 # registrar_umbrella/apps/registrar/lib/stripe_api_client.ex
@@ -177,9 +177,9 @@ defmodule Registrar.StripeApiClient do
 end
 ```
 
-While developers often use user-defined module attributes as constants, its important to remember that _the value is read at compilation time and not at runtime._ Since the value of `Application.get_env(:registrar, :stripe_api_base_url)` (which comes from a system environment variable) is only present at _runtime_, using a module attribute here won't work!
+虽然开发人员经常使用用户定义的模块属性作为常量，但重要的是要记住，_该值是在编译时读取的，而不是在运行时读取的_ 由于 `Application.get_env(:registrar, :stripe_api_base_url)` (来自系统环境变量)的值只存在于 _运行时_，所以在这里使用模块属性是行不通的！相反，我们将使用一个函数在运行时动态地查找该值。
 
-Instead, we'll use a function to dynamically look up the value at runtime:
+取而代之的是，我们将使用一个函数在运行时动态地查找该值。
 
 ```elixir
 # registrar_umbrella/apps/registrar/lib/stripe_api_client.ex
@@ -193,15 +193,15 @@ defmodule Registrar.StripeApiClient do
 end
 ```
 
-Now that we have our runtime configuration set up, we're ready to build our release!
+现在我们已经完成了运行时的配置，我们已经准备好构建我们的发行版了。
 
-## Building the Release with Docker + `mix release`
+## 用 Docker + `mix release` 构建版本
 
-We're using Docker to build our release, since our app will run in a container within our ECS cluster.
+我们使用 Docker 来构建我们的版本，因为我们的应用程序将在 ECS 集群内的容器中运行。
 
-Our Dockerfile is pretty straightforward:
+我们的 Docker 文件是非常简单直接的。
 
-```
+```dockerfile
 FROM bitwalker/alpine-elixir-phoenix:1.9.0 as releaser
 
 WORKDIR /app
@@ -247,18 +247,18 @@ COPY --from=releaser app/bin/ ./bin
 CMD ["./bin/start"]
 ```
 
-Let's take a closer look at the parts we really care about.
+让我们仔细看看我们真正关心的部分。
 
-First, we se the `MIX_ENV` to `prod` and get and compile our production dependencies:
+首先，我们将 `MIX_ENV` 改为 `prod`，并获取和编译我们的生产依赖。
 
-```
+```dockerfile
 ENV MIX_ENV=prod
 RUN mix do deps.get --only $MIX_ENV, deps.compile
 ```
 
-Later, we build our production assets for the `registrar_web` child app:
+稍后，我们为子应用 `registrar_web` 构建了生产环境的静态资源
 
-```
+```dockerfile
 WORKDIR /app/apps/registrar_web
 RUN MIX_ENV=prod mix compile
 RUN npm install --prefix ./assets
@@ -266,22 +266,22 @@ RUN npm run deploy --prefix ./assets
 RUN mix phx.digest
 ```
 
-Then we use `mix release` to build our release according to the configuration in the `:releases` key of the `project/0` function in our `mix.exs` file.
+然后我们使用 `mix release` 根据 `mix.exs` 文件中 `project/0` 函数的 `:release` 键中的配置来构建我们的 release。
 
-```
+```dockerfile
 WORKDIR /app
 RUN MIX_ENV=prod mix release
 ```
 
-This builds our release and places it in `_build/prod/rel/registrar_umbrella`.
+这将构建我们的发布版本，并将其放在 `_build/prod/rel/registrar_umbrella` 中。
 
-Finally, we copy the release into our container and specify that the start script is in `./bin/start`.
+最后，我们将 release 复制到容器中，并指定启动脚本在 `./bin/start` 中。
 
-Let's talk about that start script now.
+现在我们来谈谈启动脚本。
 
-## The Start Script
+## 启动脚本
 
-Starting our release is simple. Our `./bin/start` script looks like this:
+启动我们的发布版本很简单，我们的 `./bin/start` 脚本看起来像这样：
 
 ```bash
 #!/usr/bin/env bash
@@ -292,13 +292,13 @@ echo "Starting app..."
 bin/registrar_umbrella start
 ```
 
-At this point, you _might_ be remembering that Distillery provides a "boot hook" feature that allows you to run certain commands/execute some code when the app starts up. You _might_ be wondering how we can accomplish the same goal using `mix release`. How can we, for example, ensure that our migrations run whenever the release starts up? Keep reading to find out!
+在这一点上，你可能还记得 Distillery 提供了一个 "引导钩" 功能，允许你在应用程序启动时运行某些命令/执行一些代码。你 _可能_ 会想知道我们如何使用 `mix release` 来实现同样的目标。例如，我们如何确保我们的迁移在发布启动时运行？请继续阅读，了解更多
 
-## Pre-Start Scripts with `rel/env.sh`
+## 用 `rel/env.sh` 预启动脚本。
 
-The `rel/env.sh` file that was generated by `mix release.init` will run when the release starts. This is where we'll call on our migration script.
+`mix release.init` 生成的 `rel/env.sh` 文件将在发布开始时运行。这就是我们将调用迁移脚本的地方。
 
-Assume we have a module, `Registrar.ReleaseTasks` with a function, `migrate/0` that starts up the application and executes the Ecto migrations:
+假设我们有一个模块 `Registrar.ReleaseTasks` 和一个函数 `migrate/0`，它启动应用程序并执行 Ecto 迁移。
 
 ```elixir
 defmodule Registrar.ReleaseTasks do
@@ -343,33 +343,33 @@ defmodule Registrar.ReleaseTasks do
 end
 ```
 
-We can execute this function in our release using `eval`. A call `bin/MY_RELEASE eval` will start up your release and execute whatever function you give as an argument to `eval`. To execute our migration function in our release:
+我们可以使用 `eval` 在我们的发布中执行这个函数。调用 `bin/My_RELEASE eval` 将启动你的发布版本，并执行你给 `eval` 提供的任何函数。要在我们的版本中执行我们的迁移函数。
 
-```
+```bash
 bin/registrar_umbrella eval "Registrar.ReleaseTasks.migrate()"
 ```
 
-Recall that we're starting our release in `./bin/start` with that `start` command:
+记得我们在 `./bin/start` 中用 `start` 命令启动我们的发布。
 
-```
+```bash
 bin/registrar_umbrella start
 ```
 
-This will execute the `rel/env.sh` file in turn. This file should contain a script that does the following:
+这将依次执行 `rel/env.sh` 文件。该文件应包含一个执行以下操作的脚本。
 
-* If the command given to the release was `start`, run the migrations using `eval`.
+* 如果发布的命令是 `start`，使用 `eval` 运行迁移。
 
-Something like this should do the trick:
+类似这样的脚本应该可以做到。
 
-```
+```shell
 if [ "$RELEASE_COMMAND" = "start" ]; then
  echo "Beginning migration script..."
  bin/registrar_umbrella eval "Registrar.ReleaseTasks.migrate()"
 fi
 ```
 
-And that's it!
+就是这样！
 
-## Conclusion
+## 结语
 
-With Elixir 1.9, we can build a release without the addition of any external dependencies––Elixir now natively provides us everything we need. We can configure multiple releases for our umbrella app, defining which child apps to start for a given release. We can configure runtime vs. build time environment variables _and_ we can even define customized start up scripts to do things like run our migrations. All in all, `mix release` provides us with a comprehensive and powerful set of tools.
+有了 Elixir 1.9，我们可以在不添加任何外部依赖关系的情况下构建一个版本-- Elixir 现在原生地提供了我们所需的一切。我们可以为我们的 umbrella 应用配置多个版本，定义在给定的版本中启动哪些子应用。我们可以配置运行时与构建时的环境变量，我们甚至可以定义自定义的启动脚本来做一些事情，比如运行我们的迁移。总而言之，`mix release` 为我们提供了一套全面而强大的工具。
