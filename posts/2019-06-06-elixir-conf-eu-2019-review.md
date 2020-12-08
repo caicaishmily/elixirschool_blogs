@@ -9,183 +9,183 @@ excerpt: >
   ElixirSchool was invited to participate in a conference for the first time! Our own @gemantzu was there, and has a lot to say!
 ---
 
-Last year, it was my first time ever participating in the conference. I wanted to go off and see what this community had to offer me, as Elixir is the first language I have seriously considered working with as a professional. So, 2019 being my second back-to-back participation, I think can provide a direct comparison on how things have fared in our European join.
+# 回顾 Elixir Conf EU 2019
 
-## Sponsored Ticket
+去年是我第一次参加这个会议。我想去看看这个社区能给我带来什么，因为 Elixir 是我认真考虑过的第一个作为专业工作的语言。所以，2019 年是我第二次背靠背参加，我想可以对欧洲加入 ElixirConf 的情况做一个直接的比较。
 
-From the beginning, we would like to thank ElixirConfEU, Erlang Solutions and Lawrence Ansell in particular for giving us the opportunity to write a review on the conference by providing us with a two-day free ticket. Just as an FYI, we were never asked to be biased in our conference review, and as always, I will try to make it as objective as I can.
+## 赞助票
 
-## The City
+首先，我们想感谢 ElixirConfEU、Erlang Solutions，尤其是 Lawrence Ansell 提供的两天免费门票，让我们有机会写一篇关于会议的评论。顺便说一下，我们从来没有被要求在会议评论中带有偏见，而且我将一如既往地尽量使其客观。
+## 举办城市
 
-This year, the conference was held in the magnificent city of Prague, the capital of the Czech Republic. The city is marvelous, one of the most complete experiences I have ever had visiting a city. It was nothing compared to Warsaw, which due to the WWII destruction and later reconstruction, had a much more modern look. Prague is full of big old buildings, with a ton of marvels to invest your time in. You can enjoy old time experiences, from the Old Town Square, to the Royal Castle, and newer ones, from the Lego Museum to the Gallery of Steel Figures. The metro of the city helped a lot, as you can jump in and find your way pretty easily around the city.
+今年的会议在捷克共和国首都布拉格这座宏伟的城市举行。这座城市令人赞叹，是我参观过的城市里面最完整的之一。与华沙相比，它简直是小巫见大巫，由于二战的破坏和后来的重建，华沙的面貌更加现代化。布拉格到处都是古老的大建筑，有大量的奇迹可以让你投入时间。从老城广场，到皇家城堡，你可以享受旧时的体验，也可以享受新的体验，从乐高博物馆到钢铁人物画廊。城市的地铁帮了大忙，因为你可以跳进去，很容易就能在城市里找到路。
 
-## Conference Logistics
+## 会议后勤
 
-Just like last year, the conference organizers and attendees made heavy use of the Whova app. Whova allows users to organize or take part in conversations and events throughout the conference. People used the app to share cabs from and to the airport, to schedule evening walks to the city, a dinner for vegetarians, lost and found items etc.
+和去年一样，会议组织者和与会者大量使用了 Whova 应用。Whova 允许用户在整个会议期间组织或参与对话和活动。人们使用该应用来分享往返机场的出租车，安排晚上到城市散步，素食者的晚餐，失物招领等。
 
-The conference took place in the Prague Congress Centre, located south of the town centre, in Praha 4. The metro station was right outside, which was very convenient, and the view from outside the centre was wonderful.
+会议在布拉格会议中心举行，该中心位于市中心南部的普拉哈 4 号，地铁站就在外面，非常方便，中心外的风景也很好。
 
-The organizers had booked two halls from the congress centre, the Forum Hall and South Hall.
+主办方从会议中心订了两个大厅，论坛厅和南厅。
 
-Forum hall is a huge atrium hall, which could easily house all of us in one sitting. It had great visibility of both the speaker and his notes. It also had great acoustics.
+论坛厅是一个巨大的中庭大厅，可以轻松地将我们所有人一坐而尽。它对演讲者和他的笔记都有很大的可视性。它的音响效果也很好。
 
-South hall on the other hand, was a step down. It was much smaller, with three medium monitors where you could view the speakers’ notes. Sadly, it also had some pillars installed inside, and it was flat, which made viewing both the speaker and his notes a challenge.
+而南厅则是一个台阶。它要小得多，有三个中等显示器，你可以看到演讲者的笔记。遗憾的是，它里面还安装了一些柱子，而且是平的，这对观看演讲者和他的 PPT 都是一个挑战。
 
-From the beginning of the conference, I got to see some familiar faces from last year, which made me much more comfortable. I think the conference was more crowded this year, but we have to check with the organizers to have official stats on the attendees.
+从会议一开始，我就看到了一些去年熟悉的面孔，这让我舒服了许多。我觉得今年的会议人比较多，但要跟主办方确认一下官方统计的参会人数。
 
-I got to talk with all of the sponsors that had a booth in the venue, which was really fun. Cultivate, solarisBank, coders51, bitcrowd, ScoutAPM, Erlang Solutions and Toyota Connected, they are doing some great stuff with Elixir and some of them are hiring as well. They were kind enough to provide us with some swag, including some very nice t-shirts and a ton of stickers! Check it out:
+我和所有在会场有展位的赞助商都聊了起来，这真的很有趣。Cultivate、solarisBank、coders51、bitcrowd、ScoutAPM、Erlang Solutions 和 Toyota Connected，他们正在用 Elixir 做一些伟大的事情，其中一些也在招聘。他们很友好地给我们提供了一些小礼物，包括一些非常漂亮的 T 恤和一吨的贴纸！请看：Coders51、bitcrowd、ScoutAPM、Erlang Solutions 和 Toyota Connected。来看看吧：
 
 ![IMG_20190421_155525](https://user-images.githubusercontent.com/4966172/58432840-1752fe00-80bd-11e9-83ec-e1626c35bf5a.jpg)
 
-
 ![IMG_20190421_154204](https://user-images.githubusercontent.com/4966172/58432844-1a4dee80-80bd-11e9-962e-8a0eb2db059d.jpg)
 
-## Review
+## 回顾
 
-Overall, year over year, it was a better conference. I dare say I learned something from each of the talks and again, letting Chris close the conference was a wise decision as he always gives fantastic talks. The talks did have better content than last year, and I honestly enjoyed the lightning ones at the end of the first day as well.
+总的来说，一年比一年好，这是一个更好的会议。我敢说，我从每一场讲座中都学到了一些东西，同样，让 Chris 结束会议是一个明智的决定，因为他总是能给出精彩的讲座。讲座的内容确实比去年好，说实话，我也很喜欢第一天结束时的闪电式讲座。
 
-Was everything perfect? No. We as a community have some work to do on giving presentations, this is a part where we can learn a lot from our Ruby colleagues. I think that many people that stand up there feel like they should bombard us with information––a lot of slides with a ton code. This is the job of a tutorial, or a training session, not a presentation.
+一切都很完美吗？不，我们作为一个社区，在演讲方面还有一些工作要做，这部分我们可以从 Ruby 同事那里学到很多东西。我觉得很多人站在那里觉得他们应该用信息轰炸我们--大量的幻灯片和大量的代码。这是一个教程的工作，或者一个培训课程，而不是一个演讲。
 
-If you ask me, this stands in the way of having the best conference possible. What should we do? I think that everyone that is going to stand up there should nail it down to a couple of things that they would want to transfer to the audience, and build around them. What's the magic number? Probably less than five key points should be enough to work on, and not too much to overwhelm the attendees. Remember, over a couple of days a person will watch more than 20 presentations.
+如果你问我，这就妨碍了最好的会议。我们应该怎么做呢？我认为，每一个要站在上面的人，都应该把它钉在几件他们想传递给观众的事情上，并围绕这些事情来做。神奇的数字是什么？大概不到五个关键点应该就够了，而且不要太多，不要让参会者不知所措。记住，在几天的时间里，一个人要看 20 多个演讲。
 
-We should also find ways to collaborate more during this couple of days. The conference people could dedicate an hour or two to let attendees join small groups and work together on some small open source project, so they can get to know each other as well.
+我们还应该想办法在这几天里多进行合作。会议人员可以专门抽出一两个小时，让与会者加入小团体，一起做一些小型的开源项目，这样也可以互相了解。
 
-## Presentations
+## 演示文稿
 
-Like last year, the presentations had a very wide variety of content. You could find literally anything.
+和去年一样，演讲的内容非常广泛。你几乎可以找到任何东西。
 
-### Keynote - announcing Broadway by José Valim
+### Keynote - José Valim 宣布了 Broadway
 
-As always, José did a fantastic job on his presentation, leading us down the path of Broadway creation.
+一如既往，José 在他的演讲中做得非常出色，带领我们走上了 Broadway 的创作之路。
 
-He started explaining what were his initial goals of the language regarding collections, making them  polymorphic, extensible / open to change, general (in memory and via resources) and tunable. Tunable was the ultimate goal, where he gradually wanted to make Elixir collections go from Eager to Lazy to Concurrent to Distributed. Eager and Lazy were available to us from 1.0 with Enum and Stream modules, while concurrent came later via GenStage and Flow.
+他首先解释了他的语言关于集合的最初目标是什么，使它们成为多态的、可扩展的/开放的、通用的（在内存中和通过资源）和可调整的。可调优是最终目标，他希望逐步让 Elixir 集合从 Eager 到 Lazy，再从 Concurrent 到Distributed。Eager 和 Lazy 从 1.0 开始我们就可以通过 Enum 和 Stream 模块来实现，而 concurrent 则是后来通过 GenStage 和 Flow 来实现的。
 
-After that, instead of going directly for a distributed solution, they waited a while to see where the community would lead them with their use cases. Analyzing those use cases, they came up with Broadway, which is an external library for concurrent and multi-stage data ingestion and processing.
+之后，他们没有直接去找分布式的解决方案，而是等了一段时间，看看社区的用例会把他们引向何处。分析了这些用例之后，他们想到了 Broadway，这是一个用于并发和多阶段数据摄取和处理的外部库。
 
-What someone can expect from Broadway is back-pressure and concurrency, automatic ack at the end of the pipeline, fault-tolerance with minimal data loss (for example if a node goes down if you are doing something crazy), graceful shutdowns, batching and partitioning out of the box. There are a couple of available Producers (Amazon SQS and RabbitMQ), which means there is still room for development in that area.
+有人可以从 Broadway 中期待的是后端压力和并发，在管道末端的自动 ACK，最小化数据损失的容错性（例如，如果你正在做一些疯狂的事情，某个节点宕机了），优雅的关机，批处理和分区开箱即用。目前有几个可用的 Producer （Amazon SQS 和 RabbitMQ），这意味着这方面还有发展空间。
 
 [![Keynote: Announcing Broadway Elixir Conf EU 2019](https://img.youtube.com/vi/IzFmNQGzApQ/0.jpg)](https://www.youtube.com/watch?v=IzFmNQGzApQ)
 
-### Keynote: Phoenix LiveView - Interactive, Real TIme Apps - No need to write Javascript by Chris McCord
+### Keynote: Chris McCord Phoenix LiveView - 交互式实时应用程序 - 无需编写 Javascript
 
-Chris is one of my favorite speakers in this community. His presentations are always fun to watch, have great content and often use a live demo to make things more interesting. This year, his LiveView talk was expected from most of the attendees, and he certainly did not leave anyone complaining.
+Chris 是我在这个社区最喜欢的演讲者之一。他的演讲总是很有趣，内容精彩，而且经常使用现场演示来让事情变得更有趣。今年，他的 LiveView 演讲在大多数与会者的意料之中，他当然没有让任何人抱怨。
 
-He started off by showing us some demos of LiveView that the community has come up with, some of which are games! He went on describing where the technology shines, which is in an app that requires some simple real time functionality, most of which can be handled by server-rendered HTML. Then, he showed us an example application, a live thermostat, and we got to see how the library actually works.
+他首先向我们展示了一些社区提出的 LiveView 的 demo，其中有些是游戏! 他继续介绍了这项技术的闪光点，那就是在一个需要一些简单的实时功能的应用中，大部分功能可以通过服务器渲染的 HTML 来处理。然后，他给我们展示了一个应用实例，一个实时恒温器，我们看到了库的实际工作原理。
 
-We were shown how the library gets to be lightweight both on the server and on the client, leveraging the power of Elixir, and also, how every component is supervised and can be brought back up upon crashing.
+他向我们展示了这个库是如何在服务器和客户端实现轻量级的，充分利用了 Elixir 的强大功能，同时，每个组件都是受监督的，并且在崩溃时可以恢复。
 
-We also learned that the library is not going to affect SEO, as the initial load of the component is treated as standard HTML. It is also really easy to test LiveView and it is really not necessary to do testing with headless browser launching etc.
+我们还了解到，该库不会影响 SEO，因为组件的初始加载是作为标准 HTML 处理的。LiveView 的测试也真的很简单，真的不需要用无头浏览器启动等方式进行测试。
 
 [![Phoenix Live View](https://img.youtube.com/vi/8xJzHq8ru0M/0.jpg)](https://www.youtube.com/watch?v=8xJzHq8ru0M)
 
-### Live coding an Escher painting using Scenic by Ju Liu
+### Ju Liu 使用 Scenic 对 Escher 画作进行实时编码
 
-Ju Liu gave a very good talk about how to draw a simplified version of Escher's fish painting using vectors, a fish image and scenic. The talk had not much to do with Scenic––it was more about Vector theory and how to use small graphic assets to compose more complex structures.
+Ju Liu 给大家讲了一个非常好的讲座，讲的是如何用矢量、鱼的形象和风景画来画一个简化版的 Escher 的鱼画。他的演讲与 Scenic 关系不大，更多的是关于 Vector 理论和如何使用小的图形资产来组成更复杂的结构。
 
-He started showing how to bring a simple screen up with Scenic, then he discussed the basics of Vectorial Algebra and how to draw simple vectors on screen and scale them, moving on to describe how the Box Model works with vectors.
+他首先展示了如何用 Scenic 制作一个简单的屏幕，然后他讨论了向量代数的基础知识，以及如何在屏幕上绘制简单的向量和缩放它们，接着介绍了 Box Model 如何使用向量。
 
-The rest of the talk is all about how, by leveraging the Box Model with a picture of a fish in it, and constantly building more copies of it, rotating it, scaling it and putting it on screen, you can produce a simplified version of that painting.
+讲座的其余部分都是关于如何利用 Box Model 中的一幅鱼的图片，并不断地建立更多的副本，旋转它，缩放它，并把它放在屏幕上，你可以制作出这幅画的简化版本。
 
 [![](https://img.youtube.com/vi/sV5ValgY4ck/0.jpg)](https://www.youtube.com/watch?v=sV5ValgY4ck)
 
-### Rewriting critical software in Elixir - a case study by Renan Ranelli
+### 重写 Elixir 中的关键软件-- Renan Ranelli 的案例研究
 
-Renan Ranelli gave us some very insightful information on how to rewrite critical software in Elixir while the old system is still a moving target. Renan works in Telnyx, an IP Telephony company, where their old python system was slowing down in development due to tech debt.
+Renan Ranelli 给我们提供了一些非常有见地的信息，告诉我们如何在 Elixir 中重写关键软件，而旧系统仍然是一个移动的目标。Renan 在一家 IP 电话公司 Telnyx 工作，他们的旧 python 系统因为技术债务而发展缓慢。
 
-He began giving us some small insight on how IP telephony works, and the functionality of their Dialplan service that was up for a rewrite. That service is almost stateless, super latency sensitive and had relatively low throughput for each server. The service produced an xml file, with all the information the switch needs to to operate on a call. 
+他开始给我们介绍一些关于 IP 电话的工作原理，以及他们的 Dialplan 服务的功能，他们的 Dialplan 服务是要重写的。那个服务几乎是无状态的，对延迟超级敏感，而且每个服务器的吞吐量比较低。该服务产生了一个 xml 文件，其中包含了交换机操作呼叫所需的所有信息。
 
-The first step in the case study was getting buy-in from stakeholders by convincing them that the company needs to slow down feature development to pay technical debt, which they accomplished phrasing all the benefits in business terms. The next step was to commit resources, which is very critical as a rewrite is a huge amount of work when you are chasing a moving target. Another step is to write and deploy continuously.
+案例研究的第一步是获得利益相关者的认同，让他们相信公司需要放慢功能开发来偿还技术债务，他们完成了用商业术语来表述所有利益。下一步是投入资源，这是非常关键的，因为当你在追逐一个移动的目标时，重写是一个巨大的工作量。另一个步骤是持续编写和部署。
 
-What Telnyx did was run the new service along the old one, put a proxy in front of them that directed the traffic to both of them and logged the request, and both of their responses to a database. That way, Telnyx was able to make the final step––verifying feature parity–– finding disparities in the responses, fixing them, writing a regression test for that disparity to guard against it in the future, and iterating on those fixes with the help of TDD and rewrite / clean code, in a “TDD-ish” cycle of them that looks really close to the regular TDD one. 
+Telnyx 所做的是将新的服务沿着旧的服务运行，在它们前面放一个代理，将流量导向它们两个，并将请求，以及它们两个的响应记录到数据库中。这样一来，Telnyx 就可以进行最后一步--验证功能对等--找到响应中的差异性，并进行修复，为这个差异性写一个回归测试，以防止将来出现这种情况，并在 TDD 和重写/清理代码的帮助下，对这些修复进行迭代，他们的 "TDD 式" 循环，看起来真的很接近常规的 TDD。
 
-The outcome of this process was near zero incidents after the cutover to the new service, a better runtime with a 100% Elixir codebase, a huge improvement in observability (for example via wobserver), new features shipping faster, and parallelization made ridiculously cheap and simpler all of which led to more happy customers. 
+这个过程的结果是，在切换到新的服务之后，几乎没有发生任何事故，100% 的 Elixir 代码库带来了更好的运行时，可观察性得到了巨大的改善（例如通过 wobserver），新功能的发布速度更快，并行化的成本低得离谱，也更简单，所有这些都使客户更加满意。
 
 [![](https://img.youtube.com/vi/WocZIc4mPxs/0.jpg)](https://www.youtube.com/watch?v=WocZIc4mPxs)
 
-### Building a GameBoy emulator with Elixir and Scenic by Tonći Galić
+### Tonći Galić 使用 Elixir 和 Scenic 构建 GameBoy 模拟器 
 
-Ok, I admit it, I am an old geezer, a true fanatic of the first GameBoy and that's why I went to Tonći Galic's talk.
+好吧，我承认，我是个老古董，是 GameBoy 的第一个真正粉丝，这也是我去听 Tonći Galic 演讲的原因。
 
-He gave us some insight on how to reverse engineer and tinker with a dedicated machine architecture. What he strived for, was to open a (owned by him obviously) rom from his project and emulate the original GameBoy behaviour.
+他给了我们一些关于如何对专用机架构进行逆向工程和修补的见解。他所追求的是，从他的项目中打开一个（显然是他自己的）rom，并模仿原来的 GameBoy 行为。
 
-He provided us with a ton of information on how to check the architecture and the instruction sets, how to display things in the screen with Scenic and how different Scenic is to original GameBoy (Immediate vs Retained mode).
+他为我们提供了大量的信息，包括如何检查架构和指令集，如何用 Scenic 在屏幕上显示东西，以及 Scenic 与原始 GameBoy 的不同之处（立即模式与保留模式）。
 
-Granted, his project is far from done, but it was a very interesting presentation anyway.
+当然，他的项目还远远没有完成，但无论如何，这是一个非常有趣的演示。
 
 [![GB Emu Elixir Conf EU 2019](https://img.youtube.com/vi/7WPJDmJJqf0/0.jpg)](https://www.youtube.com/watch?v=7WPJDmJJqf0)
 
-### Let there be light: from nothing to a running application by Michał Muskała
+### Michał Muskała 让光亮起来：从无到有
 
-I have never tinkered with Erlang booting process, but I wanted to check a talk from another Elixir Core Team member. I was rewarded with a great talk, and even though I had little to zero knowledge about all the steps an Erlang application takes before it even touches your code, Michał managed to keep my interests up all the time.
+我从来没有修饰过 Erlang 的启动过程，但我想看看另一位 Elixir 核心团队成员的演讲。我得到了一场精彩的演讲，尽管我对 Erlang 应用程序在接触你的代码之前的所有步骤几乎一无所知，但 Michał 还是设法让我的兴趣一直保持着。
 
-He talked about the boot process itself and the quirks and weird stuff someone is going to discover going in if they want to contribute to the VM. As the Erlang Ecosystem Foundation grows and more and more developers join in, it would probably be a good opportunity for more advanced developers to touch on the subjects that Michał mentioned in his talk.
+他谈到了启动过程本身，以及如果有人想为虚拟机做贡献，就会发现一些怪异的东西。随着 Erlang Ecosystem 基金会的发展，越来越多的开发者加入进来，对于更多的高级开发者来说，这可能是一个很好的机会来接触 Michał 在演讲中提到的主题。
 
 [![From nothing to a running app Elixir Conf EU 2019](https://img.youtube.com/vi/_AgmxltiV9I/0.jpg](https://www.youtube.com/watch?v=_AqmxltiV9I)
 
-### Functional Concepts in Elixir by Wolfgang Loder
+### Wolfgang Loder Elixir 的函数式概念
 
-Wolfgang is an experienced developer who has worked on a variety of technologies and projects. He has also written two books. His talk covered some functional concepts and the way they can be used in Elixir, like Pattern Matching, Higher Order Functions, Recursion, Continuation Passing and Referential Integrity. He has a really nice way of describing things, and he used some real life examples from his work to explain them well.
+Wolfgang 是一位经验丰富的开发人员，他曾参与过各种技术和项目。他还写过两本书。他的演讲涵盖了一些功能概念以及它们在 Elixir 中的应用方式，比如模式匹配、高阶函数、递归、继续传递和引用完整性。他的描述方式非常好，他用了一些工作中的实际例子来很好地解释这些概念。
 
 [![Func Concepts Elixir Conf EU 2019](https://img.youtube.com/vi/Dzi52dTOxT4/0.jpg)](https://www.youtube.com/watch?v=Dzi52dTOxT4)
 
-### Building resilient systems with stacking by Chris Keathley
+### Chris Keathley: 用堆叠技术构建弹性系统
 
-Chris, a developer that currently works on Bleacher Report, closed the first day (besides lightning talks), demonstrating on how to sleep well when the storm comes, a.k.a. how to build a robust system that can handle a failure gracefully, provide feedback to other systems and give insight to operations.
+Chris 是目前在 Bleacher Report 工作的开发人员，他在第一天的演讲（除了闪电演讲外）结束时，演示了如何在暴风雨来临的时候睡个好觉，也就是如何构建一个强大的系统，能够优雅地处理故障，向其他系统提供反馈，并给运营提供洞察力。
 
-He began his talk saying complex systems run in degraded mode, and that scaling is a problem of handling failure. The cogs of the stacked design mentioned in the title, were all part of things you can do before your application starts: booting the runtime and configuration, starting dependencies, connecting to external systems, having alarms setup and showing feedback to us, and communicating with services we don’t control. 
+他在演讲开始时说，复杂系统在退化模式下运行，扩展是处理故障的问题。题目中提到的堆栈式设计的齿轮，都是在应用启动前可以做的一部分事情：启动运行时和配置，启动依赖关系，连接外部系统，设置报警并向我们显示反馈，以及与我们不控制的服务进行通信。
 
-About booting, he talks about how we should avoid having runtime configuration done via Mix, and how to configure our application via a Config module that is supervised and starts with our app.
+关于启动，他讲到我们应该避免通过 Mix 来完成运行时的配置，以及如何通过一个 Config 模块来配置我们的应用，这个模块是由我们的应用来监督和启动的。
 
-Regarding starting dependencies, he showcased how we can have a load balancer in front of our application, and our application can have an `UpController` where the balancer can check if the application has everything booted up completely or not.
+关于启动依赖，他展示了我们如何在我们的应用前面有一个负载平衡器，我们的应用可以有一个 `UpController`，平衡器可以检查应用是否已经完全启动了一切。
 
-Then, regarding connections to external systems, he demonstrated how our database connections should always start in disconnected mode, as `Supervisors are about guarantees - Fred Hebert`, meaning that when we start our application, the database might for some reason be unavailable or loaded, so we should use a module which would check if the database is available, and then start having real traffic.
+然后，关于与外部系统的连接，他演示了我们的数据库连接应该如何始终以断开模式启动，因为 "监督者是关于保证的-- Fred Hebert`，这意味着当我们启动应用程序时，数据库可能因为某些原因不可用或加载，所以我们应该使用一个模块来检查数据库是否可用，然后开始有真正的流量。
 
-Regarding alarms, in case for example the previous issue occurs where we can’t control to the database, the system should provide feedback to the operators, by raising an alarm. This can work by having a watchdog process which constantly monitors the database status and toggle an alarm based on it. 
+关于报警，如果发生了前面的问题，我们无法控制数据库，系统应该通过报警的方式向操作者提供反馈。这可以通过有一个看门狗的过程，不断监控数据库的状态，并根据它来切换报警。
 
-Lastly, he talked about how our system should handle failure with external services by using circuit breakers (like [Fuse, a circuit breaker for erlang](https://github.com/jlouis/fuse)). This can depend on a per application basis, but we could always have a write-through cache, which means that you can write the last good external service response to an ETS table, which in case the downstream service is down, we can provide to the end user. 
+最后，他谈到了我们的系统应该如何通过使用断路器（比如[Fuse，erlang的断路器](https://github.com/jlouis/fuse)）来处理外部服务的故障。这可以根据每个应用的情况而定，但我们可以一直有一个写通缓存，这意味着你可以把最后一个好的外部服务响应写到一个 ETS 表中，万一下游服务宕机，我们可以提供给最终用户。
 
-He closed his talk by saying that, by solving all those potential issues before hand, we can prevent a ton of issues happening in the future, that we have really powerful tools in our runtime, and we should take advantage of them to build more robust systems.
-
+他在演讲的最后说，通过事先解决所有这些潜在的问题，我们可以防止未来发生大量的问题，我们的运行时有非常强大的工具，我们应该利用这些工具来构建更强大的系统。
+ 
 [![](https://img.youtube.com/vi/lg7M0h9eoug/0.jpg)](https://www.youtube.com/watch?v=lg7M0h9eoug)
 
-### Lessons From our first trillion messages with Flow by John Mertens
+### John Mertens: 从我们的第一万亿条信息中得到的教训
 
-John on his talk give a real life example on how they use Flow in Change.org to process a ton of messages stored in SQS. They have a Ruby/JS website where people’s actions produce and store messages in SQS, which are then processed by their Elixir / Flow system. 
+John 在他的演讲中给出了一个真实的例子，说明他们如何在 Change.org 中使用 Flow 来处理大量存储在 SQS 中的消息。他们有一个 Ruby/JS 网站，在这个网站上，人们的行为会产生并在 SQS 中存储消息，然后由 Elixir/Flow 系统进行处理。
 
-The 3 lessons they have learned, are the following:
+他们学到的 3 条经验，是以下几点。
 
-1) Let Flow do the work
-2) Organize your Flow
-3) Tune your Flow
+1）让 Flow 来做工作
+2）整理你的流程
+3）调整你的流程
 
-In Lesson 1, we learn about GenStage / Flow and how their amazing features can help with a big long running system like that. Parallelism is made easy, and by using Flow, you are protected from DDoSing yourself, because instead of pushing from one system to another via stream, now you pull as many messages as you can get.
+在第 1 课中，我们了解了 GenStage/Flow，以及他们的惊人功能如何帮助这样一个大型的长期运行系统。并行性变得很容易，通过使用 Flow，你可以保护自己不被 DDoS 攻击，因为现在你不是通过流从一个系统推送到另一个系统，而是尽可能多地拉取消息。
 
-In Lesson 2, John talked about how one should know their system pretty well, so that they can provide the correct configuration to it. For example, by using SQS, you are limited to receiving batches of 10 messages each time, so you have to build around that. Another useful tip is to use a token, meaning a struct that gets pushed down through the whole system, changed at each step, which makes processing and pattern matching on messages really easy (it’s the same thing that Plug uses with it’s Conn struct). Errors are supposed to be passed through the whole flow, and left out of acknowledgement, so SQS will resend them, and you can process them again.
+在第 2 课中，John 谈到了应该如何很好地了解自己的系统，这样才能为它提供正确的配置。例如，通过使用 SQS，你每次只能接收 10 条消息的批次，所以你必须围绕这一点进行构建。另一个有用的技巧是使用 token，意思是一个结构，通过整个系统推送下来，每一步都会改变，这使得对消息的处理和模式匹配变得非常容易（这和 Plug 使用 Conn 结构的做法是一样的）。错误应该在整个流程中传递，不在确认中，所以 SQS 会重新发送，你可以再次处理它们。
 
-In Lesson 3, he spoke about how every system is different and there is no magic solution to fine tuning your app, how under the hood Flow breaks a flow into 3 sections of GenStages, producers, producers_consumers and consumers  and how one can toy with :max_demand argument in all these different sections to get a better result.
+在第3课中，他谈到了每个系统都是不同的，没有一个神奇的解决方案来微调你的应用程序，在引擎盖下，Flow 如何将一个流分解成3个部分 :GenStages，生产者，生产者_消费者和消费者，以及如何在所有这些不同的部分中玩弄 :max_demand 参数来获得更好的结果。
 
-As a bonus, we get to see how they have been already playing with Broadway, and how easy to swap it in instead of Flow, along the differences that they have as systems.
+作为额外的奖励，我们可以看到他们已经在玩 Broadway 了，而且很容易把它换成 Flow，以及他们作为系统的差异。
 
 [![flow](https://img.youtube.com/vi/t46L9RKmlNo/0.jpg)](https://www.youtube.com/watch?v=t46L9RKmlNo)
 
-### Telemetry ...and metrics for all - ElixirConf EU 2019 by Arkadiusz Gil
+### Arkadiusz Gil: 遥测和所有的指标
 
-Arkadiusz Gil's talk was about Telemetry, a dynamic dispatching library used for metrics and instrumentations.
+Arkadiusz Gil 的演讲是关于 Telemetry，一个用于度量和仪器的动态调度库。
 
-He started by talking about monitoring, and how crucial it is to improving performance. The goal is to use monitoring early on in the lifecycle of our project (as we have done already with testing and deployment), so we can use it as another form of verification. Next, he showed us how we can do metrics today, using custom functions (like the number of requests, the number of successful responses, how big a load we are pushing to external systems like the the database, how to track memory or cpu usage from the vm etc). 
+他首先谈到了监控，以及监控对提高性能的重要性。我们的目标是在项目生命周期的早期就使用监控（就像我们已经在测试和部署方面做的那样），这样我们就可以把它作为另一种形式的验证。接下来，他向我们展示了我们今天如何使用自定义函数来做指标（比如请求的数量，成功响应的数量，我们向数据库等外部系统推送了多大的负载，如何从 vm 跟踪内存或 cpu 的使用情况等等）。
 
-But as we add more and more, this custom set up becomes repetitive. Telemetry uses events emitted from various parts of our systems, and then attaches to those events by using handlers, which are in turn pushed to a reporter system like statsd. 
+但随着我们添加的内容越来越多，这种自定义设置就会变得重复。Telemetry 使用从我们系统的各个部分发出的事件，然后通过使用处理程序附加到这些事件上，再将这些事件推送到像 statsd 这样的报告系统。
 
-A Telemetry event consists for three parts, the event name, the measurements (measurable properties like payload) and some metadata. Various libraries are beginning to add support for Telemetry emitting events in them, like Ecto from v3.1, Phoenix from v1.5 and Plug from 1.8. Arkadiusz also showed us `Telemetry.Poller` which every couple of seconds picks some metrics from the BEAM and emits them as Telemetry events and `Telemetry.Metrics` which allows us to specify how telemetry events are aggregated over time. Some examples of metrics is `last_value`, `sum`, `counter` and `distribution` which gives us some insight into statistics. 
+一个 Telemetry 事件由三部分组成，事件名称、测量值（可测量的属性，如有效载荷）和一些元数据。各种库都开始在其中添加对 Telemetry 发射事件的支持，比如 v3.1 的 Ecto，v1.5 的 Phoenix 和 1.8 的 Plug。Arkadiusz 还向我们展示了 `Telemetry.Poller`，它每隔几秒钟就会从 BEAM 中选取一些指标，并将其作为遥测事件发射出去，以及 `Telemetry.Metrics`，它允许我们指定如何随着时间的推移对遥测事件进行汇总。一些指标的例子是 `last_value`、`sum`、`counter ` 和 `distribution`，这让我们对统计有了一些了解。
 
-Lastly, he demonstrated the way you can plug Telemetry into a project by using the Rumble application from the Phoenix Programming book. It is as simple as adding the dependencies in `mix.exs`, making a custom module that defines which metrics we want, supervising it in `application.ex` and we are good to go from the application standpoint. The difficult part is setting up the reporter, like statsd, but there is going to be one included in Phoenix as well, where we will be able to access it from a route.
+最后，他演示了如何通过使用 Phoenix 编程书中的 Rumble 应用程序将 Telemetry 插入到项目中。很简单，只要在 `mix.exs` 中添加依赖关系，做一个自定义模块，定义我们想要哪些指标，在 `application.ex` 中进行监督，从应用的角度来看，我们就可以了。困难的部分是设置报告器，就像 statsd 一样，但是 Phoenix 中也会包含一个报告器，我们将能够从一个路由中访问它。
 
 [![](https://img.youtube.com/vi/cOuyOmcDV1U/0.jpg)](https://www.youtube.com/watch?v=cOuyOmcDV1U)
 
-## Erlang Ecosystem Foundation
+## Erlang Ecosystem 基金会
 
-As they did in CODE BEAM SF conference, we were given the presentation on the new [Erlang Ecosystem Foundation](https://erlef.org/). They stated again that things are still a little blurry, and we will probably have more information in the coming months, but check out the video of the presentation just to know what's coming.
+正如他们在 CODE BEAM SF 大会上所做的那样，我们得到了关于新的 [Erlang Ecosystem Foundation](https://erlef.org/) 的介绍。他们再次表示，事情还有点模糊，我们可能会在未来几个月内得到更多的信息，但看看演讲的视频就知道会发生什么了。
 
-## Not nearly done
+## 还没有结束
 
-These were not all the talks of the conference, there were a few more, which you can check out on the [Code Sync](https://www.youtube.com/channel/UC47eUBNO8KBH_V8AfowOWOw) Youtube channel. Kudos to them for organizing a great conference, if you are located in Europe you can check all the other conferences they host in [their website](https://codesync.global/).
+这些并不是会议的全部演讲，还有一些，你可以在 [Code Sync](https://www.youtube.com/channel/UC47eUBNO8KBH_V8AfowOWOw) 的 Youtube 频道中查看。感谢他们组织了一个伟大的会议，如果你在欧洲，你可以在[他们的网站](https://codesync.global/)上查看他们举办的所有其他会议。
