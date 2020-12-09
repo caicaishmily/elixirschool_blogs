@@ -10,27 +10,29 @@ excerpt: >
   We'll use LiveView's `live_link/2` together with the `handle_params/3` callback to allow users to sort a table in real-time.
 ---
 
-LiveView makes it easy to solve for some of the most common UI challenges with little to no front-end code. It allows us to save JavaScript for the hard stuff––for complex and sophisticated UI changes. In building out a recent admin-facing view that included a table of student cohorts at the Flatiron School, I found myself reaching for LiveView. In just a few lines of backend code, my sortable table was up and running. Keep reading to see how you can leverage LiveView's `live_link/2` and `handle_params/3` to build out such a feature.
+# 利用 Live View 的 `live_link` 构建表格排序 UI
 
-## The Feature
+LiveView 可以轻松解决一些最常见的 UI 挑战，几乎不需要前端代码。它让我们可以把 JavaScript 省下来，用于复杂而精密的 UI 更改。在构建最近的一个面向管理员的视图时，包括 Flatiron 学校的学生群体表，我发现自己需要用到 LiveView。只需几行后台代码，我的可分类表格就可以运行了。继续阅读，看看你将如何利用 LiveView 的 `live_link/2` 和 `handle_params/3` 来构建这样一个功能。
 
-Our view presents a table of student cohorts that looks like this:
+## 功能
 
-![live view table]({% asset live-view-table.png @path %})
+我们的视图呈现了一个学生群体的表格，看起来像这样。
 
-Users need to be able to sort this table by cohort name, campus, start date or status. We'd also like to ensure that the "sort by" attribute is included in the URL's query params, so that users can share links to sorted views.
+![实时视图表](https://elixirschool.com/assets/live-view-table-de7e10060f002103cea071882feaa96a21c4c04777a4173a1f6953ff68340719.png)
 
-Here's a look at the behavior we're going for. Note how the URL changes when we click on a given column heading to sort the table.
+用户需要能够按学生姓名、校区、开始日期或状态对该表进行排序。我们还希望确保 "排序" 属性包含在 URL 的查询参数中，这样用户就可以共享排序视图的链接。
+
+下面是我们要实现的行为。请注意，当我们点击给定的列标题对表格进行排序时，URL 是如何变化的。
 
 <iframe width="560" height="315" src="https://www.youtube.com/embed/-4VRaX1uEhk" frameborder="0" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
-## Using `live_link/2`
+## 使用 `live_link/2`
 
-LiveView's [`live_link/2`](https://hexdocs.pm/phoenix_live_view/Phoenix.LiveView.html#module-live-navigation) function allows page navigation using the browser's [pushState API](https://developer.mozilla.org/en-US/docs/Web/API/History_API). This will ensure that that URL will change to include whatever parameters we include in a given `live_link/2` call.
+LiveView 的 [`live_link/2`](https://hexdocs.pm/phoenix_live_view/Phoenix.LiveView.html#module-live-navigation) 函数允许使用浏览器的 [pushState API](https://developer.mozilla.org/en-US/docs/Web/API/History_API) 进行页面导航。这将确保该 URL 将改变以包含我们在给定的 `live_link/2` 调用中包含的任何参数。
 
-One important thing to note before we proceed, however. In order to use the live navigation features, our live view needs to be mounted directly in the router, _not_ rendered from a controller action.
+然而，在我们继续之前，有一件重要的事情要注意。为了使用实时导航功能，我们的 live view 需要直接挂载在路由器中，而不是从控制器动作中渲染。
 
-Our router mounts the live view like this:
+我们的路由器是这样挂载 live view 的。
 
 ```elixir
 # lib/course_conductor_web/router.ex
@@ -41,9 +43,9 @@ scope "/", CourseConductorWeb do
 end
 ```
 
-And we're ready to get started!
+我们已经准备好开始了！
 
-We'll start by turning the `"Name"` table header into a live link.
+我们先将 `"Name"` 表头变成一个实时链接。
 
 ```html
 # lib/course_conductor_web/templates/cohorts/index.html.leex
@@ -53,28 +55,29 @@ We'll start by turning the `"Name"` table header into a live link.
 </table>
 ```
 
-The `live_link/2` function generates a live link for HTML5 pushState based navigation *without* page reloads.
+`live_link/2` 函数为基于 HTML5 的 pushState 导航生成一个实时链接，*不需要* 页面重新加载。
 
-With the help of the the `Routes.live_path` helper, we're generating the following live link: `"/cohorts?sort_by=name"`. Since this route belongs to the `CohortsLive` live view that we've already mounted, _and_ since that live view is defined in our router (as opposed to rendered from a controller action), this means we will invoke our existing live view's `handle_params/3` function _without mounting a new LiveView_. Pretty cool!
+在 `Routes.live_path` 助手的帮助下，我们生成了以下的实时链接。`"/cohorts?sort_by=name"`。由于这个路由属于我们已经挂载的 `CohortsLive` live view，而且由于该 LiveView 是在我们的路由器中定义的(而不是从控制器动作中渲染的)，这意味着我们将调用我们现有的实时视图的 `handle_params/3` 函数 _而无需挂载一个新的实时视图_。非常酷!
 
-Let's take a look at how we can implement a `handle_params/3` function now.
+让我们看看现在如何实现 `handle_params/3` 函数。
 
-## Implementing `handle_params/3`
+## 实现 `handle_params/3`
+1
+`handle_params/3` 回调在两种情况下被调用。
 
-The `handle_params/3` callback is invoked under two circumstances.
-* After `mount/2` is called (i.e. when the live view first renders)
-* When a live navigation event, like a live link click, occurs. This second circumstance only triggers this callback when, as described above, the live view we are linking to is the same live view we are currently on _and_ the LiveView is defined in the router.  
+* 在 `mount/2` 被调用后（即实时视图首次渲染时）。
+* 当发生实时导航事件时，比如点击实时链接。这第二种情况只有当如上所述，我们链接到的实时视图与我们当前所处的实时视图相同时，才会触发这个回调，而且实时视图是在路由器中定义的。 
 
-`handle_params/3` receives three arguments:
-* The query parameters
-* The requested url
-* The socket
+`handle_params/3` 接收三个参数。
+* 查询参数
+* 请求的地址
+* socket
 
-We can use `handle_params/3` to update socket state and therefore trigger a server re-render of the template.
+我们可以使用 `handle_params/3` 来更新 socket 状态，从而触发服务器对模板的重新渲染。
 
-Given that `handle_params/3` will be invoked by our live view whenever our `"Name"` live link is clicked, we need to implement this function in our live view to match and act on the `sort_by` params our live link will send.
+鉴于 `handle_params/3` 将被我们的 liveview 调用，每当我们的 `"Name"` 实时链接被点击时，我们需要在我们的实时视图中实现这个函数，以匹配和执行我们的实时链接将发送的 `sort_by` 参数。
 
-Assuming we have the following live view that mounts and renders a list of cohorts:
+假设我们有下面的实时视图，它可以加载和渲染一个同学列表。
 
 ```elixir
 # lib/course_conductor_web/live/cohorts_live.ex
@@ -93,7 +96,7 @@ defmodule CourseConductorWeb.CohortsLive do
 end
 ```
 
-We'll implement our `handle_params/3` function like this:
+像这样实现我们的 `handle_params/3`：
 
 ```elixir
 #  lib/course_conductor_web/live/cohorts_live.ex
@@ -109,7 +112,6 @@ def handle_params(%{"sort_by" => sort_by}, _uri, socket) do
   end
 end
 
-
 def handle_params(_params, _uri, socket) do
   {:noreply, socket}
 end
@@ -119,22 +121,22 @@ def sort_cohorts(cohort, "name") do
 end
 ```
 
-Note that we've included a "catch-all" version of the `handle_params/3` function that will be invoked if someone navigates to `/cohorts` and includes query params that do not match the `"sort_by"` param that we care about. If our live view receives such a request, it will not update state.
+注意，我们已经包含了 `handle_params/3` 函数的 "catch-all" 版本，如果有人浏览到 `/cohorts`，并且包含了与我们关心的 `"sort_by"` 参数不匹配的查询参数，那么该函数将被调用。如果我们的实时视图收到这样的请求，它将不会更新状态。
 
-Now, when a user clicks the `"Name"` live link, two things will happen:
+现在，当用户点击 `"Name"` 实时链接时，会发生两件事。
 
-* The browser's pushState API will be leveraged to change the URL to `/cohorts?sort_by=name`
-* Our already-mounted live view's `handle_params/3` function will be invoked with the params `%{"sort_by" => "name"}`
+* 浏览器的 pushState API 将被调用，将 URL 改为 `/cohorts?sort_by=name`。
+* 我们已经挂载的 live view `handle_params/3` 函数将被调用，参数 `%{"sort_by" => "name"}`。
 
-Our `handle_params/3` function will then sort the cohorts stored `socket.assigns` by cohort name and update the socket state with the sorted list. The template will therefore re-render with the sorted list.
+我们的 `handle_params/3` 函数将按照 cohort 名称对存储的 `socket.assigns` 的 cohort 进行排序，并根据排序后的列表更新 socket 状态。因此，模板将用排序后的列表重新渲染。
 
-Since `handle_params/3` is _also_ called after `mount/2`, we have therefore allowed a user to navigate directly to `/cohorts?sort_by=name` via their browser and see the live view render with a table of cohorts already sorted by name. And just like that we've enabled users to share links to sorted table views with zero additional lines of code!
+由于 `handle_params/3` 在 `mount/2` 之后 _也_ 被调用，因此我们允许用户通过浏览器直接导航到 `/cohorts?sort_by=name`，并在实时视图中看到已经按名称排序的同组表。就这样，我们让用户以零负担的代码来分享排序表视图的链接。
 
-## More Sorting!
+## 更多排序!
 
-Now that our "sort by name" feature is up and running, let's add the remaining live links to allow users to sort by the other attributes we listed earlier: campus, start date and status.
+现在，我们的 "按名称排序" 功能已经启动并运行，让我们添加其余的实时链接，以允许用户按照我们之前列出的其他属性进行排序：校园、开始日期和状态。
 
-First, we'll make each of these table headers into a live link:
+首先，我们将把这些表头中的每一个都变成一个实时链接。
 
 ```html
 <table>
@@ -145,7 +147,7 @@ First, we'll make each of these table headers into a live link:
 </table>
 ```
 
-And we'll build out our `handle_params/3` function to operate on params describing a sort by any of these attributes:
+我们将更新我们的 `handle_params/3` 函数，对描述这些属性的参数进行操作。
 
 ```elixir
 def handle_params(%{"sort_by" => sort_by}, _uri, socket) do
@@ -160,15 +162,15 @@ def handle_params(%{"sort_by" => sort_by}, _uri, socket) do
 end
 ```
 
-Here, we've added a check to see if the `sort_by` attribute is included in our list of sortable attributes.
+在这里，我们添加了一个检查，以查看 `sort_by` 属性是否包含在我们的可排序属性列表中。
 
 ```elixir
 when sort_by in ~w(name course_offering campus start_date end_date lms_cohort_status)
 ```
 
-If so, we will proceed to sort cohorts. If not, i.e. if a user pointed their browser to `/cohorts?sort_by=not_a_thing_we_support`, then we will ignore the `sort_by` value and refrain from updating socket state.
+如果是这样，我们将继续对同族进行排序。如果没有，即如果用户将浏览器指向 `/cohorts?sort_by=not_a_thing_we_support`，那么我们将忽略 `sort_by` 的值，并避免更新 socket 状态。
 
-Next up, we'll add the necessary version for the `sort_cohorts/2` function that will pattern match against our new "sort by" options:
+接下来，我们将为 `sort_cohorts/2` 函数添加必要的版本，它将针对我们新的 "排序" 选项进行模式匹配。
 
 ```elixir
 def sort_cohorts(cohorts, "campus") do
@@ -190,8 +192,8 @@ def sort_cohorts(cohorts, "status") do
 end
 ```
 
-And that's it!
+就是这样！
 
-## Conclusion
+## 结语
 
-Once again LiveView has made it easy to build seamless real-time UIs. So, while LiveView doesn't mean you'll never have to write JavaScript again, it _does_ mean that we don't need to leverage JavaScript for common, everyday challenges like sorting data in a UI. Instead of writing complex vanilla JS, or reaching for a powerful front-end framework, we were able to create a sophisticated real-time UI with mostly back-end code, and back it all with the power of fault-tolerant Elixir processes.
+LiveView 再一次让构建无缝实时用户界面变得简单。因此，虽然 LiveView 并不意味着你再也不用写 JavaScript 了，但它确实意味着我们不需要利用 JavaScript 来应对常见的日常挑战，比如在 UI 中进行数据排序。我们不需要编写复杂的 vanilla JS，也不需要使用强大的前端框架，而是能够使用大部分后端代码创建一个复杂的实时 UI，并以强大的 Elixir 容错流程作为后盾。
