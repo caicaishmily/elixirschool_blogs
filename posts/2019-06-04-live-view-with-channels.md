@@ -9,6 +9,7 @@ excerpt: >
   By pairing a custom Phoenix Channel with our LiveView, with the help of a Registry, we can respond to LiveView events with custom JavaScript on the client-side to provide better UX.
 ---
 
+# 使用 LiveView 的 Channels 实现更好的用户体验
 LiveView has given us the ability to implement flexible and responsive UX almost entirely with server-side code. But what happens when our need for a responsive UI surpasses what LiveView seemingly offers? When the demands of a particular feature have us reaching for JavaScript? It is possible to incorporate custom JS into the LiveView life cycle with the help of a custom LiveView channel and a Registry. Keep reading to see how we did it!
 
 ## The Problem
