@@ -10,23 +10,24 @@ excerpt: >
 ---
 
 # 使用 LiveView 的 Channels 实现更好的用户体验
-LiveView has given us the ability to implement flexible and responsive UX almost entirely with server-side code. But what happens when our need for a responsive UI surpasses what LiveView seemingly offers? When the demands of a particular feature have us reaching for JavaScript? It is possible to incorporate custom JS into the LiveView life cycle with the help of a custom LiveView channel and a Registry. Keep reading to see how we did it!
 
-## The Problem
+LiveView 赋予我们几乎完全用服务器端的代码来实现灵活和响应式 UX 的能力。但是，当响应式 UI 的需求超过了 LiveView 提供的功能时，会发生什么？当某一特定功能的需求让我们不得不求助于 JavaScript 时，会发生什么？在自定义 LiveView Channel 和 Registry 的帮助下，可以将自定义 JS 纳入到 LiveView 的生命周期中。继续阅读，看看我们是如何做到的。
 
-In a [recent post](https://elixirschool.com/blog/live-view-with-presence/), we built a straightforward chatting application backed by LiveView, PubSub and Presence. We implemented nearly all of the necessary features (live updates as users type in new messages, a list that keeps track of users in the chat room and who is typing!) with only 90 lines of LiveView code.
+## 问题
 
-But then we ran into a blocker.
+在 [最近的文章](https://elixirschool.com/blog/live-view-with-presence/) 中，我们构建了一个由 LiveView、PubSub 和 Presence 支持的简单聊天应用程序。我们只用了 90 行 LiveView 代码就实现了几乎所有必要的功能（用户输入新消息时的实时更新，一个可以跟踪聊天室里的用户以及谁在打字的列表！）。
 
-When new chat messages were appended to the chat window, they appeared *just* out of frame.
+但后来我们遇到了一个拦路虎。
 
-![chat message not visible]({% asset chat-message-not-visible.png @path %})
+当新的聊天信息被添加到聊天窗口时，它们 *就* 不会出现在聊天框里。
+
+![chat message not visible](https://elixirschool.com/assets/chat-message-not-visible-636e5b63bfbbe5bc65bcdeb962b3f447c140f498877a16aa09392d4d568c0f8a.png)
 
 ---
 
-The chat window needed to scroll down to accommodate and display the new message. This is easy enough to do with just one or two lines of JavaScript: grab the height of the chat window, and set the `scrollTop` accordingly.
+聊天窗口需要向下滚动以容纳并显示新消息。这很容易做到，只需一两行 JavaScript：获取聊天窗口的高度，并设置相应的 `scrollTop`。
 
-If you're familiar with Phoenix Channels, you might reach for something like this:
+如果你熟悉 Phoenix Channels，你可能会这样做：
 
 ```javascript
 channel.on("new_message", (msg) => {
@@ -35,80 +36,78 @@ channel.on("new_message", (msg) => {
 })
 ```
 
-But wait! The LiveView client-side library only responds to _one_ event from the LiveView process running on the server––the diff event. This event isn't granular enough to tell us _what_ changed on the page. It merely forces the appropriate portions of the page to re-render.
+等一下！ LiveView 客户端的库只响应服务器上运行的 LiveView 进程的 _一个_ 事件 -- 即 diff 事件。这个事件没有足够的粒度来告诉我们页面上发生了 _什么_ 变化。它只是强制页面的适当部分重新渲染。
 
-So, how can we get our LiveView to emit an event that our front-end _can_ respond to in order to fire our `scrollTop`-adjusting JS?
+那么，我们如何让我们的 LiveView 发出一个事件，让我们的前端能够响应这个事件，从而启动我们的 `scrollTop` 调整 JS 呢？
 
-## The Solution
+## 解决办法
 
-We need to do a few things in order to get this working:
+我们需要做一些事情来让它工作。
 
-* Extend the LiveView socket with a custom channel
-* Teach our LiveView processes to send messages to that channel, so that the channel can push them to the client.
+* 用自定义 channel 扩展 LiveView  socket 。
+* 教会我们的 LiveView 进程向该 channel 发送消息，以便该 channel 可以将消息推送给客户端。
 
-It's worth noting here that the responsibility of a custom LiveView channel should be narrowly scoped. LiveView can and should handle almost all of the updates to the LiveView template. That's the beauty of LiveView! We don't need to write a set of custom client-side functions for updating the page based on specific events like we've become used to doing when working with Phoenix Channels. However, when we need to trigger a client-side interaction, like our `scrollTop` adjustment, that the LiveView client isn't capable of handling, we can reach for a custom channel.
+这里值得注意的是，自定义 LiveView channel 的责任范围应该很窄。LiveView 可以也应该处理几乎所有对 LiveView 模板的更新。这就是 LiveView 的魅力所在! 我们不需要像我们在使用 Phoenix Channels 时习惯的那样，写一套自定义的客户端函数来根据特定事件更新页面。然而，当我们需要触发一个客户端的交互，比如我们的 `scrollTop` 调整，而 LiveView 客户端并不能处理时，我们可以求助于一个自定义的 channel。
 
-Now that we have a basic understanding of the problem we're trying to solve, and the tools we'll use to solve it, let's get started!
+现在我们对我们要解决的问题有了基本的了解，以及我们将使用的工具来解决这个问题，让我们开始吧!
+## 流程
 
-## The Process
+在我们开始写代码之前，我们先一步步走完这个功能的期望代码流程。
 
-Before we start writing code, let's walk through the desired code flow of this feature, one step at a time.
+1. 用户访问 `/chats/:id`
+2. 控制器挂载 live view 并且渲染静态模板
+3. 客户端连接到 Live View socket，并在这个 socket 上加入一个自定义 channel
 
-1. User visits `/chats/:id`
-2. Controller mounts the live view and renders the static template
-3. Client connects to the Live View socket and joins a custom channel on this same socket
+然后...
 
-Later...
+4. 用户提交新的聊天信息，发送事件给 live view
+5. 作为响应，live view 更新状态，重新渲染页面并且广播该消息给其他订阅了聊天室主题的用户
+6. 其他的 live view 接收到广播，更新自己的状态重新渲染模板
+7. live view 给自己关联的 channel 发送消息（这个 channel 已经加入到 live view 的 socket）
+8. 这个 channel 接收到消息以后将其推送至前端
+9. 前端接收到消息以后通过触发我们的 `scrollTop` JavaScript 调整页面
 
-4. User submits new chat message, sending an event to the live view
-5. The live view responds to the message by updating state, re-rendering the page and broadcasting the event to the other live view processes subscribing to that chat room topic
-6. The other live views receive the broadcast, update their own state and re-render the template
-7. The live views send the message to their "associated" channel (i.e. the channel joined on the live view's socket)
-8. The channel receives the message and pushes it out to the front-end
-9. Front-end receives the message and responds by triggering our `scrollTop` adjustment JavaScript
+有大量的代码需要编写，所以我们将方法组织成以下几个部分。
 
-There is a lot of code to get through, so we've organized our approach into the following parts:
+I. [建立 Socket 和 Channel](#-establishing-the-socket-and-channel)  
 
-I. [Establishing the Socket and Channel](#-establishing-the-socket-and-channel)  
+II. [LiveView 处理事件](#handling-events-in-the-liveview)
 
-II. [Handling Events in the LiveView](#handling-events-in-the-liveview)
+III. [LiveView 到 Channel 的通信](#communicationg-from-the-liveview-to-the-channel)
 
-III. [Communicating from the LiveView to the Channel](#communicationg-from-the-liveview-to-the-channel)
+IV. [Channel 发送消息给前端](#sending-messages-from-the-channel-to-the-front-end)
 
-IV. [Sending Messages From the Channel to the Front-End](#sending-messages-from-the-channel-to-the-front-end)
+## 起步
 
-## Getting Started
+如果你想跟随本教程，我们建议你先阅读并完成[上一篇文章](https://elixirschool.com/blog/live-view-with-presence/)中的教程。这将使你的代码进入正确的初始阶段。你也可以克隆下 [repo](https://github.com/elixirschool/live-view-chat)来获得初始代码。另外，你可以检查[完整代码](https://github.com/elixirschool/live-view-chat/tree/live-view-channel-registry)。
 
-If you'd like to follow along with this tutorial, we recommend reading and completing the tutorial in our previous post [here](https://elixirschool.com/blog/live-view-with-presence/) first. This will get your code into the correct starting state. You can also clone down the repo [here](https://github.com/elixirschool/live-view-chat) to get the starting code. Otherwise, you can checkout the completed code [here](https://github.com/elixirschool/live-view-chat/tree/live-view-channel-registry).
+## 第一部分: 建立 Socket 和 Channel
 
+为了保证 live view 进程能够在正确的时间向正确的 channel 发送消息，我们需要让 live view 与该 channel 共享一个 socket。我们先来关注一下这部分代码流程。
 
-## Part I: Establishing the Socket and Channel
+1. 用户访问 `/chats/:id`
+2. 控制器挂载 live view 并且渲染静态模板
+3. 客户端连接到 Live View socket，并在这个 socket 上加入一个自定义 channel
 
-In order to guarantee that the live view process can send a message to the right channel at the right time, we need to have the live view share a socket with that channel. Let's start by focusing on this portion of the code flow:
+下面就来详细了解一下这个过程是如何进行的：
 
-1. User visits `/chats/:id`
-2. Controller mounts the live view and renders the static template
-3. Client connects to the Live View socket and joins the channel on this same socket
-
-Here's a closer look at how this procedure works:
-
-![live view mounts and renders]({% asset live-view-mount-render.png @path %})
+![live view mounts and renders](https://elixirschool.com/assets/live-view-mount-render-dbd2c5a4848829b86ea213a127a2cc4a8b06edc3e5167d28593fa9ad6d0a599a.png)
 
 ---
 
-![live view socket connects]({% asset live-view-socket-connect.png @path %})
+![live view socket connects](https://elixirschool.com/assets/live-view-socket-connect-a0fb82f53bf580475c831dee0f1cb9f5cb29497feb914924b33f4fc407470cce.png)
 
 ---
 
-![live view channel joins]({% asset live-view-channel-join.png @path %})
+![live view channel joins](https://elixirschool.com/assets/live-view-channel-join-7a01d2bb0395bfdb55975eb16f71c7a93aeafcc9dd85d9e20a85510e1ae6e0ff.png)
 
 ---
 
-Let's dive in and write some code!
+让我们深入其中写一些代码吧!
 
-### Extending the LiveView Socket
+### 扩展 LiveView Socket
 
-In order to define a custom channel that will share a socket with our LiveView process, we need to extend the LiveView socket that the LiveView library provides us. LiveView doesn't (yet) provide a way for us to extend this module programmatically, so we'll define our own socket with everything it needs to support our LiveView and our custom channel:
+为了定义一个与我们的 LiveView 进程共享 socket 的自定义 channel ，我们需要扩展 LiveView 库提供给我们的 LiveView socket。LiveView 还没有提供一种方法让我们以编程方式扩展这个模块，所以我们将定义我们自己的socket，并提供它所需的一切来支持我们的 LiveView 和我们的自定义 channel。
 
 ```elixir
 # lib/phat_web/channels/live_socket.ex
@@ -147,13 +146,13 @@ defmodule PhatWeb.LiveSocket do
 end
 ```
 
-The only line we need to add in addition to what we've copied from the LiveView source code is the channel definition in which we map the topic, `"event_bus:*"` to our soon-to-be-defined custom channel.
+除了从 LiveView 源码中复制的内容之外，我们需要添加的唯一一行代码是 channel 定义，其中我们将主题 `"event_bus:*"` 映射到我们即将定义的自定义 channel。
 
 ```elixir
 channel "event_bus:*", PhatWeb.ChatChannel
 ```
 
-Next we'll tell our app's `Endpoint` module to map the socket mounted at the `"/live"` endpoint to the socket we just defined:
+接下来，我们将告诉应用的 `Endpoint` 模块将挂载在 `"/live"` 端点的 socket 映射到我们刚刚定义的 socket。
 
 ```elixir
 # lib/phat_web/endpoint.ex
@@ -165,9 +164,9 @@ defmodule PhatWeb.Endpoint do
 end
 ```
 
-### Defining the Custom Channel
+### 自定义 Channel
 
-Now we're ready to define our `ChatChannel`:
+现在我们准备定义我们的 `ChatChannel`:
 
 ```elixir
 # lib/phat_web/channels/chat_channel.ex
@@ -180,9 +179,9 @@ defmodule PhatWeb.ChatChannel do
 end
 ```
 
-### Connecting to the Socket and Joining the Channel
+### 连接到 Socket 和加入 Channel
 
-With our socket and our channel defined, we can tell the front-end client to join the channel after connecting to the LiveView socket:
+随着我们 socket 和 channel 的定义，我们可以告诉前端在其连接完 LiveView socket 之后加入 channel；
 
 ```javascript
 // assets/js/app.js
@@ -196,12 +195,12 @@ liveSocket.connect()
 let channel = liveSocket.channel("event_bus:" + chatId, {})
 ```
 
-Now, when the page loads, we will:
+现在，页面加载以后，我们将：
 
-* Connect to and start the LiveView process running over the socket
-* Join a channel over that _same_ socket
+* 连接并启动 LiveView 创建的运行中的 socket 进程。
+* 在 _相同的_ socket 之上加入一个 channel
 
-Later, we can write some code on the front-end to respond to a specific event by changing the chat box's scroll height:
+之后，我们可以在前端写一些代码，通过改变聊天框的滚动高度来响应特定事件。
 
 ```javascript
 channel.on("new_message", (msg) => {
@@ -210,38 +209,37 @@ channel.on("new_message", (msg) => {
 })
 ```
 
-So, how can we get our channel to send the `"new_message"` event to the front-end? Let's find out!
+所以，我们如何让我们的 channel 发送 `"new_message"` 事件给到前端呢？ 让我们一探究竟！
+## 第二部分: 在 LiveView 中处理事件
 
-## Part II: Handling Events in the LiveView
+在本节中，我们将深入了解以下部分的流程。
 
-In this section, we'll dive into the following portion of the process:
+1. 用户提交新的聊天消息，向 live view 发送一个事件；live view 更新其状态并重新渲染模板。
+2. live view 将该事件广播给订阅该聊天室主题的其他 live view 进程，然后这些进程更新自己的状态并重新渲染模板。
+3. live view *向自己* 发送一条消息，指示它们反过来向它们的 "关联" channel（即在 live view 的 socket 上加入的 channel）发送消息。这确保了 live view 在告诉 channel 向前端推送消息*之前*，会完成重新渲染。
 
-1. User submits a new chat message, sending an event to the live view; The live view updates its state and re-renders the template
-2. The live view broadcasts the event to the other live view processes subscribing to that chat room topic which then update their own state and re-render their templates
-3. The live views send a message *to themselves*, instructing them to in turn send a message to their "associated" channel (i.e. the channel joined on the live view's socket). This ensures that the live view will finish re-rendering *before* telling the channel to push a message to the front-end.
+下面来仔细看看这个流程。
 
-Here's a closer look at this flow:
-
-![live view handles event]({% asset live-view-handle-event.png @path %})
-
----
-
-![live view broadcasts event]({% asset live-view-broadcasts-event.png @path %})
+![live view handles event](https://elixirschool.com/assets/live-view-handle-event-07e9afbb4dcefb73c975b71944bedfc5291cede4f09e4e237660a9653a465161.png)
 
 ---
 
-![live view sends message to self]({% asset live-view-send-self.png @path %})
+![live view broadcasts event](https://elixirschool.com/assets/live-view-broadcasts-event-531b91250f86cd558d77699b277d586b5dd6ff0b103edb29cf20f99f35d8261c.png)
 
 ---
 
-### Receiving Events in the LiveView
+![live view sends message to self](https://elixirschool.com/assets/live-view-send-self-030345f207cfe93066044d68ef2b64570f67634f7f62617580d3d0ab420dd992.png)
 
-When a user submits a new message via the chat form, it will send the `"new_message"` event to the LiveView process, over the socket. Our live view process already responds to this message by:
+---
 
-* Updating its own state and re-rendering the template to display the new message.
-* Broadcasting the message to the other running live view processes subscribed to the same topic so that everyone gets the new message and subsequent re-render.
+### 在 LiveView 中接收事件
 
-To get a refresher on how this works, check out our earlier post [here](https://elixirschool.com/blog/live-view-with-presence/). In this post, we'll just take a brief look at that code:
+当用户通过聊天表单提交新消息时，它将通过 socket 发送 `"new_message"` 事件到 LiveView 进程。我们的 live view 进程已经通过以下方式对该消息做出响应。
+
+* 更新自己的状态并重新渲染模板以显示新消息。
+* 将消息广播给订阅了同一主题的其他运行中的 live view 进程，以便每个人都能收到新消息和随后的重新渲染。
+
+要想了解如何工作，请查看我们之前的[文章](https://elixirschool.com/blog/live-view-with-presence/)。在这篇文章中，我们只简单地看一下这段代码。
 
 ```elixir
 # lib/phat_web/live/chat_live_view.ex
@@ -259,13 +257,13 @@ def handle_info(%{event: "new_message", payload: state}, socket) do
 end
 ```
 
-Its important to note that the live view is broadcasting the message to *all* of the LiveView processes subscribed to the chat room's topic, including itself. However, LiveView is smart enough not to re-render a page for which there are no diffs, so this isn't an expensive operation.
+需要注意的是，LiveView 正在向 *所有* 订阅了聊天室主题的 LiveView 进程广播消息，包括它自己。然而，LiveView 很聪明，不会重新渲染一个没有差异的页面，所以这不是一个昂贵的操作。
 
-### Sending Messages from the LiveView to the Channel
+### 从 LiveView 发送消息至 Channel 
 
-We need to ensure that the page has a chance to re-render before we have the channel send the message to the front-end. Otherwise the JavaScript function to adjust `scrollTop` might run before the new message is present on the page, thereby failing to actually make an adjustment to the chat window.
+我们需要确保在 channel 向前端发送消息之前，页面有机会重新渲染。否则，调整 `scrollTop` 的 JavaScript 函数可能会在新消息出现在页面上之前运行，从而无法真正对聊天窗口进行调整。
 
-*After* this `handle_info/2` function returns is the point at which we can be sure all LiveView templates are re-rendered:
+这个 `handle_info/2` 函数返回 *之后*，就是我们可以确定所有 LiveView 模板被重新渲染的时间点。
 
 ```elixir
 def handle_info(%{event: "new_message", payload: state}, socket) do
@@ -274,6 +272,8 @@ end
 ```
 
 So, how can we make sure each LiveView process handling this message will only send a message to the channel _after_ this function finishes working? We can use `send/2` to have the live view send a message to itself! Since a process can only do one thing at a time, the live view process will finish the the current work in the `handle_info/2`  processing the `"new_message"` event *before* acting on the message it receives from itself.
+
+那么，我们如何确保每个处理该消息的 LiveView 进程在该函数完成工作后才会向 channel 发送消息呢？我们可以使用 `send/2` 来让 live view 给自己发送消息！因为一个进程一次只能做一件事，所以 live view 进程将在 `handle_info/2` 处理 `"new_message"` 事件 *之前* 完成当前的工作，在对它从自己那里收到的消息采取行动。
 
 ```elixir
 def handle_info(%{event: "new_message", payload: state}, socket) do
@@ -287,46 +287,46 @@ def handle_info({:send_to_event_bus, msg}, socket) do
 end
 ```
 
-Now we've captured the moment in time at which to send a message from the LiveView process to the Channel process. But wait! How can we send a message to a process whose PID we don't know? The LiveView process, in its current form, doesn't know about the channel process with which it shares a socket. In order to fix this, we'll need to leverage a Registry.
+现在我们已经捕捉到了从 LiveView 进程向 Channel 进程发送消息的时间点。但是等一下！我们如何向一个我们不知道其 PID 的进程发送消息？LiveView 进程在其当前形式下，并不知道与它共享一个 socket 的 channel 进程。为了解决这个问题，我们需要利用一个 Registry。
 
-## Part III: Communicating from the LiveView to the Channel
+## 第三部分: 从 LiveView 到 Channel 的通信
 
-In this section, we'll register our channel process so that the live view can look up and send a message to the appropriate channel PID. Then, we'll teach the live view how to perform this lookup and send a message to the right channel PID.
+在本节中，我们将注册我们的 channel 进程，以便 live view 可以查找并向适当的 channel PID 发送消息。然后，我们将教 live view 如何执行这个查询并发送消息到正确的 channel PID。
 
-Here's the code flow we're aiming for:
+下面是我们的目标代码流程。
 
-1. The LiveView is mounted from the controller and stores a unique identifier of a "session UUID" in its own state; it renders the template with a hidden element that contains the session UUID encoded in a `Phoenix.Token`
-2. The channel's socket is connected with this token; the socket stores it in state.
-3. The channel is joined; it takes the session UUID from its socket's state and registers its PID under a key of that UUID.
+1. LiveView 从控制器上挂载，并在自己的状态下存储一个 "会话UUID" 的唯一标识符；它在模板上渲染一个隐藏的元素，该元素包含以 `Phoenix.Token` 编码的会话 UUID。
+2. Channel 的 socket 与此令牌相连，socket 将其存储在状态中。
+3. 加入 Channel；它从它的 socket 的状态中获取会话 UUID，并在该 UUID 的键下注册它的 PID。
 
-![live view mounts with session uuid]({% asset live-view-mount-session-uuid.png @path %})
-
----
-
-![live view channel connects]({% asset live-view-connect-channel.png @path %})
+![live view mounts with session uuid](https://elixirschool.com/assets/live-view-mount-session-uuid-7d42d71da5cbbb018ee7355b6e886f08f7d931bb36993ad71a1544a5612061de.png)
 
 ---
 
-![live view channel register]({% asset live-view-channel-register.png @path %})
+![live view channel connects](https://elixirschool.com/assets/live-view-connect-channel-00f63e49d325e2f1695e04e724c104d798715cc133b090bf28b81e6eb8752f2a.png)
 
 ---
 
-Later...
-
-4. When the user submits a new chat message, the LiveView processes that received the message broadcast will look up the channel PID under the session UUID in the registry
-5. Each live view will then send the message to the PID they looked up
-
-![live view looks up channel]({% asset live-view-lookup-send-to-channel.png @path %})
+![live view channel register](https://elixirschool.com/assets/live-view-channel-register-835188bac138761e9b6311391f9258993d665c93af43174f76c14eccf2d0d5c0.png)
 
 ---
 
-### Defining the Channel Registry
+然后...
 
-We'll use a process registry, implemented with Elixir's native [Registry](https://hexdocs.pm/elixir/Registry.html) module, to keep track of the channel PID so that the LiveView can look up its associated channel in order to send it a message.
+4. 当用户提交新的聊天消息时，收到消息广播的 LiveView 进程会在注册表中查找会话 UUID 下的频道 PID。
+5. 然后，每个 live view 都会将信息发送到他们所查找的 PID 上。
 
-*Its important to note that Elixir's Registry module isn't distribution friendly––if you look up a given PID created on one server on a totally different server, there's no guarantee that it will refer to the same process. But! Since our channel shares a socket with the LiveView process, it is guaranteed that the live view and the channel are running on the same server.*
+![live view looks up channel](https://elixirschool.com/assets/live-view-lookup-send-to-channel-ef04590f8407467e90778798ff76ee7755f595561355d9b83ec960ee12e42bd7.png)
 
-We'll tell Elixir's Registry supervisor to start supervising a named registry called `SessionRegistry` when our app starts up:
+---
+
+### 定义 Channel 注册表
+
+我们将使用 Elixir 的原生 [Registry](https://hexdocs.pm/elixir/Registry.html) 模块实现的进程注册表来跟踪 channel PID，以便 LiveView 能够查找其相关的频道，从而向其发送消息。
+
+*需要注意的是，Elixir 的注册表模块对分布式并不友好--如果你在一个完全不同的服务器上查找一个在一个服务器上创建的给定 PID，就不能保证它是指同一个进程。但是！由于我们的 channel 与 LiveView 进程共享一个 socket，所以可以保证 live view 和 channel 运行在同一个服务器上。
+
+我们将告诉 Elixir 的注册表监督器，当我们的应用启动时，开始监督一个名为 `SessionRegistry` 的命名注册表。
 
 ```elixir
 # application.ex
@@ -344,11 +344,11 @@ def start(_type, _args) do
   end
 ```
 
-We want to register our channel PID when the channel is joined. But we need to store the PID under a unique key that the live view can use to look it up by later. So, we need to create such an identifier and find a way to make it available to both the live view and the channel.
+我们想在 channel 加入时注册我们的 channel PID。但是，我们需要将 PID 存储在一个唯一的密钥下，以便 live view 以后可以使用它来查找。所以，我们需要创建这样一个标识符，并找到一种方法让它对 live view 和 channel 都可用。
 
-### Sharing the Session UUID
+### 共享会话 UUID
 
-When the LiveView first mounts via the controller, we'll create a unique identifier––a session UUID––to store in the live view's state:
+当 LiveView 第一次通过控制器挂载时，我们将创建一个唯一的标识符--会话 UUID --存储在 LiveView 的状态中。
 
 ```elixir
 # lib/phat_web/controllers/chat_controller.ex
@@ -383,7 +383,7 @@ def mount(%{chat: chat, current_user: current_user, session_uuid: session_uuid},
 end
 ```
 
-In the `mount/2` function of our live view, we store the session UUID in the socket's state so that we can use it to look up the channel PID later. We also encode the session UUID into a signed `Phoenix.Token` so that we can put it on the page and use it when we join the channel from the client-side.
+在 live view 的 `mount/2` 函数中，我们将 session UUID 存储在 socket 的状态中，这样我们就可以在以后使用它来查询 channel 的 PID。我们还将会话 UUID 编码成一个有签名的 `Phoenix.Token`，这样我们就可以把它放在页面上，当我们从客户端加入 channel 时使用它。
 
 ```elixir
 # lib/phat_web/templates/chat/show.html.leex
@@ -391,13 +391,13 @@ In the `mount/2` function of our live view, we store the session UUID in the soc
 <%= tag :meta, name: "channel_token", content: @token %>
 ```
 
-Let's take a look at how we will give our channel access to this token.
+让我们来看看我们将如何给我们的 channel 访问这个 token。
 
-When we send the socket connection request from the browser, we hit the `connect/3` function of our extended Live View socket, `PhatWeb.LiveSocket`. At this time, we _don't_ have access to the Live View process's representation of the socket, but we _do_ have access to the channel's representation of the socket.
+当我们从浏览器发送 socket 连接请求时，我们触发了扩展的 Live View socket `PhatWeb.LiveSocket` 的 `connect/3` 函数。此时，我们 _没有_ 访问 Live View 进程对 socket 的表示，但我们 _有_ 访问 channel 对socket 的表示。
+ 
+我们需要让 channel 知道会话的 UUID。因此，我们将在 socket 连接请求中包含来自页面的签名令牌，并使用 `connect/3` 在 channel 的 socket 状态中存储会话 UUID。
 
-We need to give the channel awareness of the session UUID. So, we'll include the signed token from the page in the socket connection request and use `connect/3` to store the session UUID in the channel's socket state.
-
-We'll include the token in our socket connection request on the front-end:
+我们会在前端的 socket 连接请求中包含这个 token。
 
 ```javascript
 // assets/js/app.js
@@ -406,7 +406,7 @@ const liveSocket = new LiveSocket("/live", {params: {channel_token: channelToken
 liveSocket.connect()
 ```
 
-And we'll have the `PhatWeb.LiveSocket.connect/3` function verify the token, extract the session UUID and store it in the channel socket's state:
+我们会让 `PhatWeb.LiveSocket.connect/3` 函数验证 token，提取会话 UUID，并将其存储在 channel socket 的状态中。
 
 ```elixir
 # lib/phat_web/channels/live_socket.ex
@@ -423,9 +423,9 @@ def connect(params, socket, _connect_info) do
 end
 ```
 
-### Registering The Channel Process
+### 注册 Channel 进程
 
-Now, when we join the channel, we can look up the `:session_uuid` in the channel socket's state and use it to register the channel's PID in the `SessionRegistry` under a key of this UUID:
+现在，当我们加入 channel 时，我们可以在 channel socket 的状态中查找 `:session_uuid`，并用它在 `SessionRegistry` 中以这个 UUID 的键注册 channel 的 PID。
 
 ```elixir
 # lib/phat_web/channels/chat_channel.ex
@@ -440,20 +440,20 @@ defmodule PhatWeb.ChatChannel do
 end
 ```
 
-Now our registry is up and running, and we're registering a given channel PID under a unique identifier (session UUID) that live view with which the channel shares a socket connection is aware of.
+现在我们的注册表已经启动并运行了，我们在一个唯一的标识符（会话 UUID）下注册一个给定的 channel  PID，与 channel 共享一个套接字连接的实时视图是知道的。
 
-We're ready to have the live view send a message to its channel!
+我们已经准备好让 live view 向它的 channel 发送消息了!
 
-### Sending Messages to the Channel
+### 给 Channel 发消息
 
-Let's recap the "new chat message" process so far:
+让我们回顾一下到目前为止的 "新聊天信息" 过程。
 
-* A user submits the "new message" form and sends a `"new_message"` event to the live view
-* The live view responds to this event by updating its own socket's state, re-rendering _and_ broadcasting the `"new_message"` event to all the live view processes subscribing to the topic for this chat room, i.e. the processes that represent the other users in the chat room.
-* The live view processes receive this message broadcast and respond to it by updating their own state and re-rendering. They also `send` a message to themselves that they will process once they finish re-rendering.
-* The live view processes responds to the message they sent themselves, telling themselves to send a message to the channel with which they share a socket.
+* 用户提交 "新消息" 表单并发送 `"new_message"` 事件到 live view。
+* live view 通过更新自己的 socket 状态来响应这一事件，重新渲染 _并_ 向所有订阅该聊天室主题的 live view 进程（即代表聊天室中其他用户的进程）广播 `"new_message"` 事件。
+* live view 进程收到该消息广播后，会通过更新自己的状态和重新渲染来做出回应，同时也会发送一个 "新消息" 事件给所有订阅该聊天室主题的进程。他们也会向自己 `send` 一条消息，一旦完成重新渲染，他们就会进行处理。
+* live view 进程对自己发送的消息做出响应，告诉自己向与自己共享 socket 的 channel 发送消息。
 
-Now our live views have what they need to look up their associated channel. They are storing the _same_ session UUID in state that the channel used to register its PID in the `SessionRegistry`. So, our live views can look up the channel PID and send a message to that PID.
+现在我们的 live view 有了它们所需要的东西来查找它们的关联 channel。它们在状态中存储了与 channel 用于在 `SessionRegistry` 中注册其 PID _相同的_ session UUID。因此，我们的 live view 可以查找通道的 PID，并向该 PID 发送消息。
 
 ```elixir
 # lib/phat_web/live/chat_live_view.ex
@@ -472,29 +472,29 @@ def handle_info({:send_to_event_bus, msg}, socket = %{assigns: %{session_uuid: s
 end
 ```
 
-Each live view process shares a session UUID with the channel that was joined on its socket. In this sense, each live view has an "associated" channel. By registering the channel PID under this session UUID, the given live view can look up its associated channel's PID and send a message to that channel and that channel only.
+每个 live view 进程与在其 socket 上加入的 channel 共享一个会话 UUID。从这个意义上说，每个 live view 都有一个 "关联" channel。通过在这个会话 UUID 下注册 channel 的 PID，给定的 live view 可以查找其关联 channel 的 PID，并向该 channel 和仅向该 channel发送消息。
 
-Next up, we need to teach our channel to respond to this message.
+接下来，我们需要教会我们的 channel 响应这个消息。
 
-## Part IV: Sending Messages from the Channel to the Front End
+## 第四部分: 从 Channel 发送消息到前端
 
-In this section, we'll focus on the following portion of our process:
+在本节中，我们将重点介绍以下部分流程。
 
-1. The channel receives the message from the live view and pushes it out to the front-end
-2. The front-end receives the message and responds by triggering our `scrollTop` adjustment JavaScript
+1. channel 接收到实景的消息，并将其推送到前端。
+2. 前端接收到消息后，通过触发我们的 `scrollTop` 调整 JavaScript 来进行响应。
 
-Here's a closer look:
+下面就来仔细看看。
 
-![live view channel push]({% asset live-view-channel-push.png @path %})
-
----
-![live view front end update]({% asset live-view-front-end-update.png @path %})
+![live view channel push](https://elixirschool.com/assets/live-view-channel-push-ffbfdb98df546141488683d3b39582473ccfa0ec12342ee270a8f9c3180eba5b.png)
 
 ---
+![live view front end update](https://elixirschool.com/assets/live-view-front-end-update-d69dab82dbaebc110265742953633bc00006bb7ed4a9c0c202546dea4002f4ee.png)
 
-### Receiving Messages in the Channel
+---
 
-We need to define a `handle_info/` in the `ChatChannel` that knows how to respond to `"new_message"` messages by pushing them down the socket to the front-end.
+### 从 Channel 接收消息
+
+我们需要在 `ChatChannel` 中定义一个 `handle_info/`，这个 `handle_info/` 知道如何响应 `new_message` 消息，把它们从 socket 推送到前端。
 
 ```elixir
 # channel
@@ -504,9 +504,9 @@ def handle_info("new_message", socket) do
 end
 ```
 
-### Responding to Messages on the Front-End
+### 前端响应消息
 
-On the front-end, our channel JS is ready and waiting to fire:
+在前端，我们的 channel JS 已经准备好了，就等着开火了。
 
 ```javascript
 // assets/js/app.js
@@ -517,10 +517,10 @@ channel.on("new_message", function() {
 })
 ```
 
-Now, right after the page re-renders, the channel will receive the `"new_message"` message and push it to the client which is listening for just this event. The client reacts by firing our `scrollTop` adjustment JS and the user experiences a responsive UI––a chat window that automatically and seamlessly scrolls down to accommodate new messages in real-time.
+现在，页面重新渲染后，channel 将接收 `"new_message"` 消息，并将其推送给正在监听该事件的客户端。客户端通过启动我们的 `scrollTop` 调整 JS 做出反应，用户会体验到一个响应式的 UI--一个自动无缝滚动的聊天窗口，以实时容纳新消息。
 
-## Conclusion
+## 结语
 
-We've seen that a seeming "limit" of LiveView can be surpassed by incorporating available Phoenix real-time tools––in this case Phoenix Channels. The work in this post raises the question: "What _should_ LiveView be capable of?" Is the extension of LiveView with a custom Phoenix Channel a violation of the "purpose" of LiveView? Does such a use-case mean we should eschew LiveView in favor of Channels?
+我们已经看到，通过结合现有的 Phoenix 实时工具，可以超越 LiveView 的一个看似 "极限" 的地方--在这里是 Phoenix Channels。这篇文章中的工作提出了一个问题。"LiveView _应该_ 能做什么？" 用自定义的 Phoenix Channel 扩展 LiveView 是否违反了 LiveView 的 "目的"？这样的用例是否意味着我们应该摒弃 LiveView 而选择 Channel？
 
-I think there are still distinctive advantages to using LiveView to back a feature like our chat app. Almost all of the chat functionality is handled in less than 100 lines of LiveView code. This is as opposed to all of the Channel back and front-end code that you would otherwise write. So, I would like to see LiveView become _more_ extensible and configurable, making it easier to incorporate custom channels out-of-the-box.
+我认为使用 LiveView 来支持像我们的聊天应用这样的功能还是有独特的优势的。几乎所有的聊天功能都在不到 100 行的 LiveView 代码中完成。这是与所有的 Channel 后端和前端代码相对应的，否则你就会写这些代码。所以，我希望看到 LiveView 变得 _更加_ 可扩展和可配置，使其更容易结合自定义 channel 开箱即用。
