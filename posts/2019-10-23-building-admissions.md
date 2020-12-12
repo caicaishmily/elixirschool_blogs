@@ -10,31 +10,33 @@ excerpt: >
   Follow along as we use build Elixir School's Slack invite portal: Admissions.
 ---
 
-If you didn't know, Elixir School has its own Slack where contributors can gather to discuss our organization's content and projects but most importantly, support one another in our Elixir journey. When we set out to create our own Slack we wanted to address a big concern with many public Slacks: the signal to noise ratio is bad, there's just too much spam.
+# 构建 Elixir School 的招生门户网站
 
-> Have you contributed to an Elixir School project but not joined us on Slack? Head over to https://admissions.elixirschool.com to get your invite today!
+如果你不知道，Elixir School 有自己的 Slack，贡献者可以聚集在这里讨论我们组织的内容和项目，但最重要的是，在我们的 Elixir 旅程中相互支持。当我们开始创建我们自己的 Slack 时，我们想解决许多公共 Slack 的一个大问题：信噪比不好，垃圾信息太多。
 
-So how can we keep our Slack public but prevent spammers from joining and do so in a way that doesn't add work to our maintainers? Our solution: required at least once contribution of any side to any one of our projects.
+> 你是否为 Elixir School 的项目做出过贡献，但没有加入我们的 Slack？现在就去 https://admissions.elixirschool.com 获得邀请吧！
 
-Achieving this required an application that used GitHub to verify a user's eligibility. This application would come to be known as: Admissions.
+那么，我们如何才能既保持 Slack 的公开性，又能防止垃圾邮件发送者加入，并且不给我们的维护者增加工作？我们的解决方案是：要求任何一方对我们的任何一个项目至少有一次贡献。
 
-> Want to skip ahead and see the final product? The code can be found at https://github.com/elixirschool/admissions.
+要做到这一点，需要一个使用 GitHub 来验证用户资格的应用程序。这个应用后来被称为：资格认证
 
-In this post we're going to explore how Admissions works and how we achieved our goals using Elixir and Phoenix. To start let's look at the expected flow and work from there:
+> 想跳过前面看最终产品吗？在这里可以找到代码 https://github.com/elixirschool/admissions。
+
+在这篇文章中，我们将探讨 Admissions 是如何工作的，以及我们如何使用 Elixir 和 Phoenix 实现我们的目标。首先，让我们看看预期的流程，然后从那里开始工作。
 
 ![image](https://user-images.githubusercontent.com/73386/67163591-ff12a280-f32d-11e9-83f9-f033345f559b.png)
 
-In addition to telling us how the application should function, this diagram breaks the flow up into convenient development tasks. Working from this diagram let's explore the individual tasks we'll need in order to fulfill our high level requirements:
+除了告诉我们应用程序应该如何运作，这个图还将流程分解成方便的开发任务。根据这个图，我们来探讨一下为了实现我们的高层需求，我们需要的各个子任务。
 
-1. Allow a user to sign in using GitHub and capture their access token. We can leverage [Ueberauth](https://github.com/ueberauth/ueberauth) and its [GitHub strategy](https://github.com/ueberauth/ueberauth_github) to do the heavy lifting for us.
-2. With the user's access token use the GitHub API to see if the user has contributed to an organization's project. To avoid having to spend time writing our own GitHub API client we're going to make use of [Tentacat](https://github.com/edgurgel/tentacat).
-3. Using the result of the API search, process the user's result
-   1. In the event a user **is** a contributor, have them confirm the email address they want to use for Slack, use the Slack API to send an invite, and finally congratulate them.
-   2. If they **have not** contributed we need to notify them of their ineligibility
+1. 允许用户使用 GitHub 登录，并获取其访问令牌。我们可以利用 [Ueberauth](https://github.com/ueberauth/ueberauth) 和它的 [GitHub 策略](https://github.com/ueberauth/ueberauth_github) 来为我们完成繁重的工作。
+2. 有了用户的访问令牌后，使用 GitHub API 查看用户是否对组织的项目做出了贡献。为了避免花时间编写自己的 GitHub API 客户端，我们要利用[Tentacat](https://github.com/edgurgel/tentacat)。
+3. 利用 API 搜索的结果，对用户的结果进行处理。
+   1. 在用户 **是** 贡献者的情况下，让他们确认要使用 Slack 的电子邮件地址，使用 Slack API 发送邀请，最后祝贺他们。
+   2. 如果他们 **没有** 贡献，我们需要通知他们不符合条件
 
-### Login with GitHub
+### 使用 GitHub 登录
 
-Starting from a new Phoenix project (`mix phx.new admissions`)  we looked at how to support GitHub login. For that we need a new dependency: `ueberauth_github`:
+我们将从一个新的 Phoenix 项目(`mix phx.new admissions`)开始，研究如何支持 GitHub 登录。为此我们需要一个新的依赖：`ueberauth_github`。
 
 ```elixir
   defp deps do
@@ -50,29 +52,29 @@ Starting from a new Phoenix project (`mix phx.new admissions`)  we looked at how
   end
 ```
 
-> We won't need to include `ueberauth` itself, as a dependency  of `ueberauth_github` it is included for us.
+> 我们不需要包含 `ueberauth` 本身，作为 `ueberauth_github` 的依赖，它已经为我们包含了。
 
-> Helpful tip: Did you know you can use `mix hex.info <package name>` to get the latest version? Try it!
+> 有用的提示：你知道你可以使用 `mix hex.info <package name>` 来获取最新版本吗？试试吧!
 
-With our application empowered with our new dependency what's left to do? Plenty! To finish our integration with Ueberauth we had a few subtasks:
+有了新的依赖关系，我们的应用还剩下什么呢？有很多事情要做 为了完成我们与 Ueberauth 的整合，我们有几个子任务。
 
-1. Create a `AuthController` that'll handle the callback phase of the OAuth request.
+1. 创建一个 `AuthController`，处理 OAuth 请求的回调阶段。
 
-2. Include our new controller and route in our `router.ex` file.
+2. 在 `router.ex` 文件中包含我们新的控制器和路由。
 
-3. Put the required configuration for Ueberauth in our `config/config.exs` file.
+3. 把 Ueberauth 所需的配置放在我们的 `config/config.exs` 文件中。
 
-4. Add a button to the UI for login. While we won't spend time in this article building the UI, we will touch on the required pieces.
+4. 在 UI 中添加一个登录的按钮。虽然我们不会在本文中花时间来构建 UI，但我们会触及到必要的部分。
 
-5. Setting up your application on GitHub. Here you'll also need to retrieve your `CLIENT_ID` and `CLIENT_SECRET` .
+5. 在 GitHub 上设置你的应用程序。这里你还需要检索你的 `CLIENT_ID` 和 `CLIENT_SECRET`。
 
-   > GitHub setup and configuration goes beyond this article. If you aren't quite sure what to do, head over to GitHub's Developer article [Authorizing OAuth Apps](https://developer.github.com/apps/building-oauth-apps/authorizing-oauth-apps/)
+   > GitHub 的设置和配置超出了本文的范围。如果你不太清楚该怎么做，可以去 GitHub 的开发者文章 [Authorizing OAuth Apps](https://developer.github.com/apps/building-oauth-apps/authorizing-oauth-apps/)。
 
-Onward!
+继续前进！
 
-#### Our new controller
+#### 我们新的控制器
 
-Completing our first subtask requires we create a new controller for Ueberauth that will handle the OAuth callback from GitHub in the event of successful login. The only hard requirement for our controller is that we include the Ueberauth plug:
+完成第一个子任务需要我们为 Ueberauth 创建一个新的控制器，它将在成功登录时处理 GitHub 的 OAuth 回调。控制器唯一的硬性要求是我们必须包含 Ueberauth 插件。
 
 ```elixir
 defmodule AdmissionsWeb.AuthController do
@@ -82,7 +84,7 @@ defmodule AdmissionsWeb.AuthController do
 end
 ```
 
-With the plug in place, we'll define a function to handle our requests. We've elected to name that function `callback/2`. This function needs to retrieve the user details Ueberauth has so conveniently placed into the `Plug.Conn` assigns for us. The fields we're concerned with are the user's email and GitHub nickname:
+有了这个插件，我们将定义一个函数来处理我们的请求。我们选择将该函数命名为 `callback/2`。这个函数需要检索 Ueberauth 为我们方便地放入 `Plug.Conn` 分配的用户详细信息。我们关注的字段是用户的邮箱和 GitHub 昵称。
 
 ```elixir
 defmodule AdmissionsWeb.AuthController do
@@ -96,9 +98,9 @@ defmodule AdmissionsWeb.AuthController do
 end
 ```
 
-There's no need to concern ourselves _in this instance_ with a match error because all successful logins will contain the aforementioned fields.
+_在这个例子中_，我们不需要担心匹配错误，因为所有成功的登录都会包含上述字段。
 
-Now that we've got what we need, we need to forward the user on to the next step in the process: determining eligibility. To ensure we've got what we need in the next step, we chose to put our GitHub data into the session and then redirect the user to the eligibility check:
+现在我们已经得到了我们需要的东西，我们需要将用户转发到流程的下一步：确定资格。为了确保我们已经得到了下一步需要的东西，我们选择将我们的 GitHub 数据放入会话中，然后将用户重定向到资格检查。
 
 ```elixir
 defmodule AdmissionsWeb.AuthController do
@@ -116,11 +118,10 @@ defmodule AdmissionsWeb.AuthController do
 end
 ```
 
-With that in place we're done with our controller and can move on to the next subtask, updating our `router.ex`. We'll be implementing our `eligibility` request handler shortly.
+有了这些，我们就完成了控制器的工作，可以继续下一个子任务，更新我们的 `router.ex`。我们将很快实现我们的 `eligibility` 请求处理程序。
+#### 更新 Phoenix 的路由
 
-#### Updating Phoenix's router
-
-Updating the router for Ueberauth is a fairly easy and straightforward change. At the bottom of our `router.ex` we added the following scope block:
+更新 Ueberauth 的路由是一个相当简单和直接的变化。在我们的 `router.ex` 底部，我们添加了以下代码块。
 
 ```elixir
 scope "/auth", AdmissionsWeb do
@@ -131,15 +132,15 @@ scope "/auth", AdmissionsWeb do
 end
 ```
 
-We added 2 routes but only 1 request handler, `callback/2` in our controller so what gives? Remember `plug Ueberauth` from our controller? Our good friend Ueberauth takes care of that request phase of the OAuth exchange saving us the hassle.
+我们添加了 2 条路由，但只有 1 个请求处理程序，`callback/2` 在我们的控制器中。还记得我们控制器中的 `plug Ueberauth` 吗？我们的好朋友 Ueberauth 负责 OAuth 交换的请求阶段，省去了我们的麻烦。
 
-At this stage we're almost done with our integration. Now we can move on to configuring Ueberauth for our application.
+在这个阶段，我们几乎完成了我们的集成。现在我们可以继续为我们的应用配置 Ueberauth 了。
 
-#### Ueberauth configuration
+#### Ueberauth 配置
 
-The Ueberauth GitHub strategy's documentation provided us everything we needed. Since we need the user's email and profile access we had to update our scopes to `user:email,user:profile` per GitHub's documentation.
+Ueberauth GitHub 策略的文档为我们提供了我们所需要的一切。由于我们需要用户的电子邮件和配置文件的访问权限，我们必须根据 GitHub 的文档将我们的作用域更新为 `user:email,user:profile`。
 
-The resulting changes to our `config.exs` looked like this:
+我们的 `config.exs` 的修改如下：
 
 ```elixir
 config :ueberauth, Ueberauth,
@@ -152,11 +153,11 @@ config :ueberauth, Ueberauth.Strategy.Github.OAuth,
   client_secret: System.get_env("GITHUB_CLIENT_SECRET")
 ```
 
-With `System.get_env/1` we avoid checking secret values into source control in addition to supporting changes to those values at runtime. We populate the `GITHUB_CLIENT_ID` and `GITHUB_CLIENT_SECRET` system ENVs in a later step using values retrieved from our GitHub application settings.
+通过 `System.get_env/1`，我们除了支持在运行时对这些值进行修改外，还避免了在源码控制中检查秘钥值。我们在后面的步骤中使用从 GitHub 应用设置中获取的值来填充 `GITHUB_CLIENT_ID` 和 `GITHUB_CLIENT_SECRET` 系统 ENV。
 
-> Confused about compile and runtime configuration? Check out our blog post [Configuration Demystified](https://elixirschool.com/blog/configuration-demystified/) to learn more.
+> 对编译和运行时的配置感到困惑？查看我们的博客文章[配置解密](https://elixirschool.com/blog/configuration-demystified/)以了解更多。
 
-An optional but strongly encouraged configuration is to update the `oauth2` serializer to use the newer JSON library [Jason](https://github.com/michalmuskala/jason):
+一个可选但强烈鼓励的配置是使用较新的 JSON 库 [Jason](https://github.com/michalmuskala/jason) 更新 `oauth2` 序列化器。
 
 ```elixir
 config :oauth2,
@@ -165,11 +166,11 @@ config :oauth2,
   }
 ```
 
-To do this we added `jason` to our `mix.exs` just as we did before with `ueberauth_github`.
+为了做到这一点，我们在 `mix.exs` 中添加了 `jason`，就像之前使用 `ueberauth_github` 一样。
 
-#### Sign-in button
+#### 登录按钮
 
-To kick off the auth flow for GitHub logins we need the user to click a link for the earlier request route we defined. To do that we added the following HTML to our `index.html.eex` file:
+为了启动 GitHub 登录的认证流程，我们需要用户点击我们定义的早期请求路径的链接。为此，我们在 `index.html.eex` 文件中添加了以下 HTML。
 
 ```html
 <a class="button is-info is-medium" href="/auth/github">
@@ -180,17 +181,17 @@ To kick off the auth flow for GitHub logins we need the user to click a link for
 </a>
 ```
 
-Now that our UI is updated we can call our Ueberauth integration code complete! The last step for us was setting up the application on GitHub. Once complete we pulled the `CLIENT_ID` and `CLIENT_SECRET` from the application settings and added them to our ENV.
+现在我们的 UI 已经更新了，我们可以称我们集成 Ueberauth 代码完成了! 我们的最后一步是在 GitHub 上设置应用程序。完成后，我们从应用设置中调出 `CLIENT_ID` 和 `CLIENT_SECRET` ，并将它们添加到我们的 ENV 中。
 
-A user can now sign-in with a valid GitHub account. We need to handle the next step in the process: eligibility.
+现在用户可以用有效的 GitHub 账号登录了。我们需要处理下一步流程：资格认证。
 
-### Verifying contributor status
+### 验证贡献者状态
 
-At this stage in the request our user has successfully authenticated with GitHub and now we need to determine if they've contributed to any of our repositories. To achieve this we need to leverage the GitHub API. For this portion of the application the high level of what we're doing looks like:
+在请求的这个阶段，我们的用户已经成功地通过了 GitHub 的认证，现在我们需要确定他们是否对我们的仓库做出了贡献。为了达到这个目的，我们需要利用 GitHub 的 API。对于这部分应用，我们要做的高阶工作是这样的。
 
 ![image](https://user-images.githubusercontent.com/73386/67163600-19e51700-f32e-11e9-89c3-a14b6a9bde8d.png)
 
-In the interest of not reinventing the wheel we opted for the [Tentacat](https://github.com/edgurgel/tentacat) library. At this point in our journey our `mix.exs` dependencies looked like this:
+为了不重新造个轮子，我们选择了 [Tentacat](https://github.com/edgurgel/tentacat) 库。在这一点上，我们的 `mix.exs` 依赖关系是这样的：
 
 ```elixir
   defp deps do
@@ -208,15 +209,15 @@ In the interest of not reinventing the wheel we opted for the [Tentacat](https:/
   end
 ```
 
-With our new dependency in place we can fetch (`mix deps.get`) and get on our way. Keeping our controller's simple and focused on presentation is a goal we always shoot for so we decided to implement the eligibility code in a separate module outside of the web portion of our application.
+有了新的依赖关系，我们就可以获取 (`mix deps.get`)，然后开始我们的工作。保持我们的控制器的简单和专注于展示是我们一直以来的目标，所以我们决定在应用程序的 web 部分之外的一个单独的模块中实现资格代码。
 
-We've called this new module `Registrar` in keeping with our college theme, it can be found in the `lib/admissions/registrar.ex` file.
+我们把这个新模块称为 `Registrar`，以保持我们的学院主题，它可以在 `lib/admissions/registrar.ex` 文件中找到。
 
 >  ### reg·is·trar
 >
-> 1. An official in a college or university who is responsible for keeping student records.
+> 1. 在学院或大学中负责保管学生档案的官员
 
-Given the flow above we determined the best way to achieve this would be to check a list of repositories in our organization (with support for multiple organizations) for contributors who matched our user's GitHub nickname. To this end we knew we'd need to store the organization's name and its repositories. For this we opted to use a map where an organization name's is the key and the value is a list of repositories. To avoid any type casting we elected to store everything as strings, the end result of which was added to our `config.exs`:
+考虑到上面的流程，我们决定实现这一目标的最佳方式是检查组织中的仓库列表（支持多个组织），以查找与我们用户的 GitHub 昵称相匹配的贡献者。为此，我们知道我们需要存储组织的名称和它的仓库。为此，我们选择了一个以组织名称为键，以仓库列表为值的 map。为了避免任何类型转换，我们选择将所有的东西都存储为字符串，最终的结果被添加到我们的 `config.exs` 中。
 
 ```elixir
 config :admissions, repositories: %{
@@ -224,22 +225,22 @@ config :admissions, repositories: %{
 }
 ```
 
-> To support some future plans we opted to support multiple organizations. This also allows other organizations and companies to leverage the Admissions.
+> 为了支持未来的一些计划，我们支持选择多个组织。这也允许其他组织和公司利用 Admissions 。
 
-When implementing the actual checks we found breaking things up into a few functions worked best to keep the code clean and readable. We ended up with 4 functions in our new `lib/admissions/registrar.ex` file:
+当实现实际的检查时，我们发现把事情分解成几个函数是最好的，以保持代码的干净和可读性。我们最终在新的 `lib/admissions/registrar.ex` 文件中使用了 4 个函数。
 
-1. Our only public function `eligibile?/1` takes a nickname.
-2. A private function `org_contributor?/3` which takes the GitHub API client we'll create with the token, the user's nickname, and lastly a key-value pair from our `config :admissions, repositories` map.
-3. A function to check each repository's contributors for our user: `contributor?/4`. We'll need the GitHub API client, nickname, organization, and a repository.
-4. Lastly, a function to retrieve our configuration from above: `organizations/0`. We prefer to use functions in place of module attributes when loading configuration values.
+1. 我们唯一的公共函数 `eligibile?/1` 采用了一个昵称。
+2. 一个私有函数 `org_contributor?/3`，它需要我们将创建的 GitHub API 客户端的 token，用户的昵称，最后是我们 `config :admissions, repositories` 映射中的键值对。
+3. 一个检查每个仓库的贡献者的函数，为我们的用户。`contributor?/4`。我们需要 GitHub API 客户端、昵称、组织和一个仓库。
+4. 最后，是一个从上面检索配置的函数。`organizations/0`。我们在加载配置值的时候，比较喜欢用函数来代替模块属性。
 
-To get it out of the way tackled the easiest function, `organization/0`, where we do no more than get our configuration:
+为了把它解决掉，处理了一个最简单的函数：`organization/0`，在这里我们只需要获取我们的配置即可。
 
 ```elixir
 def organizations, do: Application.get_env(:admissions, :repositories)
 ```
 
-With our configuration available we can iterate over the organizations and look for contributor status. For that we'll need to create a Tentacat GitHub API client. Let's take a peek at what we ended up with in our `eligible?/2` function:
+有了我们的配置，我们就可以对组织进行迭代，并查找贡献者状态。为此，我们需要创建一个 Tentacat GitHub API 客户端。让我们来看看我们最终在 `eligible?/2` 函数中得到了什么。
 
 ```elixir
 def eligible?(nickname) do
@@ -248,7 +249,7 @@ def eligible?(nickname) do
 end
 ```
 
-Here we create a `Tentacat.Client` and iterate over configured organizations using `Enum.any?/2`. We don't much care for complex anonymous functions so we elected to create `org_contributor/2` . This function is simple enough: Take single organization from our configuration and iterate through the repositories looking for a match:
+在这里，我们创建一个 `Tentacat.Client`，并使用 `Enum.any?/2` 对配置好的组织进行迭代。我们不太关心复杂的匿名函数，所以我们选择创建 `org_contributor/2`。这个函数非常简单。从我们的配置中抽取一个组织，然后遍历仓库，寻找匹配的组织。
 
 ```elixir
 defp org_contributor?(client, nickname, {org, repos}) do
@@ -256,7 +257,7 @@ defp org_contributor?(client, nickname, {org, repos}) do
 end
 ```
 
-Last but not least is our `contributor?/4` function that does the real work.  We have to retrieve the list of contributors for a repository and verify whether or not our nickname is present in the list. Thanks to Tentacat this is fairly easy using the `Tentacat.Repositories.Contributors` module and `list/3` function which returns a tuple including a list of our contributors, the other values we can ignore:
+最后但并非最不重要的是我们的 `contributor?/4` 函数，它做的是真正的工作。 我们必须检索一个仓库的贡献者列表，并验证我们的昵称是否在列表中。多亏了 Tentacat，使用 `Tentacat.Repositories.Contributors` 模块和 `list/3` 函数，这很容易，它返回一个元组，包括我们的贡献者列表，其他值我们可以忽略。
 
 ```elixir
 defp contributor?(client, nickname, org, repo) do
@@ -269,21 +270,21 @@ defp contributor?(client, nickname, org, repo) do
 end
 ```
 
-The contributor list is a collection of maps containing _all_ of the information pertaining to a GitHub user but we're most interested in the`"login"` key, the user's nickname.
+贡献者列表是一个 map 的集合，包含了 GitHub 用户的所有信息，但我们最感兴趣的是 "login" 键，即用户的昵称。
 
-Now we can finally answer the question: Are they a contributor?
+现在我们终于可以回答这个问题了。他们是贡献者吗？
 
-### Processing the user's request
+### 处理用户请求
 
-Now that we know whether or not the user is a contributor we need to do something with that. If they **are not** a contributor they can't proceed and we should tell them as much. However, if they **are** a contributor then we need to verify their email address so we can send them an invitation via the Slack API. Visualized, our flow looks something like this:
+现在我们知道了一个用户是否是贡献者，我们需要做一些事情。如果他们 **不是** 贡献者，他们就不能继续，我们应该告诉他们。然而，如果他们 **是** 贡献者，那么我们需要验证他们的电子邮件地址，以便我们可以通过 Slack API 向他们发送邀请。可视化，我们的流程看起来像这样。
 
 ![image](https://user-images.githubusercontent.com/73386/67163615-35502200-f32e-11e9-8204-294d73790e0c.png)
 
-#### Handling eligibility
+#### 处理资格
 
-Using our new `Registrar.eligible?/1` function we'll implement the `RegistrarController`'s `eligibility/2` route handler we briefly discussed earlier. This will be the point in our flow where our user's path diverge based on their contributor status. We concluded the simplest approach for this would be deciding the view template based on the answer to our question, with eligible users seeing `eligible.html` which includes the email address verification step and `ineligible.html` for all others.
+使用我们新的 `Registrar.qualified?/1` 函数，我们将实现我们前面简单讨论过的 `RegistrarController` 的 `eligibility/2` 路由处理程序。在我们的流程中，这将是我们的用户根据他们的贡献者身份而产生路径分歧的地方。我们得出的结论是，最简单的方法是根据问题的答案来决定视图模板，符合条件的用户看到的是包括电子邮件地址验证步骤的 `eligible.html`，而其他的则是 `ineligible.html`。
 
-To accomplish our goal we retrieve our user's information from our session, call into our new `eligible?/1` function, decide on our template, and finally call `render/3` with our connection, template, and the user's email and GitHub username:
+为了实现我们的目标，我们从我们的会话中检索用户信息，调用到我们新的 `eligible?/1` 函数，决定我们的模板，最后调用 `render/3` 与我们的连接，模板，以及用户的电子邮件和 GitHub 用户名。
 
 ```elixir
 def eligibility(conn, _params) do
@@ -295,7 +296,7 @@ def eligibility(conn, _params) do
 end
 ```
 
-With our new function in place we added the new `/eligibility` route to the `router.ex` file, this time adding the `:auth` pipeline to limit access to only authenticated users. While we're in the router file we can add the next route we'll need, a `POST` for the email address submission:
+有了我们的新功能，我们将新的 `/eligibility` 路由添加到 `router.ex` 文件中，这次添加了 `:auth` 管道，以限制只对经过认证的用户进行访问。当我们在 router 文件中时，我们可以添加下一个我们需要的路由，一个用于提交电子邮件地址的 `POST`。
 
 ```elixir
 scope "/", AdmissionsWeb do
@@ -306,15 +307,15 @@ scope "/", AdmissionsWeb do
 end
 ```
 
-At this point non-contributors have been handled, they're encouraged to find opportunities to contribute and try again later. Our contributors have 1 final step left: verifying the email address they'd like their invite sent to.
+在这一点上，非贡献者已经被处理，我们鼓励他们寻找机会贡献，以后再尝试。我们的贡献者还剩下最后一步：验证他们希望被邀请的电子邮件地址。
 
-#### Slack invitation
+#### Slack 邀请
 
-We have reached our very final step: inviting contributors to Slack! To do this will require the use of the official Slack API and the `users.admin.invite` function they provide. This request must be a form POST with the user's email we collected in the last step and our organization's Slack token, there are some optional Slack settings you can include as well.
+我们已经到了最后一步：邀请贡献者加入 Slack！要做到这一点，需要使用 Slack 官方的 API 和他们提供的 `users.admin.invite` 函数。这个请求必须是一个表单 POST，其中包含我们在上一步收集到的用户的电子邮件和我们组织的 Slack 令牌，你也可以包含一些可选的 Slack 设置。
 
-> You can find more on the Slack API in the official documentation at https://api.slack.com/
+> 你可以在官方文档中找到更多关于 Slack API 的信息：https://api.slack.com/。
 
-Once we handled our response we had a working API client:
+一旦我们处理了我们的响应，我们就有了一个工作的 API 客户端。
 
 ```elixir
 defmodule Admissions.Slack do
@@ -346,15 +347,15 @@ defmodule Admissions.Slack do
 end
 ```
 
-With an API client in hand all that remains is implementing the `/register` route handler. To do this we outlined what was expected of our new function and set to work building it:
+有了一个 API 客户端，剩下的就是实现 `/register` 路由处理程序。为此，我们概述了对新函数的期望，并开始着手构建它。
 
-1. Knowing our request a body has the `"email"` key, pattern matching is used to get the value we care about: their email address.
-2. Our new Slack API client is used to trigger and invite
-3. We handle the result
-   1. On success we show them a welcome page
-   2. On failure we show them an error message. The Slack documentation outlines a few error codes we'll match on and translate into human readable messages: `already_in_team`, `already_invited`, `invalid_email`, and lastly the `unexpected_error` we returned in the client.
+1. 我们知道一个请求主体有 `"email"` 键，模式匹配被用来获取我们关心的值：他们的 email 地址。
+2. 我们新的 Slack API 客户端用来触发和邀请
+3. 我们处理结果
+   1. 成功后，我们向他们展示一个欢迎页面
+   2. 失败时，我们会给他们看一条错误信息。Slack 文档中概述了一些错误代码，我们将匹配上并翻译成人类可读的信息。`already_in_team`, `already_invited`, `invalid_email`, 最后是我们在客户端返回的 `unexpected_error`。
 
-Once we'd decided on the work updating the `RegistrarController` was straight forward:
+当我们决定了工作后，更新 `RegistrarController` 就很直接了当了。
 
 ```elixir
 def register(conn, %{"email" => email}) do
@@ -373,8 +374,8 @@ defp translated_message("invalid_email"), do: "Invalid email address"
 defp translated_message("unexpected_error"), do: "Unexpected error"
 ```
 
-We've already added a route for this function so we're done. Like done done. We have a functioning application that requires sign in with GitHub, confirms their contributor status, and invites them to Slack when appropriate. Since the organizations are configurable there's no stopping other organizations from using Admissions, how cool!
+我们已经为这个功能添加了一条路由，所以我们已经完成了。就像完成了一样。我们有一个正常运行的应用程序，需要用 GitHub 登录，确认他们的贡献者状态，并在适当的时候邀请他们到 Slack。由于组织是可配置的，所以没有人可以阻止其他组织使用Admissions，真是太酷了。
 
-Have you contributed to an Elixir School project but not yet joined Slack? Head over to [http://admissions.elixirschool.com](http://admissions.elixirschool.com/) and check your eligibility!
+你是否已经为 Elixir School 项目做出了贡献，但还没有加入 Slack？前往 [http://admissions.elixirschool.com](http://admissions.elixirschool.com/) 检查你的资格吧!
 
-Interested in seeing the code in it's entirity? Looking for a contribution opportunity to unlock Slack access? You can find the project on GitHub at https://github.com/elixirschool/admissions.
+有兴趣看看代码的完整版吗？正在寻找解锁 Slack 访问的贡献机会？你可以在 GitHub 上找到这个项目：https://github.com/elixirschool/admissions。

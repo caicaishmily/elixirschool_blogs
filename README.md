@@ -18,7 +18,7 @@
 ### 2019 
 
 - [ ] [LiveView 组件](./posts/2019-12-29-live-view-live-component.md)
-- [ ] [building admissions](./posts/2019-10-23-building-admissions.md)
+- [x] [构建 Elixir School 的招生门户网站](./posts/2019-10-23-building-admissions.md)
 - [x] [利用 Live View 的 `live_link` 构建表格排序 UI](./posts/2019-10-20-sorting-a-table-with-live-view-live-links.md)
 - [x] [使用 docker 和 mix release 发布一个 umbrella app](./posts/2019-09-15-releasing-an-umbrella-app-with-docker-and-mix-release.md)
 - [x] [来自 ElixirConf 2019 的快讯](./posts/2019-09-12-elixirconf-2019-review.md)
