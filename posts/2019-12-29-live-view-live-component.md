@@ -10,38 +10,36 @@ excerpt: >
   It's easy to end up with an overly complex LiveView that houses lots of business rules and responsibilities. We can use `Phoenix.LiveComponent` to build a LiveView feature that is clean, maintainable and adherent to the Single Responsibility Principle.
 ---
 
-## LiveView Can Get Messy
+# LiveView 设计模式 - LiveComponent 和单一责任原则
+## LiveView 可能会变得混乱
 
-As LiveView becomes a more established technology, we naturally find ourselves using it to back more and more complex features. If we're not careful, this can lead to "fat controller syndrome"––live views that are jam packed with complex business logic and disparate responsibilities, just like the classic "fat Rails controller".
+随着 LiveView 成为一项更加成熟的技术，我们自然会发现自己使用它来支持越来越多的复杂功能。如果我们不小心，可能会导致 "控制器臃肿综合症" -- live view 中塞满了复杂的业务逻辑和不同的职责，就像经典的 "Rails 肥胖控制器"。
 
-How can we write live views that are easy to reason about and maintain while adhering to common design principles like SRP?
+我们如何才能在遵守 SRP 等通用设计原则的同时，编写出易于推理和维护的实时视图呢？
 
-One way to achieve this goal is to leverage the `Phoenix.LiveComponent` behaviour.
+实现这一目标的一种方法是利用 `Phoenix.LiveComponent` 行为。
 
-## Introducing `Phoenix.LiveComponent`
+## `Phoenix.LiveComponent` 简介
 
-Components are modules that use the `Phoenix.LiveComponent` behaviour. This behaviour provides
+> 组件是使用 `Phoenix.LiveComponent` 行为的模块。该行为提供在 LiveView 中对状态、标记和事件进行分类的机制。--[文档](https://hexdocs.pm/phoenix_live_view/Phoenix.LiveComponent.html)
 
-> ...a mechanism to compartmentalize state, markup, and events in LiveView. ––[docs](https://hexdocs.pm/phoenix_live_view/Phoenix.LiveComponent.html)
+组件通过对 `Phoenix.LiveView.live_component/3` 的调用在 live view 父进程内运行。由于它们与父组件 live view 共享一个进程，因此两者之间的通信非常简单（稍后再谈）。
 
-Components are run inside a parent live view process via a call to `Phoenix.LiveView.live_component/3`. Since they share a process with their parent live view, communication between the two is simple (more on that later).
+组件可以是无状态或有状态的。无状态的组件除了渲染一个特定的 `leex` 模板之外，不会做更多的事情，而有状态的组件实现了一个 `handle_event/3` 函数，允许我们更新组件自己的状态。这使得组件成为从过于复杂的实时视图中剥离责任的好方法。
 
-Components can be stateless or stateful. While stateless components don't do much more than render a particular `leex` template, stateful components implement a `handle_event/3` function that allow us to update the component's own state. This makes components a great way to peel off responsibilities from an overly complex live view.
+让我们来看看我们如何使用组件来重构现有应用程序中的一些复杂的 LiveView 代码。
 
-Let's take a look at how we can use components to refactor some complicated LiveView code in an existing application.
+## 应用程序
 
-## The App
+假设我们有一个应用程序，它使用像 RabbitMQ 这样的消息代理在系统之间发布和消费消息。我们的应用程序将这些消息持久化在 DB 中，并为用户提供一个 UI，以列出和搜索这些持久化的消息。
 
-Let's say we have an application that uses a message broker like RabbitMQ to publish and consume messages between systems. Our app persists these messages in the DB and exposes a UI for users to list and search such persisted messages.
+![live view messages index](https://elixirschool.com/assets/live-view-messages-index-cfb8d1e20fe495a1ccb66afa03b7e7a3e7ab6404ab6debd99ab631c1a69b31f6.png)
 
+我们使用 LiveView 来实现搜索功能、分页功能，并维护当前显示哪些消息的状态。我们的 live view 模块响应搜索表单事件，并维护搜索表单的状态，处理搜索表单的提交，*并* 渲染各种搜索和分页参数的模板。
 
-![live view messages index]({% asset live-view-messages-index.png @path %})
+### 代码
 
-We're using LiveView to enact the search functionality, pagination and maintain which messages are currently being displayed in state. Our live view module responds to search form events and maintains the state of the search form, handles the search form submission *and* renders the template with various search and pagination params.
-
-### The Code
-
-A simplified version of our live view looks something like this:
+我们的 live view 的简化版本看起来像这样：
 
 ```elixir
 defmodule RailwayUiWeb.MessageLive.Index do
@@ -136,34 +134,31 @@ defmodule RailwayUiWeb.MessageLive.Index do
 end
 ```
 
-Maintaining a representation of the search form's selected query and inputed value in state allows us to ensure that the correct search query radio button is selected and allows us to update the placeholder text of the search form input field:
+在状态下保持搜索表单的选择查询和输入值的表示，可以让我们确保选择正确的搜索查询单选按钮，并允许我们更新搜索表单输入字段的占位符文本。
 
 <iframe width="560" height="315" src="https://www.youtube.com/embed/6Ta2Au-PcQI" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
+保持搜索表单的状态，还可以保证用户通过一组查询参数直接导航到 `/consumed_messages` 路径，不仅可以看到正确弹出的消息，还可以看到正确配置的搜索表单。
 
-Maintaining the search form state also ensures that users can navigate directly to the `/consumed_messages` route with a set of query params and see not just the correctly populated messages but also the correctly configured search form:
+![live component search form query params](https://elixirschool.com/assets/live-component-search-form-query-params-ffb0e6908b686be4cc42356f0ce94e5332d745442d1adf2556d093cdd090da7e.png)
 
+### 问题
 
-![live component search form query params]({% asset live-component-search-form-query-params.png @path %})
+很明显，我们需要维护搜索表单的状态，但上面的 LiveView 代码太长，难以维护和推理。它管理搜索表单的状态，实现了一组 `handle_params/3` 回调来执行搜索查询和分页，并在状态中维护了一组消息。这是一个很大的工作，它违反了单一责任原则。简单地说，我们的 live view 做了太多的工作。
 
-### The Problem
+让我们把搜索表单的状态维护重构成有自己状态的组件吧!
+## 解决方法: 搜索表单组件
 
-Its clear that we need to maintain the state of our search form but the LiveView code above is too lengthy to maintain and reason about. It manages search form state, implements a set of `handle_params/3` callbacks to enact search queries and pagination and maintains a set of messages in state. This is a lot of work and it violates the Single Responsibility Principle. Our live view, plainly put, does too many jobs.
+我们的搜索表单组件将从父级 live view 中获取其初始搜索表单状态。这将确保用户可以直接导航到像 `/consumed_messages?search[query]=uuid&search[value]=0af71c6a-aeec-431f-83d0-ae779358b055` 这样的路由，并从 params 中看到正确配置的搜索表单。
 
-Let's refactor the search form state maintenance into its very own stateful component!
+但是，我们的搜索组件会继续保持搜索表单状态独立于父体，只有在表单提交时才会将消息转发到 live view 中。
 
-## The Solution: The Search Form Component
+这样一来，我们就可以将搜索表单变化事件的处理及其对搜索表单状态的后续影响移出 live view 。这将使我们在减少责任的情况下获得一个更干净的 live view。
 
-Our search form component will get its initial search form state from the parent live view. This will ensure that a user can navigate directly to a route like `/consumed_messages?search[query]=uuid&search[value]=0af71c6a-aeec-431f-83d0-ae779358b055` and see the search form correctly configured from the params.
+### 定义组件
+#### 从 LiveView 设置初始化状态
 
-However, our search component will go on to maintain the search form state independently of the parent, only forwarding messages up to the live view when the form is submitted.
-
-This way, we can move the search form change event handling and its subsequent impact on search form state out of the live view. This will leave us with a cleaner live view with fewer responsibilities.
-
-### Defining the Component
-#### Setting Initial State From LiveView
-
-We'll begin by defining our component, `RailwayUiWeb.MessageLive.SearchComponent`, and rendering it with an initial search from state from the parent live view.
+我们先定义我们的组件 `RailwayUiWeb.MessageLive.SearchComponent`，并从父级 live view 中的状态进行初始搜索渲染。
 
 ```elixir
 defmodule RailwayUiWeb.MessageLive.SearchComponent do
@@ -175,28 +170,28 @@ defmodule RailwayUiWeb.MessageLive.SearchComponent do
 end
 ```
 
-At this point, our component is simple. It uses the `Phoenix.LiveComponent` behaviour and implements a `render/1` function. This function renders our `search_component.html.leex` template (which we'll take a look at in a moment), passing through the `assigns` established when the parent live view calls `live_component/3`.
+在这一点上，我们的组件很简单。它使用 `Phoenix.LiveComponent` 行为并实现了 `render/1` 函数。这个函数渲染我们的 `search_component.html.leex` 模板（我们稍后会看一下），通过父 live view 调用 `live_component/3` 时建立的 `assigns`。
 
-Let's take a look at that call now. In the parent live view's template, we invoke:
+现在我们来看看这个调用。在父 live view 的模板中，我们调用。
 
 ```html
 <%= live_component @socket, RailwayUiWeb.MessageLive.SearchComponent, search: @search, id: :search %>
 ```
 
-There are two important things to call out here. First, its important to note that we are passing in the `:id` attribute and setting it to a value of the `:search` atom. Components are made stateful by the setting of the `:id` attribute. Without this, we would not be able to implement the `handle_event/2` callbacks
+这里有两件重要的事情需要指出。首先，需要注意的是，我们传递了 `:id` 属性并将其设置为 `:search` 原子的值。通过设置 `:id` 属性，组件变得有状态。如果没有这个属性，我们就无法实现 `handle_event/2` 回调。
 
-Second, we are populating the component's `assigns` with the `@search` value. The component's `assigns` at this point looks like this:
+其次，我们用 `@search` 值填充组件的 `assigns`。此时组件的 `assigns` 是这样的。
 
 ```elixir
 %{search: search}
 ```
 
-And the search struct from the parent live view's `socket.assigns` will be available in the component's own template as `@search`.
+而来自父 live view 的 `socket.assigns` 的搜索结构将在组件自己的模板中作为 `@search`。
 
-This allows us to leverage the `handle_params/3` callback in the parent live view to establish the search state and then pass that search state into the component. Let's take a closer look at how this works:
+这使得我们可以利用父 live view 中的 `handle_params/3` 回调来建立搜索状态，然后将该搜索状态传递到组件中。让我们来仔细看看这是如何工作的。
 
-1. User visit `/consumed_messages?search[query]=uuid&search[value]=0af71c6a-aeec-431f-83d0-ae779358b055`
-2. The `MessageLive.Index` live view's `handle_params/3` function is called:
+1. 用户访问 `/consumed_messages?search[query]=uuid&search[value]=0af71c6a-aeec-431f-83d0-ae779358b055`
+2. `MessageLive.Index` live view 的 `handle_params/3` 函数被调用:
 
 ```elixir
 def handle_params(
@@ -213,15 +208,14 @@ def handle_params(
 end
 ```
 
-3. The `MessageLive.Index` live view's template renders with the `@search` assignment
-4. The `MessageLive.Index`'s template calls `live_component/3`, passing through the `@search` assignment
-5. The `MessageLive.SearchComponent`'s template renders with the  `@search` assignment, correctly rendering the search form to reflect any selected search query type and input.
+3. `MessageLive.Index` live view 使用 `@search` 声明渲染模板
+4. `MessageLive.Index` 的模板调用 `live_component/3`, 传递 `@search` 声明
+5. `MessageLive.SearchComponent` 根据 `@search` 声明正确呈现搜索表单，以反映任何选定的搜索查询类型和输入。
 
-Let's take a look at the component's template now in order to understand how it uses the information in the search form's state to render appropriately.
+现在让我们来看看组件的模板，以便了解它是如何利用搜索表单状态中的信息进行适当渲染的。
+#### 构建搜索表单模板
 
-#### Building The Search Form Template
-
-The search component's template uses the query and value attributes of the `@search` assignment to ensure that the correct radio button is selected and that the search form input is correctly populated with a value if one is present.
+搜索组件的模板使用 `@search` 赋值的 query 和 value 属性，以确保选择正确的单选按钮，并确保搜索表单输入正确地填充一个值（如果存在）。
 
 ```html
 <!-- styling removed for brevity -->
@@ -247,26 +241,26 @@ The search component's template uses the query and value attributes of the `@sea
 </form>
 ```
 
-A few things to note here:
+这里有些事需要注意：
 
-* `if` conditions, like the one below, are responsible for ensuring the correct radio button is selected:
+* `if` 条件，如下面的条件，负责确保选择正确的单选按钮。
 
 ```elixir
 if @search.query == "message_type", do: "checked"
 ```
 
-* The `value` of the search form's input field is populated by the `@search` assignment's `value` attribute:
+* 搜索表单的输入字段的 `value` 是由 `@search` 赋值的 `value` 属性填充的。
 
-Now that we've seen how our component is rendered with its initial search form state, let's take a look at how our component will handle search form events.
+现在我们已经看到了我们的组件是如何呈现它的初始搜索表单状态的，让我们来看看我们的组件将如何处理搜索表单事件。
 
-#### Handling Form Change Events
+#### 处理表格变化事件
 
-We need to update the component's `socket.assigns` to reflect changes to search form state under two conditions:
+我们需要更新组件的 `socket.assigns` 来反映两种情况下搜索表单状态的变化。
 
-* The user selects a given search query ("message UUID", "correlation ID", "message type")
-* The user types a value into the search form input field
+* 用户选择一个给定的搜索查询（"消息UUID"、"相关ID"、"消息类型"）。
+* 用户在搜索表格输入栏中输入一个值。
 
-We'll add a `phx-change` event to our form to capture these interactions and define the corresponding `handle_event/3` callbacks in our component.
+我们将在表单中添加一个 `phx-change` 事件来捕捉这些交互，并在组件中定义相应的 `handle_event/3` 回调。
 
 ```html
 <form phx-change="search_form_change">
@@ -274,7 +268,7 @@ We'll add a `phx-change` event to our form to capture these interactions and def
 </form>
 ```
 
-We'll add the following `handle_event/3` callbacks:
+我们将添加下面的 `handle_event/3` 回调
 
 ```elixir
 defmodule RailwayUiWeb.MessageLive.SearchComponent do
@@ -300,28 +294,28 @@ defmodule RailwayUiWeb.MessageLive.SearchComponent do
 end
 ```
 
-These callbacks ensure two things for us:
+这些回调为我们确保了两件事。
 
-* The correct radio button is marked as "selected" when a user chooses a new search query type option.
-* The search form input's `placeholder` attribute is correctly updated to reflect the selected query type:
+* 当用户选择一个新的搜索查询类型选项时，正确的单选按钮被标记为 "选定"。
+* 搜索表单输入的 `placeholder` 属性被正确更新，以反映所选的查询类型。
 
 ```html
 <input name="search[value]" value="<%= @search.value %>" type="text" placeholder="<%= "search by #{@search.query}"  %>">
 ```
 
-#### Handling Form Submission
+#### 处理表格提交
 
-Now that our form component's state properly updates in response to the user's interactions, let's talk about what needs to happen when a user submits the form.
+现在，我们表单组件的状态已经可以根据用户的交互正确更新了，我们来谈谈用户提交表单时需要发生的事情。
 
-The feature we're designing requires us to populate the URI's query params in the browser's URL bar when the user submits the search form. This allows users to share a link with the results of a particular search.
+我们正在设计的功能需要我们在用户提交搜索表单时，在浏览器的 URL 栏中填充查询参数。这样用户就可以共享某个搜索结果与链接。
 
-In order to achieve this, we can reach for the `live_redirect/2` function. This will take advantage of the browser's `pushState` API to change the page navigation without actually sending a web request. Instead, our live view's `handle_params/3` callback function will be invoked, allowing us to respond by searching for the appropriate messages and updating the live view socket's state with those messages.
+为了达到这个目的，我们可以使用 `live_redirect/2` 函数。这将利用浏览器的 `pushState` API 来改变页面导航，而不需要实际发送一个 web 请求。取而代之的是，我们的 live view 的 `handle_params/3` 回调函数将被调用，允许我们通过搜索适当的消息和更新 live view socket 的状态来响应。
 
-But wait! The `live_redirect/2` function is sadly not available from within component since the `Phoenix.LiveComponent` behaviour does not implement a `handle_params/3` function. Luckily for us, however, the parent live view and the component share a process. That means that calling `self()` from within the component returns a PID that *is the same PID as that parent live view process*. So, from within our component we can `send` a message to `self()` and handle that message in the parent live view.
+但是等一下! 很遗憾，由于 `Phoenix.LiveComponent` 行为没有实现 `handle_params/3` 函数，所以 `live_redirect/2` 函数在组件内部无法使用。但幸运的是，父 live view 和组件共享一个进程。这意味着从组件内部调用 `self()` 会返回一个 PID，*这个 PID 与父 live view 进程* 是相同的。因此，在我们的组件中，我们可以 `send` 一个消息到 `self()`，并在父 live view 中处理该消息。
 
-We'll take advantage of this functionality to have our component handle search from submission events by sending a message to the parent live view instructing that live view to enact a live redirect.
+我们将利用这个功能，让我们的组件通过向父 live view 发送消息来处理提交事件中的搜索，指示该 live view 执行实时重定向。
 
-We'll start by adding a `phx-submit` event binding to our search form in the component's template:
+我们首先在组件模板中为搜索表单添加一个 `phx-submit` 绑定事件：
 
 ```html
 <form phx-submit="search" phx-change="search_form_change">
@@ -329,7 +323,7 @@ We'll start by adding a `phx-submit` event binding to our search form in the com
 </form>
 ```
 
-Then we'll implement a `handle_event/3` function for this `"search"` event in the component:
+然后我们需要为 `"search"` 事件实现一个 `handle_event/3` 函数
 
 ```elixir
 defmodule RailwayUiWeb.MessageLive.SearchComponent do
@@ -342,15 +336,15 @@ defmodule RailwayUiWeb.MessageLive.SearchComponent do
 end
 ```
 
-The important part of our function is this line:
+我们函数中最重要的一部分是这一行：
 
 ```elixir
 send self(), {:search, params}
 ```
 
-Here, we are sending a message `{:search, params}` that the parent live view can respond to.
+在这里，我们将发送一个消息 `{:search, params}` ，让父级 live view 可以响应。
 
-Lastly, we will implement a `handle_info/2` callback in the parent live view that will be responsible for enacting the live redirect with the params from the search form:
+最后，我们将在父 live view 中实现一个 `handle_info/2` 回调，它将负责用搜索表单中的 params 执行实时重定向：
 
 ```elixir
 defmodule RailwayUiWeb.MessageLive.Index do
@@ -365,7 +359,7 @@ defmodule RailwayUiWeb.MessageLive.Index do
 end
 ```
 
-This will in turn cause the live view's `handle_params/3` callback to be invoked, resulting in the correct updates to the live view's state:
+这将反过来导致 live view 的 `handle_params/3` 回调被调用，从而正确更新 live view 的状态。
 
 ```elixir
 defmodule RailwayUiWeb.MessageLive.Index do
@@ -386,12 +380,12 @@ defmodule RailwayUiWeb.MessageLive.Index do
 end
 ```
 
-## Conclusion
+## 结语
 
-As a result of this refactoring, we have a cleaner live view module that is more adherent to the Single Responsibility Principle. Our live view can focus on setting up the correct state given a set of params. Meanwhile, the logic required to maintain the state of the search form and render search form attributes appropriately can be housed in a dedicated component.
+作为这次重构的结果，我们有了一个更干净的 live view 模块，更遵守单一责任原则。我们的 live view 可以专注于给定一组 params 的正确状态的设置。同时，维护搜索表单的状态和适当地呈现搜索表单属性所需的逻辑可以放在一个专门的组件中。
 
-We did run into an obstacle when we found ourselves unable to use `live_redirect/2` from within our component. However, since the component and the live view share a process, we found it easy to enact communication between the two.
+当我们发现自己无法在组件中使用 `live_redirect/2` 时，我们确实遇到了一个障碍。然而，由于组件和 live view 共享一个流程，我们发现很容易在两者之间实现通信。
 
-Still, this approach doesn't allow us to build a live view that is entirely agnostic of the state of the search form. In order to allow users to navigate directly to the route with query params, our parent live view does set up the initial state of the search form and pass it down into the component. Regardless of this drawback, reaching for components here has allowed us to write and maintain a slimmer live view.
+不过，这种方法还是不能让我们建立一个完全不知道搜索表单状态的 live view 。为了让用户直接导航到带有查询参数的路线，我们的父级 live view 确实设置了搜索表单的初始状态，并将其传递到组件中。不管这个缺点如何，在这里组件已经达到让我们能够编写和维护一个更纤细的 live view。
 
-For a look at some of the other state, markup and event handling isolation options that LiveView offers, check out the docs [here](https://hexdocs.pm/phoenix_live_view/Phoenix.LiveView.html#module-compartmentalizing-markup-and-events-with-render-live_render-and-live_component).
+要想了解 LiveView 提供的其他一些状态、标记和事件处理隔离选项，请查看[文档](https://hexdocs.pm/phoenix_live_view/Phoenix.LiveView.html#module-compartmentalizing-markup-and-events-with-render-live_render-and-live_component)。
