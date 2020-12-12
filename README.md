@@ -17,7 +17,7 @@
 - [ ] [使用 telemetry 仪表化 Phoenix 项目第一部分](./posts/2020-04-22-instrumenting-phoenix-with-telemetry-part-one.md)
 ### 2019 
 
-- [ ] [LiveView 设计模式 - LiveComponent 和单一责任原则](./posts/2019-12-29-live-view-live-component.md)
+- [x] [LiveView 设计模式 - LiveComponent 和单一责任原则](./posts/2019-12-29-live-view-live-component.md)
 - [x] [构建 Elixir School 的招生门户网站](./posts/2019-10-23-building-admissions.md)
 - [x] [利用 Live View 的 `live_link` 构建表格排序 UI](./posts/2019-10-20-sorting-a-table-with-live-view-live-links.md)
 - [x] [使用 docker 和 mix release 发布一个 umbrella app](./posts/2019-09-15-releasing-an-umbrella-app-with-docker-and-mix-release.md)
