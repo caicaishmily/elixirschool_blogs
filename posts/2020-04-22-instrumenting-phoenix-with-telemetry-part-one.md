@@ -14,9 +14,9 @@ excerpt: >
 在这个系列中，我们将借助 Elixir 和 Erlang 的 Telemetry 产品，对一个 Phoenix 应用进行仪表化，并将指标发送到 StatsD。简要介绍一下我们将涉及的内容：
 <!-- TODO: update link -->
 * 第一部分: Telemetry 的背后
-* [第二部分: 用 `TelemetryMetrics` + `TelemetryMetricsStatsd` 处理 Telemetry 事件](./2020-04-29-instrumenting-phoenix-with-telemetry-part-two.md)
-* [第三部分: 观测 Phoenix + Ecto Telemetry 事件](./2020-04-29-instrumenting-phoenix-with-telemetry-part-three.md)
-* [第四部分: 用 `telemetry_poller`、`TelemetryMetrics` + `TelemetryMetricsStatsd` 对 Erlang VM 进行测量](./instrumenting-phoenix-with-telemetry-part-four.md)
+* [第二部分: 用 `TelemetryMetrics` + `TelemetryMetricsStatsd` 处理 Telemetry 事件](./2020-04-29-instrumenting_phoenix_with_telemetry_part_two.md)
+* [第三部分: 观测 Phoenix + Ecto Telemetry 事件](./2020-04-29-instrumenting-phoenix-with-telemetry_part_three.md)
+* [第四部分: 用 `telemetry_poller`、`TelemetryMetrics` + `TelemetryMetricsStatsd` 对 Erlang VM 进行测量](./instrumenting-phoenix-with-telemetry_part_four.md)
 
 在第一部分中，我们将从建立一个基本的、DIY 的 Telemetry 管道开始，并了解 Erlang 的 Telemetry 库背后是如何工作的。然后，在第二部分中，我们将利用 `TelemetryMetrics` 和 `TelemetryMetricsStatsd` 库来响应 Telemetry 事件，将它们格式化为度量并将这些度量报告给 StatsD。在第三部分，我们将通过执行 Telemetry 事件来使用 Phoenix 和 Ecto 提供的开箱即用的仪表。最后，在第四部分，我们将利用 `telemetry_poller` Erlang 库来采集 Erlang 虚拟机的测量结果，并将其作为 Telemetry 事件发出，然后我们的 Telemetry 管道可以观察和报告这些事件。
 ## 简介
@@ -484,6 +484,6 @@ Telemetry 提供了一个简单的仪表化接口，但我们的裸例还有很�
 
 此外，Telemetry 提供了许多报告客户端，包括 StatsD 报告器，我们可以把它插入到我们的 `Telemetry.Metrics` 模块中，允许我们利用事件元数据和标签，免费向 StatsD 或 DogStatsD 报告。
 
-在[下一篇](https://elixirschool.com/blog/instrumenting_phoenix_with_telemetry_part_two/)，我们将利用 `Telemetry.Metrics` 和 `TelemetryStatsdReporter` 来观察、格式化和报告我们在这里建立的 Telemetry 事件。通过这样做，我们将抽象出我们的自定义处理程序 _和_ 我们的自定义 StatsD 报告器的需求。
+在[下一篇](./2020-04-29-instrumenting_phoenix_with_telemetry_part_two.md)，我们将利用 `Telemetry.Metrics` 和 `TelemetryStatsdReporter` 来观察、格式化和报告我们在这里建立的 Telemetry 事件。通过这样做，我们将抽象出我们的自定义处理程序 _和_ 我们的自定义 StatsD 报告器的需求。
 
 回头见！
