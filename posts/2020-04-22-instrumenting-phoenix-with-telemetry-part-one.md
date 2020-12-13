@@ -15,8 +15,8 @@ excerpt: >
 <!-- TODO: update link -->
 * 第一部分: Telemetry 的背后
 * [第二部分: 用 `TelemetryMetrics` + `TelemetryMetricsStatsd` 处理 Telemetry 事件](./2020-04-29-instrumenting_phoenix_with_telemetry_part_two.md)
-* [第三部分: 观测 Phoenix + Ecto Telemetry 事件](./2020-04-29-instrumenting-phoenix-with-telemetry_part_three.md)
-* [第四部分: 用 `telemetry_poller`、`TelemetryMetrics` + `TelemetryMetricsStatsd` 对 Erlang VM 进行测量](./instrumenting-phoenix-with-telemetry_part-four.md)
+* [第三部分: 观测 Phoenix + Ecto Telemetry 事件](./2020-05-06-instrumenting_phoenix_with_telemetry_part_three.md)
+* [第四部分: 用 `telemetry_poller`、`TelemetryMetrics` + `TelemetryMetricsStatsd` 对 Erlang VM 进行测量](./2020-05-06-instrumenting_phoenix_with_telemetry_part_three.md)
 
 在第一部分中，我们将从建立一个基本的、DIY 的 Telemetry 管道开始，并了解 Erlang 的 Telemetry 库背后是如何工作的。然后，在第二部分中，我们将利用 `TelemetryMetrics` 和 `TelemetryMetricsStatsd` 库来响应 Telemetry 事件，将它们格式化为度量并将这些度量报告给 StatsD。在第三部分，我们将通过执行 Telemetry 事件来使用 Phoenix 和 Ecto 提供的开箱即用的仪表。最后，在第四部分，我们将利用 `telemetry_poller` Erlang 库来采集 Erlang 虚拟机的测量结果，并将其作为 Telemetry 事件发出，然后我们的 Telemetry 管道可以观察和报告这些事件。
 ## 简介
