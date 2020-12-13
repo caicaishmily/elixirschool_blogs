@@ -14,7 +14,7 @@
 - [ ] [使用 telemetry 仪表化 Phoenix 项目第三部分](./posts/2020-05-06-instrumenting-phoenix-with-telemetry-part-three.md)
 - [ ] [使用 telemetry 仪表化 Phoenix 项目第二部分](./posts/2020-04-29-instrumenting-phoenix-with-telemetry-part-two.md)
 - [ ] [使用 live dashboard 仪表化 Phoenix 项目](./posts/2020-04-24-instrumenting-phoenix-with-live-dashboard.md)
-- [ ] [使用 telemetry 仪表化 Phoenix 项目第一部分](./posts/2020-04-22-instrumenting-phoenix-with-telemetry-part-one.md)
+- [x] [使用 Telemetry 仪表化 Phoenix 第一部分: Telemetry 的背后](./posts/2020-04-22-instrumenting-phoenix-with-telemetry-part-one.md)
 ### 2019 
 
 - [x] [LiveView 设计模式 - LiveComponent 和单一责任原则](./posts/2019-12-29-live-view-live-component.md)

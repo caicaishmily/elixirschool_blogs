@@ -9,104 +9,103 @@ excerpt: >
   In this series, we're instrumenting a Phoenix app and sending metrics to StatsD with the help of Elixir and Erlang's Telemetry offerings. In Part I we'll start out by setting up a basic, DIY Telemetry pipeline and examining how Erlang's Telemetry library works under the hood
 ---
 
-## Table Of Contents
+## 目录
 
-In this series, we're instrumenting a Phoenix app and sending metrics to StatsD with the help of Elixir and Erlang's Telemetry offerings. A brief overview of what we'll cover:
+在这个系列中，我们将借助 Elixir 和 Erlang 的 Telemetry 产品，对一个 Phoenix 应用进行仪表化，并将指标发送到 StatsD。简要介绍一下我们将涉及的内容：
+<!-- TODO: update link -->
+* 第一部分: Telemetry 的背后
+* [第二部分: 用 `TelemetryMetrics` + `TelemetryMetricsStatsd` 处理 Telemetry 事件](./2020-04-29-instrumenting-phoenix-with-telemetry-part-two.md)
+* [第三部分: 观测 Phoenix + Ecto Telemetry 事件](./2020-04-29-instrumenting-phoenix-with-telemetry-part-three.md)
+* [第四部分: 用 `telemetry_poller`、`TelemetryMetrics` + `TelemetryMetricsStatsd` 对 Erlang VM 进行测量](./instrumenting-phoenix-with-telemetry-part-four.md)
 
-* Part I: Telemetry Under The Hood
-* [Part II: Handling Telemetry Events with `TelemetryMetrics` + `TelemetryMetricsStatsd`](https://elixirschool.com/blog/instrumenting_phoenix_with_telemetry_part_two/)
-* [Part III: Observing Phoenix + Ecto Telemetry Events](https://elixirschool.com/blog/instrumenting_phoenix_with_telemetry_part_three/)
-* [Part IV: Erlang VM Measurements with `telemetry_poller`, `TelemetryMetrics` + `TelemetryMetricsStatsd`](https://elixirschool.com/blog/instrumenting-phoenix-with-telemetry-part-four/)
+在第一部分中，我们将从建立一个基本的、DIY 的 Telemetry 管道开始，并了解 Erlang 的 Telemetry 库背后是如何工作的。然后，在第二部分中，我们将利用 `TelemetryMetrics` 和 `TelemetryMetricsStatsd` 库来响应 Telemetry 事件，将它们格式化为度量并将这些度量报告给 StatsD。在第三部分，我们将通过执行 Telemetry 事件来使用 Phoenix 和 Ecto 提供的开箱即用的仪表。最后，在第四部分，我们将利用 `telemetry_poller` Erlang 库来采集 Erlang 虚拟机的测量结果，并将其作为 Telemetry 事件发出，然后我们的 Telemetry 管道可以观察和报告这些事件。
+## 简介
 
-In Part I we'll start out by setting up a basic, DIY Telemetry pipeline and examining how Erlang's Telemetry library works under the hood. Then, in Part II we'll take advantage of the `TelemetryMetrics` and `TelemetryMetricsStatsd` libraries to respond to Telemetry events by formatting them as metrics and reporting those metrics to StatsD. In Part III, we'll look at the powerful instrumentation that Phoenix and Ecto offer out-of-the-box via Telemetry events executed in source code. Lastly, in Part IV, we'll leverage the `telemetry_poller` Erlang library to take Erlang VM measurements and emit them as Telemetry events, which our Telemetry pipeline can then observe and report on.
+在这篇文章中，我们将讨论为什么可观测性很重要，以及 Telemetry 如何帮助我们在 Elixir 项目中把可观测性当作一等公民对待。然后，我们将使用 Telemetry 和 StatsD 手绘我们自己的仪表管道。最后，我们将看看 Telemetry 库的外壳，并为本系列的第二部分做准备，在这部分中，我们将利用 `Telemetry.Metrics` 库来实现更简单的仪器和报告。
 
-## Introduction
+## 可观测性的重要性
 
-In this post we'll discuss why observability matters and how Telemetry helps us treat observability like a first class citizen in Elixir projects. Then, we'll hand-roll our own instrumentation pipeline using Telemetry and StatsD. We'll wrap up with a look under the hood of the Telemetry library and set ourselves up for Part II of this series, in which we leverage the `Telemetry.Metrics` library for even easier instrumentation and reporting.
+用 [Charity Majors](https://charity.wtf/2020/03/03/observability-is-a-many-splendored-thing/) 的不朽名言来说，可观察性意味着问自己：
 
-## Observability Matters
+> 你能不能理解系统内部发生的事情--你能不能理解系统可能陷入的任何内部状态？
 
-In the immortal words of [Charity Majors](https://charity.wtf/2020/03/03/observability-is-a-many-splendored-thing/), observability means asking ourselves:
+> 你能理解系统内部发生的事情吗？ 你能理解系统可能陷入的任何内部状态吗？ 仅仅通过从外部提出问题？
 
-> can you understand what is happening inside the system — can you understand ANY internal state the system may get itself into, simply by asking questions from the outside?
+任何花了几个小时(几天?)调试一个他们无法在本地复现的生产环境问题，主要依靠猜测和机构知识的人都知道缺乏这种能力的代价是什么。
 
-Anyone who has spent hours (days?) debugging a production issue that they can't replicate locally, relying mostly on guesswork and institutional knowledge knows what it costs to lack this ability.
+我们中的许多人已经将这种情况视为非常自然的事情--我们已经接受了这种挫折感，将其视为软件工程师工作的一部分。我们把可观察性看成是我们无法掌控的东西，或者是事后的想法--在建立新功能或发布 MVP 的主要目标达到之后，"最好有的东西"。
 
-Many of us have come to treat this situation as perfectly natural--we've come to accept this frustration as part of the job of being a software engineer. We treat observability like something that is out of our hands, or an afterthought--a "nice to have" after the main target of building that new feature or shipping the MVP are hit.
+传统的 "web 开发者" 和 "开发-运维工程师" 之间的分工让我们误以为可观察性不是 web 开发者的责任。在过去，确保系统的可观察性可能需要一套专门的技能，但我们所处的世界越来越不是这样。
 
-The traditional split between "web developers" and "dev-ops engineers" has lulled us into believing that observability is not the responsibility of the web dev. In the past, it may have been the case that ensuring system observability required a specialized set of skills, but this is increasingly not true of the world we live in.
+有了像 Datadog、Splunk 和 Honeycomb 这样的第三方工具，以及像 Telemetry 这样的库，Web 开发人员有能力把可观察性当作头等公民来对待。套用 Charity Majors 的话说，在今天的世界里，我们可以检测我们的代码，观察它的部署，并回答这样的问题："它是否在做我所期望的事情？" 通过这种方式，我们可以构建 "既能理解又好理解" 的系统。
 
-With third-party tools like Datadog, Splunk and Honeycomb, and libraries like Telemetry, web developers are empowered to treat observability like the first class citizen it is. To paraphrase Charity Majors (again), in today's world we can instrument our code, watch it deploy, and answer the question: "is it doing what I expect?". In this way, we can build systems that are "both understandable and well understood".
+## Telemetry 为我们提供可视性
 
-## Telemetry Gives Us Visibility
+[Telemetry](https://www.erlang-solutions.com/blog/introducing-telemetry.html) 是一套开源的库，旨在统一和规范 BEAM 上的库和应用程序的检测和监控方式。它是如何工作的？
 
-[Telemetry](https://www.erlang-solutions.com/blog/introducing-telemetry.html) is an open source suite of libraries which aims to to unify and standardize how the libraries and applications on the BEAM are instrumented and monitored. How does it work?
+> Telemetry 的核心是事件。事件表明发生了一些事情：一个 HTTP 请求被接受，一个数据库查询返回了一个结果，或者用户已经登录。每个事件可以有许多处理程序连接到它，当事件被发布时，每个处理程序执行一个特定的动作。例如，一个事件处理程序可能会更新一个指标，记录一些数据，或者丰富分布式跟踪的上下文。
 
-> At the core of Telemetry lies the event. The event indicates that something has happened: an HTTP request was accepted, a database query returned a result, or the user has signed in. Each event can have many handlers attached to it, each performing a specific action when the event is published. For example, an event handler might update a metric, log some data, or enrich a context of distributed trace.
+Ecto 和 Phoenix 中都已经包含了 Telemetry 功能，发出的事件我们可以选择接收并采取相应的行动。我们也可以从我们的应用代码中发出自己的自定义 Telemetry 事件，并定义处理程序来响应它们。
 
-Telemetry is already included in both Ecto and Phoenix, emitting events that we can opt-in to receiving and acting on accordingly. We can also emit our own custom Telemetry events from our application code and define handlers to respond to them.
+从 Ecto 和 Phoenix 免费发出的 Telemetry 事件意味着 _所有_ 使用这些库的应用程序的标准化仪表。同时，Telemetry 提供的处理这些事件和发送额外的自定义事件的接口使每个 Elixir 开发者都能通过轻松地编写和发布完全检测的代码来实现可观察性目标。
 
-The Telemetry events emitted for free from Ecto and Phoenix mean standardized instrumentation for _all_ apps using these libraries. At the same time, the interface that Telemetry provides for handling such events and emitting additional custom events empowers every Elixir developer to hit observability goals by writing and shipping fully instrumented code with ease.
+现在我们了解了为什么可观察性很重要以及 Telemetry 如何支持可观察性，让我们深入了解一下 Telemetry 库吧!
 
-Now that we understand why observability matters and how Telemetry supports observability, let's dive into the Telemetry library!
+## 在 Elixir 中使用 Telemetry
 
-## Using Telemetry in Elixir
+首先，我们先看一下如何在我们的 Phoenix 应用中为自定义 Telemetry 事件设置一个简单的报告管道。然后，我们将深入 Telemetry 库的背后，以了解我们的管道是如何工作的。
+### 起步
 
-First, we'll take a look at how to set up a simple reporting pipeline for custom Telemetry events in our Phoenix app. Then, we'll take a look under the hood at the Telemetry library to understand how our pipeline works.
+你可以通过克隆下来的 [repo](https://github.com/elixirschool/telemetry-code-along/tree/part-1-start) 来跟进这个教程。
 
-### Getting Started
+* 在分支 [part-1-start](https://github.com/elixirschool/telemetry-code-along/tree/part-1-start) 上查看我们代码的起始状态。
+* 在分支 [part-1-solution](https://github.com/elixirschool/telemetry-code-along/tree/part-1-solution) 上查找解题代码。
 
-You can follow along with this tutorial by cloning down the repo [here](https://github.com/elixirschool/telemetry-code-along/tree/part-1-start).
-* Checking out the starting state of our code on the branch [part-1-start](https://github.com/elixirschool/telemetry-code-along/tree/part-1-start)
-* Find the solution code on the branch [part-1-solution](https://github.com/elixirschool/telemetry-code-along/tree/part-1-solution)
+我们的 Phoenix 应用 Quantum (懂了吗?)，非常简单--用户可以注册、登录并点击一些按钮。厉害吧？真的，这个虚拟应用只是为了被工具化而存在，所以它并没有什么用，抱歉。
 
-Our Phoenix app, Quantum (get it?), is pretty simple--users can sign up, log in and click some buttons. Awesome, right? Really this dummy app just exists to be instrumented so it doesn't do much, sorry.
+### 概述
 
-### Overview
+为了让我们的管道启动和运行，我们将：
 
-To get our pipeline up and running we will:
+* 安装 Telemetry 库
+* 执行 Telemetry 事件
+* 定义一个事件处理模块和回调函数。
+* 将事件附加到处理程序上
 
-* Install the Telemetry library
-* Execute a Telemetry event
-* Define an event handler module and callback function
-* Attach the event to the handler
+让我们开始吧!
 
-Let's get started!
+### 我们的工具是什么？
 
-### What We're Instrumenting
+我们首先要选择一个工作流程来制作工具。但首先...
+#### 关于衡量标准的说明
 
-We'll start by picking a workflow to instrument. But first...
+为了使我们真正具有可观察性，我们需要的不仅仅是对预定义指标的可见性。指标对于创建静态仪表盘、监测一段时间内的趋势和针对这些趋势建立警报阈值是有用的。指标对于我们监控我们的系统是必要的，但由于它们是预先聚集和预先定义的，所以它们不能实现真正的可观察性。为了实现真正的可观察性，我们需要能够提出和回答我们运行系统的任何问题。所以，我们要跟踪和发出具有丰富上下文的事件。例如，我们不需要为一个特定的 Web 请求建立一个指标，并跟踪它的次数和持续时间，而是希望能够发出描述任何 Web 请求的信息，并包含该请求上下文的丰富描述符--它的持续时间、它被发送到的端点等。
 
-#### A Note on Metrics
+尽管我们希望为每个 web 请求发出一个事件，但我们将从选择一个端点开始。
 
-In order for us to truly have observability, we need _more_ than visibility into predefined metrics. Metrics are useful for creating static dashboards, monitoring trends over time and establishing alerting thresholds against those trends. Metrics are necessary for us to monitor our system, but since they are pre-aggregated and pre-defined, they _don't_ achieve true observability. For true observability, we need to be able to ask and answer _any_ question of our running system. So, we want to track and emit events with rich context. Instead of establishing a metric for a specific web request and tracking its count and duration, for example, we want to be able to emit information describing _any_ web request and include rich descriptors of the context of that request--its duration, the endpoint to which it was sent, etc.
+#### 我们自定义的 Telemetry 事件
 
-Although we want to emit an event for every web request, we'll start by picking just one endpoint to instrument.
+让我们在每次用户点击 `/register` 路径并访问注册页面时发出一个 Telemetry 事件。
 
-#### Our Custom Telemetry Event
+### 步骤 1: 安装 Telemetry
 
-Let's emit a Telemetry event every time a user hits the `/register` route and visits the sign up page.
-
-### Step 1: Installing Telemetry
-
-First, we'll install Telemetry and run `mix deps.get`:
+首先，我们通过运行 `mix deps.get` 安装 Telemetry：
 
 ```elixir
 # add the following to the `deps` function of your mix.exs file
 {:telemetry, "~> 0.4.1"}
 ```
 
-Now we're ready to emit an event!
+现在，我们准备发出一个事件！
+### 步骤 2: 执行一条 Telemetry 事件
 
-### Step 2: Executing a Telemetry Event
+要发出一个 Telemetry 事件，我们调用 [`:telemetry.execute/3`](https://hexdocs.pm/telemetry/index.html#execute)。是的，没错，我们直接从 Elixir 代码中调用 Erlang 的 `:telemetry` 模块。Elixir/Erlang 互操作 FTW!
 
-To emit a Telemetry event, we call [`:telemetry.execute/3`](https://hexdocs.pm/telemetry/index.html#execute). Yep, that's right, we call on the Erlang `:telemetry` module directly from our Elixir code. Elixir/Erlang inter-op FTW!
+`execute/3` 函数需要三个参数--事件的名称、我们用来描述该事件的测量值以及描述事件上下文的任何元数据。
 
-The `execute/3` function takes in three arguments--the name of the event, the measurements we're using to describe that event and any metadata that describes the event context.
+我们将从我们的 `UserController` 的 `new` 函数中发出以下事件，名称为 `[:phoenix, :request]`。
 
-We'll emit the following event, with the name `[:phoenix, :request]`, from the `new` function of our `UserController`.
-
-Our event:
+我们的事件：
 
 ```elixir
 defmodule QuantumWeb.UserController do
@@ -126,16 +125,15 @@ defmodule QuantumWeb.UserController do
 end
 ```
 
-Here, we're emitting an event that includes the duration measurement--tracking the duration of the web request--along with the context of the web request, described by the `conn` struct.
+在这里，我们发出一个事件，由 `conn` 结构描述，其中包括持续时间测量--跟踪 web 请求的持续时间--以及 web 请求的上下文，。
 
+### 步骤 3: 定义和添加 Telemetry 处理程序
 
-### Step 3: Defining and Attaching The Telemetry Handler
+我们需要定义一个处理程序，实现一个回调函数，当我们的事件被执行时，该函数将被调用。
 
-We need to define a handler that implements a callback function that will be invoked when our event is executed.
+回调函数将使用 [function arity pattern matching](https://medium.com/flatiron-labs/how-functions-pattern-match-in-elixir-12a44a51c6ad) 来匹配我们发出的特定事件。
 
-The callback function will match the specific event we're emitting using [function arity pattern matching](https://medium.com/flatiron-labs/how-functions-pattern-match-in-elixir-12a44a51c6ad).
-
-Let's define a module, `Quantum.Telemetry.Metrics`, that implements a function, `handle_event/4`:
+让我们定义一个模块 `Quantum.Telemetry.Metrics`，实现一个函数 `handle_event/4`。
 
 ```elixir
 # lib/quantum/telemetry/metrics.ex
@@ -150,20 +148,20 @@ defmodule Quantum.Telemetry.Metrics do
 end
 ```
 
-### Step 4: Attaching the Event to the Handler
+### 步骤 4: 将事件附加到处理程序
 
-In order for this module's `handle_event/4` function to be called when our `[:phoenix, :request]` event is executed, we need to "attach" the handler to the event.
+为了让这个模块的 `handle_event/4` 函数在我们的 `[:phoenix, :request]` 事件被执行时被调用，我们需要将处理程序 "附加" 到事件上。
 
-We do that with the help of Telemetry's [`attach/4`](https://hexdocs.pm/telemetry/index.html#attach) function.
+我们借助于 Telemetry 的 [`attach/4`](https://hexdocs.pm/telemetry/index.html#attach) 函数来实现。
 
-The `attach/4` function takes in four arguments:
+`attach/4` 函数有四个参数。
 
-* A unique "handler ID" that will be used to look up the handler for the event later
-* The event name
-* The handler callback function
-* Any handler config (which we don't need to take advantage of for the purposes of our example)
+* 一个独特的 "处理程序 ID"，将用于以后查找该事件的处理程序。
+* 事件名称
+* 处理器回调函数
+* 任何处理程序配置(在本例中我们不需要利用它)
 
-We'll call this function in our application's `start/2` function:
+我们将在应用程序的 `start/2` 函数中调用这个函数。
 
 ```elixir
 # lib/quantum/application.ex
@@ -182,31 +180,33 @@ end
 
 Now that we've defined and emitted our event, and attached a handler to that event, the following will occur:
 
-* When a user visit the `/register` route and hits the `new` action of the `UserController`
-* We'll emit the Telemetry event, including the request duration and the `conn` like this:`:telemetry.execute([:phoenix, :request], %{duration: System.monotonic_time() - start}, conn)`
-* Then our `Quantum.Telemetry.Metrics.handle_event/4` function will be invoked, with the arguments of the event name, the measurement map including the request duration, and the measurement metadata, for which we passed in the `conn`.
+现在我们已经定义并发出了我们的事件，并为该事件附加了一个处理程序，下面将发生：
 
-So, if we run the server with `mix phx.server`, and visit `http://localhost:4000/register/new`, we should see the following logged to our terminal:
+* 当一个用户访问 `/register` 路由触发 `UserController` 的 `new` 动作
+* 我们发出 Telemetry 事件，包含请求持续时间和 `conn` 就像这样：`:telemetry.execute([:phoenix, :request], %{duration: System.monotonic_time() - start}, conn)`
+* 然后我们的 `Quantum.Telemetry.Metrics.handle_event/4` 函数将被调用，参数为事件名称、测量 map（包括请求持续时间）和测量元数据，我们为其传递了 `conn`。
+
+因此，如果我们使用 `mix phx.server` 运行服务端，然后访问 `http://localhost:4000/register/new`，我们将会在命令行看到下面的 log
 
 ```
 [info] Received [:phoenix, :request] event. Request duration: 18000, Route: /register/new
 ```
 
-This log statement is just one example of what we could do to respond to the Telemetry event. Later on, we'll use the information in this event to report a metric to StatsD.
+这个日志语句只是我们可以对 Telemetry 事件进行响应的一个例子。稍后，我们将使用这个事件中的信息向 StatsD 报告一个指标。
 
-Next up, we'll take a look under the hood of the Telemetry library to understand how emitting our event results in the invocation of our handler.
+接下来，我们将看看 Telemetry 库的内部，以了解我们发出的事件是如何调用我们的处理程序的。
 
-## Telemetry Under The Hood
+## Telemetry 揭秘
 
-How does Telemetry invoke our handler callback function when an event is emitted? It leverages ETS! Telemetry stores our event and associated handler in an ETS table when we call `:telemetry.attach/4`. When we call `:telemetry.execute/3`, Telemetry looks up the handler function for the given event in the ETS table and executes it.
+当一个事件发出时，Telemetry 如何调用处理程序的回调函数？它利用了 ETS! 当我们调用 `:telemetry.attach/4` 时，Telemetry 将我们的事件和相关的处理程序存储在 ETS 表中。当我们调用 `:telemetry.execute/3` 时，Telemetry 会在 ETS 表中查找给定事件的处理函数并执行它。
 
-In the next sections, we'll walk through some Telemetry source code so get a better understanding of how this process works. If you're new to Erlang (like me!), no problem. Just do your best to read through the code for a high-level understanding.
+在接下来的章节中，我们将通过一些 Telemetry 的源码，以便更好地理解这个过程是如何工作的。如果你是 Erlang 的新手（比如我！），没问题。只要尽力读完代码，就能有一个高层次的理解。
 
-### Attaching Handlers to Events
+### 为事件附加处理程序
 
-The `:telemetry.attach/4` function stores the handler and its associated events in an ETS table, under the unique handler ID we provide.
+`:telemetry.attach/4` 函数将处理程序及其相关事件存储在我们提供的唯一处理程序 ID 下的 ETS 表中。
 
-If we peek at the `attach/4` source code, we can see the call to insert into ETS [here](https://github.com/beam-telemetry/telemetry/blob/master/src/telemetry.erl#L89)
+如果我们偷看一下 `attach/4` 的源代码，我们可以[在这里](https://github.com/beam-telemetry/telemetry/blob/master/src/telemetry.erl#L89)看到插入 ETS 的调用 
 
 ```erlang
 % telemetry/src/telemetry.erl
@@ -215,7 +215,7 @@ If we peek at the `attach/4` source code, we can see the call to insert into ETS
 telemetry_handler_table:insert(HandlerId, EventNames, Function, Config).
 ```
 
-Looking at the [`telemetry_handler_table` source code](https://github.com/beam-telemetry/telemetry/blob/master/src/telemetry_handler_table.erl#L65), we can see that the handler is stored in the ETS table like this:
+再看一下 [`telemetry_handler_table` 源代码](https://github.com/beam-telemetry/telemetry/blob/master/src/telemetry_handler_table.erl#L65), 我们可以看到，处理程序是这样存储在 ETS 表中的：
 
 ```erlang
 % telemetry/src/telemetry_handler_table.erl
@@ -228,7 +228,7 @@ Objects = [#handler{id=HandlerId,
             ets:insert(?MODULE, Objects)
 ```
 
-So, each handler is stored in ETS with the format:
+所以，每个 handler 都以这样一个格式存储在 ETS 中：
 
 ```erlang
 {
@@ -239,11 +239,13 @@ So, each handler is stored in ETS with the format:
 }
 ```
 
-Where the `HandlerId` `EventName`, `HandlerFunction` and `Config` are set to whatever we passed into our call to `:telemetry.attach/4`.
+其中 `HandlerId` `EventName`、`HandlerFunction` 和 `Config` 设置为我们在调用 `:telemetry.attach/4` 时传递的任何内容。
 
-### Executing Events
+### 执行事件
 
 When we call `:telemetry.execute/3`, Telemetry will look up the handler by the event name and invoke its callback function. Let's take a look at the source code for `:telemetry.execute/3` [here](https://github.com/beam-telemetry/telemetry/blob/master/src/telemetry.erl#L108):
+
+当我们调用 `:telemetry.execute/3` 时，Telemetry 会根据事件名称查找处理程序，并调用其回调函数。让我们看看` :telemetry.execute/3` [源代码](https://github.com/beam-telemetry/telemetry/blob/master/src/telemetry.erl#L108)。
 
 ```erlang
 % telemetry/src/telemetry.erl
@@ -275,9 +277,9 @@ execute(EventName, Measurements, Metadata) when is_map(Measurements) and is_map(
    lists:foreach(ApplyFun, Handlers).
 ```
 
-Let's break down this process:
+我们来分析一下这个过程:
 
-#### First, look up the handlers for the event in ETS:
+#### 首先, 在 ETS 中查找该事件的处理程序。
 
 ```erlang
 % telemetry/src/telemetry.erl
@@ -285,7 +287,7 @@ Let's break down this process:
 Handlers = telemetry_handler_table:list_for_event(EventName)
 ```
 
-Looking at the [`telemetry_handler_table.list_for_event/1` source code](https://github.com/beam-telemetry/telemetry/blob/master/src/telemetry_handler_table.erl#L45), we can see that the handler is looked up in ETS by the given event name like this:
+看一下 [`telemetry_handler_table.list_for_event/1` 源代码](https://github.com/beam-telemetry/telemetry/blob/master/src/telemetry_handler_table.erl#L45)，我们可以看到，在 ETS 中，处理程序是通过给定的事件名称来查找的，比如这样。
 
 ```erlang
 % telemetry/src/telemetry_handler_table.erl
@@ -294,7 +296,7 @@ Looking at the [`telemetry_handler_table.list_for_event/1` source code](https://
 ets:lookup(?MODULE, EventName)
 ```
 
-This will return the list of stored handlers for the event, where each handler will know its handle ID, handle function and any config:
+这将返回存储的事件处理程序列表，其中每个处理程序将知道它的句柄 ID、句柄函数和任何配置。
 
 ```erlang
 {
@@ -304,9 +306,9 @@ This will return the list of stored handlers for the event, where each handler w
 }
 ```
 
-#### Then, establish an `ApplyFun` to be called for each handler
+#### 然后, 建立一个 `ApplyFun`，以便为每个处理程序调用。
 
-The `ApplyFun` will invoke the given handler's `HandleFunction` with the event, measurements and metadata passed in via the call to `:telemetry.execute/3`, along with any config that was stored in ETS.
+`ApplyFun` 将调用给定处理程序的 `HandleFunction`，其中包括通过调用 `:telemetry.execute/3` 传入的事件、测量和元数据，以及存储在 ETS 中的任何配置。
 
 ```erlang
 % telemetry/src/telemetry.erl
@@ -327,32 +329,32 @@ ApplyFun =
   end
 ```
 
-#### Lastly, iterate over the `Handlers` and invoke the `ApplyFun` for each handler
+#### 最后, 遍历 `Handlers` 然后为每个 handler 调用 `ApplyFun`
 
 ```erlang
 lists:foreach(ApplyFun, Handlers).
 ```
 
-And that's it!
+就是这样！
 
-#### Putting It All Together
+#### 把它们放在一起
 
-To summarize, when we "attach" an event to a handler, we are storing the handler and its callback function in ETS under that event name. Later, when an event is "executed", Telemetry looks up the handler for the event and executes the callback function. Pretty simple.
+总之，当我们将一个事件 "附加" 到一个处理程序时，我们将处理程序及其回调函数存储在该事件名称下的 ETS 中。之后，当一个事件被 "执行" 时，Telemetry 会查找该事件的处理程序并执行回调函数。很简单。
 
-Now that we understand how our Telemetry pipeline works, we're ready to consider the last piece of the puzzle: event reporting.
+现在我们了解了我们的 Telemetry 管道是如何工作的，我们准备好考虑拼图的最后一块：事件报告。
 
-### Reporting Events to StatsD
+### 报告事件到 StatsD
 
-What you do with your event is up to you, but one common strategy is to report metrics to StatsD. In this example, we'll use the [`Statix`](https://github.com/lexmag/statix) library to report metrics describing our event to StatsD.
+如何处理事件取决于你，但一个常见的策略是向 StatsD 报告指标。在这个例子中，我们将使用 [`Statix`](https://github.com/lexmag/statix) 库来向 StatsD 报告描述我们事件的指标。
 
-First, we'll install Statix and run `mix deps.get`
+首先，我们运行 `mix deps.get` 来安装 Statix
 
 ```elixir
 # add the following to the `deps` function of your mix.exs file
 {:statix, ">= 0.0.0"}
 ```
 
-Next up, we define a module that uses `Statix`:
+接下来，我们定义一个模块使用 `Statix`:
 
 ```elixir
 # lib/quantum/telemetry/statsd_reporter.ex
@@ -361,7 +363,7 @@ defmodule Quantum.Telemetry.StatsdReporter do
 end
 ```
 
-We need to start the `StatsdReporter` in our application's `start/2` function:
+我们需要在我们的应用的 `start` 函数中启动 `StatsdReporter`
 
 ```elixir
 # lib/quantum/application.ex
@@ -378,7 +380,7 @@ def start(_, _) do
 end
 ```
 
-Now we can call on our `Quantum.Telemetry.StatsdReporter` in our event handler to emit metrics to StatsD:
+现在我们可以在事件处理函数中调用 `Quantum.Telemetry.StatsdReporter` 将指标发送到 StatsD：
 
 ```elixir
 # lib/quantum/telemetry/metrics.ex
@@ -393,11 +395,11 @@ defmodule Quantum.Telemetry.Metrics do
 end
 ```
 
-Here, we're reporting a counter metric that tracks the number of such request events, as well as a timing metric that tracks the duration of web requests.
+这里，我们报告了请求事件的总数，以及跟踪 web 请求的持续时间。
 
-Now, if we run our app and visit the `/register` route a few times, we should see the following emitted to StatsD:
+现在，如果我们运行我们的应用并访问 `/register` 很多次，我们应该可以在 StatsD 里面看到如下：
 
-```
+```bash
 {
   counters: {
     'quantum.phoenix.request': 7
@@ -434,54 +436,54 @@ Now, if we run our app and visit the `/register` route a few times, we should se
 }
 ```
 
-*NOTE: To install and run StatsD locally follow the simple guide [here](https://anomaly.io/statsd-install-and-config/index.html).*
+*注: 在本地安装运行 StatsD 可以跟着这个简单的 [指导](https://anomaly.io/statsd-install-and-config/index.html)*
 
-This reporting leaves something to be desired. We're not currently taking advantage of the request context, passed into the `handle_event/4` function as the `metadata` argument. This metric alone is not very helpful from an observability standpoint since it doesn't tell us anything about which endpoint received the request, who sent it and what the response was.
+这个报告还有一些需要改进的地方。我们目前没有利用作为 `metadata` 参数传递到 `handle_event/4` 函数中的请求上下文。从可观察性的角度来看，这个指标本身并没有什么帮助，因为它并没有告诉我们关于哪个端点收到了请求，是谁发送的，以及响应是什么。
 
-We have two options here. We can emit a more specific event from our controller, something like:
+我们在这里有两个选择。我们可以从我们的控制器中发出一个更具体的事件，比如说：
 
 ```elixir
 :telemetry.execute([:phoenix, :request, :register], %{duration: System.monotonic_time() - start}, conn)
 ```
 
-This leaves us on the hook for defining and emitting custom events _from every controller action_. Soon it will be hard to keep track of and standardize all of these events.
+这让我们不得不从每个控制器的动作中定义和发出自定义事件。很快就很难跟踪和标准化这些事件了。
 
-We could instead add some tags to the metric we are sending to StatsD in the event handler:
+我们可以在事件处理程序中为我们发送给 StatsD 的指标添加一些标签。
 
 ```elixir
 StatsdReporter.increment("phoenix.request.success", 1, tags: [metadata.request_path])
 StatsdReporter.timing("phoenix.request.success", dur, tags: [metadata.request_path])
 ```
 
-The standard StatsD agent does not support tagging, and will error if we use tags here. However, if you are reporting to the DogStatsD agent with the goal of sending metrics to Datadog, your tags will be successfully applied like this:
+标准 StatsD 代理不支持标签，如果我们在这里使用标签会导致出错。但是，如果你向 DogStatsD 代理报告，目标是向 Datadog 发送指标，你的标签将被成功应用，就像这样：
 
 ```
 quantum.phoenix.request:1|c|#/register/new
 quantum.phoenix.request:21000|ms|#/register/new
 ```
 
-We won't dig into solving this problem now. Instead, we're highlighting the fact that metrics reporting is complex. It's a hard problem to solve and we could easily throw many hours and lots of code at it.
+我们现在不会深入解决这个问题。相反，我们要强调的是，度量报告是复杂的。这是一个很难解决的问题，我们可以很容易地投入许多小时和大量的代码来解决这个问题。
 
-### Conclusion
+### 结语
 
-This seems hard. Is this too hard?
+这看起来有点难，这太难了吗？
 
-Telemetry provides a simple interface for instrumentation, but our barebones example leaves a lot to be desired. Earlier, we identified a need to instrument and report on _all_ of the web requests received by our app. We want to be able to aggregate and analyze metrics describing the request times and counts across our web application, and we want the data we emit describing these data points to be information rich so that we can slice it by endpoint, response status and more. In this way, our app becomes _observable_, i.e. its outputs can tell use about its state.
+Telemetry 提供了一个简单的仪表化接口，但我们的裸例还有很多需要改进的地方。早些时候，我们确定了对应用程序收到的所有网络请求进行检测和报告的需求。我们希望能够汇总和分析描述整个 Web 应用的请求时间和计数的指标，我们希望我们发出的描述这些数据点的数据是信息丰富的，这样我们就可以按端点、响应状态等进行划分。这样一来，我们的应用就变成了 _可观察的_，也就是说，它的输出可以告诉使用它的状态。
 
-In our current approach, however, we are manually emitting _just one Telemetry event_ for _one specific endpoint_. This approach leaves us on the hook for manually emitting Telemetry events for _every_ request, from _every endpoint_.
+然而，在我们当前的方法中，我们是为 _一个特定的端点_ 手动发出 _一个 Telemetry 事件_。这种方法让我们不得不为来自 _每个端点_ 的 _每个请求_ 手动发送 Telemetry 事件。
 
-Our reporting mechanism, currently set up to send metrics to StatsD, is also a little problematic. Not only did we have to do the work to setup our own reporter, with the help of the `Statix` library, we're not properly taking advantage of tagging or our rich event context. We'll have to do additional work to utilize our event context, either through tagging with a DogStatsD reporter (even more work to set up a whole new reporter!) or by updating the name of the event itself.
+我们的报告机制，目前设置为向 StatsD 发送指标，也有点问题。我们不仅要在 `Statix` 库的帮助下设置我们自己的报告器，我们也没有正确地利用标签或我们丰富的事件上下文。我们将不得不做额外的工作来利用我们的事件上下文，要么通过标记与 DogStatsD 报告（甚至更多的工作来设置一个全新的报告！）或通过更新事件本身的名称。
 
-"Wait a minute", you might be thinking, "I thought Telemetry was supposed to standardize instrumentation events and make it fast and easy to operate on and report those events. Why do I _still_ have to emit _all_ my own events and be on the hook for _all_ of my reporting needs?"
+"等一下"，你可能会想，"我想 Telemetry 应该是对仪表化事件进行标准化，并使其快速、简单地操作和报告这些事件。为什么我 _还_ 得发出自己的所有事件，并为我 _所有_ 的报告需求提供钩子？"
 
-### Next Up
+### 下一个
 
-Well the answer is, you _don't_ have to emit all of your own events _or_ be responsible for all of your reporting! Now that we understand _how_ to set up a Telemetry pipeline, and how it works under the hood to store and execute callbacks for events using ETS, we're ready to rely on some handy abstractions that additional Telemetry libraries provide.
+好吧，答案是，你 _不_ 需要发送所有事件，_也_ 不需要负责所有的报告！现在我们了解了 _如何_设置 Telemetry 管道，以及如何使用 ETS 为事件存储和执行回调，我们已经准备好依靠一些方便的抽象来实现。
 
-Surprise! Phoenix and Ecto are *already* emitting common events from source code, including request counts and duration. The `Telemetry.Metrics` library will make it super easy for us to hook into these events without defining and attaching our own handlers.
+令人惊讶的是，Phoenix 和 Ecto *都是* 的抽象库。Phoenix 和 Ecto 已经可以从源代码中发出常见的事件，包括请求计数和持续时间。`Telemetry.Metrics` 库将使我们超级容易地钩入这些事件，而无需定义和附加我们自己的处理程序。
 
-Further, Telemetry provides a number of reporting clients, including a StatsD reporter, that we can plug into our `Telemetry.Metrics` module for free metrics reporting to StatsD _or_ DogStatsD, allowing us to take advantage of event metadata with tagging.
+此外，Telemetry 提供了许多报告客户端，包括 StatsD 报告器，我们可以把它插入到我们的 `Telemetry.Metrics` 模块中，允许我们利用事件元数据和标签，免费向 StatsD 或 DogStatsD 报告。
 
-In the [next post](https://elixirschool.com/blog/instrumenting_phoenix_with_telemetry_part_two/), we'll leverage `Telemetry.Metrics` and the `TelemetryStatsdReporter` to observe, format and report the Telemetry event we established here. In doing so, we'll abstract away the need for our custom handler _and_ our custom StatsD reporter.
+在[下一篇](https://elixirschool.com/blog/instrumenting_phoenix_with_telemetry_part_two/)，我们将利用 `Telemetry.Metrics` 和 `TelemetryStatsdReporter` 来观察、格式化和报告我们在这里建立的 Telemetry 事件。通过这样做，我们将抽象出我们的自定义处理程序 _和_ 我们的自定义 StatsD 报告器的需求。
 
-See you soon!
+回头见！
