@@ -13,7 +13,7 @@
 - [ ] [使用 telemetry 仪表化 Phoenix 项目第四部分](./posts/2020-05-13-instrumenting-phoenix-with-telemetry-part-four.md)
 - [ ] [使用 telemetry 仪表化 Phoenix 项目第三部分](./posts/2020-05-06-instrumenting-phoenix-with-telemetry-part-three.md)
 - [ ] [使用 telemetry 仪表化 Phoenix 项目第二部分](./posts/2020-04-29-instrumenting-phoenix-with-telemetry-part-two.md)
-- [ ] [使用 live dashboard 仪表化 Phoenix 项目](./posts/2020-04-24-instrumenting-phoenix-with-live-dashboard.md)
+- [x] [使用 Telemetry 和 LiveDashboard 对 Phoenix 进行仪表化](./posts/2020-04-24-instrumenting-phoenix-with-live-dashboard.md)
 - [x] [使用 Telemetry 仪表化 Phoenix 第一部分: Telemetry 的背后](./posts/2020-04-22-instrumenting-phoenix-with-telemetry-part-one.md)
 ### 2019 
 
