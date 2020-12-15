@@ -16,7 +16,7 @@ excerpt: >
 - [第一部分: Telemetry 的背后](./2020-04-22-instrumenting-phoenix-with-telemetry-part-one.md)
 - 第二部分: 用 `TelemetryMetrics` + `TelemetryMetricsStatsd` 处理 Telemetry 事件
 - [第三部分: 观测 Phoenix + Ecto Telemetry 事件](./2020-05-06-instrumenting_phoenix_with_telemetry_part_three.md)
-- [第四部分: 用 `telemetry_poller`、`TelemetryMetrics` + `TelemetryMetricsStatsd` 对 Erlang VM 进行测量](./2020-05-06-instrumenting_phoenix_with_telemetry_part_three.md)
+- [第四部分: 用 `telemetry_poller`、`TelemetryMetrics` + `TelemetryMetricsStatsd` 对 Erlang VM 进行测量](./2020-05-13-instrumenting-phoenix-with-telemetry-part-four.md)
 
 ## 简介
 

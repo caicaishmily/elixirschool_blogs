@@ -11,9 +11,9 @@
 ### 2020
 
 - [ ] [使用 Context 和 LiveView 绘制实时 SVG 图表](./posts/2020-10-06-server-side-svg-charts-with-contex-and-liveview.md)
-- [ ] [使用 telemetry 仪表化 Phoenix 项目第四部分](./posts/2020-05-13-instrumenting-phoenix-with-telemetry-part-four.md)
+- [x] [使用 telemetry 仪表化 Phoenix 第四部分: 使用 `telemetry_poller` 对 Erlang VM 进行测量](./posts/2020-05-13-instrumenting-phoenix-with-telemetry-part-four.md)
 - [ ] [使用 telemetry 仪表化 Phoenix 项目第三部分](./posts/2020-05-06-instrumenting-phoenix-with-telemetry-part-three.md)
-- [ ] [使用 Telemetry 仪表化 Phoenix 第二部分: Telemetry Metrics + Reporters](./posts/2020-04-29-instrumenting-phoenix-with-telemetry-part-two.md)
+- [x] [使用 Telemetry 仪表化 Phoenix 第二部分: Telemetry Metrics + Reporters](./posts/2020-04-29-instrumenting-phoenix-with-telemetry-part-two.md)
 - [x] [使用 Telemetry 和 LiveDashboard 对 Phoenix 进行仪表化](./posts/2020-04-24-instrumenting-phoenix-with-live-dashboard.md)
 - [x] [使用 Telemetry 仪表化 Phoenix 第一部分: Telemetry 的背后](./posts/2020-04-22-instrumenting-phoenix-with-telemetry-part-one.md)
 

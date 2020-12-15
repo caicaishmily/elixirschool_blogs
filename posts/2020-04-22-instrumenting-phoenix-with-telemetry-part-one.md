@@ -12,13 +12,16 @@ excerpt: >
 ## 目录
 
 在这个系列中，我们将借助 Elixir 和 Erlang 的 Telemetry 产品，对一个 Phoenix 应用进行仪表化，并将指标发送到 StatsD。简要介绍一下我们将涉及的内容：
+
 <!-- TODO: update link -->
-* 第一部分: Telemetry 的背后
-* [第二部分: 用 `TelemetryMetrics` + `TelemetryMetricsStatsd` 处理 Telemetry 事件](./2020-04-29-instrumenting_phoenix_with_telemetry_part_two.md)
-* [第三部分: 观测 Phoenix + Ecto Telemetry 事件](./2020-05-06-instrumenting_phoenix_with_telemetry_part_three.md)
-* [第四部分: 用 `telemetry_poller`、`TelemetryMetrics` + `TelemetryMetricsStatsd` 对 Erlang VM 进行测量](./2020-05-06-instrumenting_phoenix_with_telemetry_part_three.md)
+
+- 第一部分: Telemetry 的背后
+- [第二部分: 用 `TelemetryMetrics` + `TelemetryMetricsStatsd` 处理 Telemetry 事件](./2020-04-29-instrumenting_phoenix_with_telemetry_part_two.md)
+- [第三部分: 观测 Phoenix + Ecto Telemetry 事件](./2020-05-06-instrumenting_phoenix_with_telemetry_part_three.md)
+- [第四部分: 用 `telemetry_poller`、`TelemetryMetrics` + `TelemetryMetricsStatsd` 对 Erlang VM 进行测量](./2020-05-13-instrumenting-phoenix-with-telemetry-part-four.md)
 
 在第一部分中，我们将从建立一个基本的、DIY 的 Telemetry 管道开始，并了解 Erlang 的 Telemetry 库背后是如何工作的。然后，在第二部分中，我们将利用 `TelemetryMetrics` 和 `TelemetryMetricsStatsd` 库来响应 Telemetry 事件，将它们格式化为度量并将这些度量报告给 StatsD。在第三部分，我们将通过执行 Telemetry 事件来使用 Phoenix 和 Ecto 提供的开箱即用的仪表。最后，在第四部分，我们将利用 `telemetry_poller` Erlang 库来采集 Erlang 虚拟机的测量结果，并将其作为 Telemetry 事件发出，然后我们的 Telemetry 管道可以观察和报告这些事件。
+
 ## 简介
 
 在这篇文章中，我们将讨论为什么可观测性很重要，以及 Telemetry 如何帮助我们在 Elixir 项目中把可观测性当作一等公民对待。然后，我们将使用 Telemetry 和 StatsD 手绘我们自己的仪表管道。最后，我们将看看 Telemetry 库的外壳，并为本系列的第二部分做准备，在这部分中，我们将利用 `Telemetry.Metrics` 库来实现更简单的仪器和报告。
@@ -54,12 +57,13 @@ Ecto 和 Phoenix 中都已经包含了 Telemetry 功能，发出的事件我们�
 ## 在 Elixir 中使用 Telemetry
 
 首先，我们先看一下如何在我们的 Phoenix 应用中为自定义 Telemetry 事件设置一个简单的报告管道。然后，我们将深入 Telemetry 库的背后，以了解我们的管道是如何工作的。
+
 ### 起步
 
 你可以通过克隆下来的 [repo](https://github.com/elixirschool/telemetry-code-along/tree/part-1-start) 来跟进这个教程。
 
-* 在分支 [part-1-start](https://github.com/elixirschool/telemetry-code-along/tree/part-1-start) 上查看我们代码的起始状态。
-* 在分支 [part-1-solution](https://github.com/elixirschool/telemetry-code-along/tree/part-1-solution) 上查找解题代码。
+- 在分支 [part-1-start](https://github.com/elixirschool/telemetry-code-along/tree/part-1-start) 上查看我们代码的起始状态。
+- 在分支 [part-1-solution](https://github.com/elixirschool/telemetry-code-along/tree/part-1-solution) 上查找解题代码。
 
 我们的 Phoenix 应用 Quantum (懂了吗?)，非常简单--用户可以注册、登录并点击一些按钮。厉害吧？真的，这个虚拟应用只是为了被工具化而存在，所以它并没有什么用，抱歉。
 
@@ -67,16 +71,17 @@ Ecto 和 Phoenix 中都已经包含了 Telemetry 功能，发出的事件我们�
 
 为了让我们的管道启动和运行，我们将：
 
-* 安装 Telemetry 库
-* 执行 Telemetry 事件
-* 定义一个事件处理模块和回调函数。
-* 将事件附加到处理程序上
+- 安装 Telemetry 库
+- 执行 Telemetry 事件
+- 定义一个事件处理模块和回调函数。
+- 将事件附加到处理程序上
 
 让我们开始吧!
 
 ### 我们的工具是什么？
 
 我们首先要选择一个工作流程来制作工具。但首先...
+
 #### 关于衡量标准的说明
 
 为了使我们真正具有可观察性，我们需要的不仅仅是对预定义指标的可见性。指标对于创建静态仪表盘、监测一段时间内的趋势和针对这些趋势建立警报阈值是有用的。指标对于我们监控我们的系统是必要的，但由于它们是预先聚集和预先定义的，所以它们不能实现真正的可观察性。为了实现真正的可观察性，我们需要能够提出和回答我们运行系统的任何问题。所以，我们要跟踪和发出具有丰富上下文的事件。例如，我们不需要为一个特定的 Web 请求建立一个指标，并跟踪它的次数和持续时间，而是希望能够发出描述任何 Web 请求的信息，并包含该请求上下文的丰富描述符--它的持续时间、它被发送到的端点等。
@@ -97,6 +102,7 @@ Ecto 和 Phoenix 中都已经包含了 Telemetry 功能，发出的事件我们�
 ```
 
 现在，我们准备发出一个事件！
+
 ### 步骤 2: 执行一条 Telemetry 事件
 
 要发出一个 Telemetry 事件，我们调用 [`:telemetry.execute/3`](https://hexdocs.pm/telemetry/index.html#execute)。是的，没错，我们直接从 Elixir 代码中调用 Erlang 的 `:telemetry` 模块。Elixir/Erlang 互操作 FTW!
@@ -156,10 +162,10 @@ end
 
 `attach/4` 函数有四个参数。
 
-* 一个独特的 "处理程序 ID"，将用于以后查找该事件的处理程序。
-* 事件名称
-* 处理器回调函数
-* 任何处理程序配置(在本例中我们不需要利用它)
+- 一个独特的 "处理程序 ID"，将用于以后查找该事件的处理程序。
+- 事件名称
+- 处理器回调函数
+- 任何处理程序配置(在本例中我们不需要利用它)
 
 我们将在应用程序的 `start/2` 函数中调用这个函数。
 
@@ -182,9 +188,9 @@ Now that we've defined and emitted our event, and attached a handler to that eve
 
 现在我们已经定义并发出了我们的事件，并为该事件附加了一个处理程序，下面将发生：
 
-* 当一个用户访问 `/register` 路由触发 `UserController` 的 `new` 动作
-* 我们发出 Telemetry 事件，包含请求持续时间和 `conn` 就像这样：`:telemetry.execute([:phoenix, :request], %{duration: System.monotonic_time() - start}, conn)`
-* 然后我们的 `Quantum.Telemetry.Metrics.handle_event/4` 函数将被调用，参数为事件名称、测量 map（包括请求持续时间）和测量元数据，我们为其传递了 `conn`。
+- 当一个用户访问 `/register` 路由触发 `UserController` 的 `new` 动作
+- 我们发出 Telemetry 事件，包含请求持续时间和 `conn` 就像这样：`:telemetry.execute([:phoenix, :request], %{duration: System.monotonic_time() - start}, conn)`
+- 然后我们的 `Quantum.Telemetry.Metrics.handle_event/4` 函数将被调用，参数为事件名称、测量 map（包括请求持续时间）和测量元数据，我们为其传递了 `conn`。
 
 因此，如果我们使用 `mix phx.server` 运行服务端，然后访问 `http://localhost:4000/register/new`，我们将会在命令行看到下面的 log
 
@@ -206,7 +212,7 @@ Now that we've defined and emitted our event, and attached a handler to that eve
 
 `:telemetry.attach/4` 函数将处理程序及其相关事件存储在我们提供的唯一处理程序 ID 下的 ETS 表中。
 
-如果我们偷看一下 `attach/4` 的源代码，我们可以[在这里](https://github.com/beam-telemetry/telemetry/blob/master/src/telemetry.erl#L89)看到插入 ETS 的调用 
+如果我们偷看一下 `attach/4` 的源代码，我们可以[在这里](https://github.com/beam-telemetry/telemetry/blob/master/src/telemetry.erl#L89)看到插入 ETS 的调用
 
 ```erlang
 % telemetry/src/telemetry.erl
@@ -436,7 +442,7 @@ end
 }
 ```
 
-*注: 在本地安装运行 StatsD 可以跟着这个简单的 [指导](https://anomaly.io/statsd-install-and-config/index.html)*
+_注: 在本地安装运行 StatsD 可以跟着这个简单的 [指导](https://anomaly.io/statsd-install-and-config/index.html)_
 
 这个报告还有一些需要改进的地方。我们目前没有利用作为 `metadata` 参数传递到 `handle_event/4` 函数中的请求上下文。从可观察性的角度来看，这个指标本身并没有什么帮助，因为它并没有告诉我们关于哪个端点收到了请求，是谁发送的，以及响应是什么。
 
@@ -478,9 +484,9 @@ Telemetry 提供了一个简单的仪表化接口，但我们的裸例还有很�
 
 ### 下一个
 
-好吧，答案是，你 _不_ 需要发送所有事件，_也_ 不需要负责所有的报告！现在我们了解了 _如何_设置 Telemetry 管道，以及如何使用 ETS 为事件存储和执行回调，我们已经准备好依靠一些方便的抽象来实现。
+好吧，答案是，你 _不_ 需要发送所有事件，_也_ 不需要负责所有的报告！现在我们了解了 *如何*设置 Telemetry 管道，以及如何使用 ETS 为事件存储和执行回调，我们已经准备好依靠一些方便的抽象来实现。
 
-令人惊讶的是，Phoenix 和 Ecto *都是* 的抽象库。Phoenix 和 Ecto 已经可以从源代码中发出常见的事件，包括请求计数和持续时间。`Telemetry.Metrics` 库将使我们超级容易地钩入这些事件，而无需定义和附加我们自己的处理程序。
+令人惊讶的是，Phoenix 和 Ecto _都是_ 的抽象库。Phoenix 和 Ecto 已经可以从源代码中发出常见的事件，包括请求计数和持续时间。`Telemetry.Metrics` 库将使我们超级容易地钩入这些事件，而无需定义和附加我们自己的处理程序。
 
 此外，Telemetry 提供了许多报告客户端，包括 StatsD 报告器，我们可以把它插入到我们的 `Telemetry.Metrics` 模块中，允许我们利用事件元数据和标签，免费向 StatsD 或 DogStatsD 报告。
 

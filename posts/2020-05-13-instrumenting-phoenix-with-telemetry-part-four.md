@@ -9,39 +9,39 @@ excerpt: >
   In this series, we're instrumenting a Phoenix app and sending metrics to StatsD with the help of Elixir and Erlang's Telemetry offerings. In Part III we'll incorporate Erlang's [`telemetry_poller` library](https://github.com/beam-telemetry/telemetry_poller) into our Phoenix app so that we can observe and report on Erlang VM Telemetry events.
 ---
 
-## Table Of Contents
+## 目录
 
-In this series, we're instrumenting a Phoenix app and sending metrics to StatsD with the help of Elixir and Erlang's Telemetry offerings.
+在这个系列中，我们将借助 Elixir 和 Erlang 的 Telemetry 产品，对一个 Phoenix 应用进行仪表化，并将指标发送到 StatsD。简要介绍一下我们将涉及的内容：
 
-* [Part I: Telemetry Under The Hood](https://elixirschool.com/blog/instrumenting-phoenix-with-telemetry-part-one/)
-* [Part II: Handling Telemetry Events with `TelemetryMetrics` + `TelemetryMetricsStatsd`](https://elixirschool.com/blog/instrumenting_phoenix_with_telemetry_part_two/)
-* [Part III: Observing Phoenix + Ecto Telemetry Events](https://elixirschool.com/blog/instrumenting_phoenix_with_telemetry_part_three/)
-* Part IV: Erlang VM Measurements with `telemetry_poller`, `TelemetryMetrics` + `TelemetryMetricsStatsd`
+- [第一部分: Telemetry 的背后](./2020-04-22-instrumenting-phoenix-with-telemetry-part-one.md)
+- [第二部分: 用 `TelemetryMetrics` + `TelemetryMetricsStatsd` 处理 Telemetry 事件](./2020-04-29-instrumenting_phoenix_with_telemetry_part_two.md)
+- [第三部分: 观测 Phoenix + Ecto Telemetry 事件](./2020-05-06-instrumenting_phoenix_with_telemetry_part_three.md)
+- 第四部分: 用 `telemetry_poller`、`TelemetryMetrics` + `TelemetryMetricsStatsd` 对 Erlang VM 进行测量
 
-## Intro
+## 简介
 
-In [the previous post](https://elixirschool.com/blog/instrumenting_phoenix_with_telemetry_part_three/) we used `Telemetry.Metrics` to define metrics for a number of out-of-the-box Phoenix and Ecto Telemetry events and used `TelemetryMetricsStatsd` to handle and report those events to StatsD.
+在 [上一篇](./2020-05-06-instrumenting_phoenix_with_telemetry_part_three.md) 中，我们使用 `Telemetry.Metrics` 来定义一些开箱即用的 Phoenix 和 Ecto Telemetry 事件的度量，并使用 `TelemetryMetricsStatsd` 来处理和报告这些事件到 StatsD。
 
-In this post, we'll incorporate Erlang's [`telemetry_poller` library](https://github.com/beam-telemetry/telemetry_poller) into our Phoenix app so that we can observe and report on Erlang VM Telemetry events.
+在这篇文章中，我们将把 Erlang 的 [`telemetry_poller`](https://github.com/beam-telemetry/telemetry_poller) 库整合到我们的 Phoenix 应用中，这样我们就可以观察和报告 Erlang VM Telemetry 事件。
 
-## Getting Started
+## 起步
 
-You can follow along with this tutorial by cloning down the repo [here](https://github.com/elixirschool/telemetry-code-along/tree/part-4-start).
-* Checking out the starting state of our code on the branch [part-4-start](https://github.com/elixirschool/telemetry-code-along/tree/part-4-start)
-* Find the solution code on the branch [part-4-solution](https://github.com/elixirschool/telemetry-code-along/tree/part-4-solution)
+你可以通过克隆下来的 [repo](https://github.com/elixirschool/telemetry-code-along/tree/part-4-start) 来跟进这个教程。
 
-## Overview
+- 在分支 [part-4-start](https://github.com/elixirschool/telemetry-code-along/tree/part-4-start) 上查看我们代码的起始状态。
+- 在分支 [part-4-solution](https://github.com/elixirschool/telemetry-code-along/tree/part-4-solution) 上找到解题代码。
 
-In order to report on Erlang VM measurements as metrics, we will:
+## 概述
 
-* Install the `telemetry_poller` dependency
-* Define metrics for `telemetry_poller` Telemetry events using `Telemetry.Metrics`
-* That's it!
+为了报告 Erlang 虚拟机测量的指标，我们将：
 
+- 安装 `telemetry_poller` 依赖
+- 使用 `Telemetry.Metrics` 定义 `telemetry_poller` Telemetry 事件的指标
+- 就这些！
 
-## Step 1: Installing `telemetry_poller`
+## 步骤 1: 安装 `telemetry_poller`
 
-First, we'll include the `telemetry_poller` dependency in our app and run `mix deps.get`
+首先，我们将在我们的应用程序中加入 `telemetry_poller` 依赖，并运行 `mix deps.get`
 
 ```elixir
 # mix.exs
@@ -50,26 +50,27 @@ def deps do
 end
 ```
 
-## Step 2: Defining Metrics for `telemetry_poller` Events
+## 步骤 2: 为 `telemetry_poller` 事件定义指标
 
-### `telemetry_poller` Telemetry Events
+### `telemetry_poller` Telemetry 事件
 
-When our app starts up, the `telemetry_poller` app will also start running. This app will poll the Erlang VM to take the following measurements and execute these measurements as Telemetry events:
+当我们的应用程序启动时，`telemetry_poller` 应用程序也将开始运行。这个应用程序将对 Erlang VM 进行轮询，以进行以下测量，并将这些测量作为 Telemetry 事件来执行。
 
-* Memory - Measurement of the memory used by the Erlang VM
-* Total run queue lengths - Measurement of the queue of tasks to be scheduled by the Erlang scheduler. This event will be executed with a measurement map describing:
-  * `total` - a sum of all run queue lengths
-  * `cpu` - a sum of CPU schedulers' run queue lengths
-  * `io` - length of dirty IO run queue. It's always 0 if running on Erlang versions prior to 20.
+- 内存 - 测量 Erlang VM 使用的内存。
+- 总运行队列长度 -- 测量 Erlang 调度器要调度的任务队列。这个事件将通过测量 map 来执行，测量 map 描述了：
 
-* System count - Measurement of number of processes currently existing at the local node, the number of atoms currently existing at the local node and the number of ports currently existing at the local node
-* Process info - A measurement with information about a given process, for example a worker in your application
+  - `total` -- 所有运行队列长度的总和。
+  - `cpu` -- CPU 调度器运行队列长度的总和。
+  - `io` -- dirty IO 运行队列的长度。如果运行在 20 之前的 Erlang 版本上，它总是 0。
 
-Let's define metrics for some of these events in our `Quantum.Telemetry` module.
+- System count - 测量本地节点当前存在的进程数、本地节点当前存在的原子数和本地节点当前存在的端口数。
+- 进程信息 - 含有给定进程信息的测量，例如您的应用程序中的 worker。
 
-### Defining Our Metrics
+让我们在 `Quantum.Telemetry` 模块中定义其中一些事件的指标。
 
-The [`Telemetry.Metrics.last_value/2`](https://hexdocs.pm/telemetry_metrics/Telemetry.Metrics.html#last_value/2) function defines a metric that holds the value of the selected measurement from the most recent event. The `TelemetryMetricsStatsd` reporter will send such a metric to StatsD as a "gauge" metric. Let's define a set of gauge metrics for some of the Telemetry events mentioned above:
+### 定义我们的指标
+
+[`Telemetry.Metrics.last_value/2`](https://hexdocs.pm/telemetry_metrics/Telemetry.Metrics.html#last_value/2) 函数定义了一个度量指标，用于保存最近事件中选定的测量值。`TelemetryMetricsStatsd` 报告者将把这样的度量作为 "度量" 指标发送给 StatsD。让我们为上面提到的一些 Telemetry 事件定义一组度量指标：
 
 ```elixir
 # lib/quantum/telemetry.ex
@@ -85,7 +86,7 @@ defp metrics do
 end
 ```
 
-Now, when `telemetry_poller` executes the corresponding events, we will see the following metrics to StatsD sent to StatsD:
+现在，当 `telemetry_poller` 执行相应的事件时，我们会看到以下指标发送到 StatsD。
 
 ```
 gauges: {
@@ -96,15 +97,15 @@ gauges: {
 }
 ```
 
-And that's it! Before we wrap up, let's take a look under the hood of the `telemetry_poller` library.
+这就是了! 在我们结束之前，让我们来看看 `telemetry_poller` 库的内部。
 
-## `telemetry_poller` Under The Hood
+## 揭秘 `telemetry_poller`
 
-Taking a look at some source code, we can see exactly how `telemetry_poller` is executing these events.
+看一些源代码，我们可以了解 `telemetry_poller` 到底是如何执行这些事件的。
 
-### The `memory/0` Function
+### `memory/0` 函数
 
-The [`memory/0`](https://github.com/beam-telemetry/telemetry_poller/blob/master/src/telemetry_poller_builtin.erl#L22) function grabs memory measurements with a call to `erlang:memory/0` and passes those measurements to the call to `telemetry:execute/3` as the measurements map:
+[`memory/0`](https://github.com/beam-telemetry/telemetry_poller/blob/master/src/telemetry_poller_builtin.erl#L22) 函数通过调用 `erlang:memory/0` 来抓取内存测量值，并将这些测量值作为测量 map 传递给 `telemetry:execute/3` 。
 
 ```erlang
 % telemetry_poller/src/telemetry_poller_builtin.erl
@@ -114,7 +115,7 @@ memory() ->
     telemetry:execute([vm, memory], maps:from_list(Measurements), #{}).
 ```
 
-Let's break this down further. We can examine the measurements returned from the call to [`erlang:memory()`](http://erlang.org/doc/man/erlang.html#memory-0) by trying it out ourselves in `iex`:
+让我们进一步分析一下。我们可以通过自己在 `iex` 中的尝试来检查调用 [`erlang:memory()`](http://erlang.org/doc/man/erlang.html#memory-0) 所返回的测量值。
 
 ```elixir
 iex(1)> :erlang.memory()
@@ -131,9 +132,9 @@ iex(1)> :erlang.memory()
 ]
 ```
 
-We can see that is contains a key of `:total`, pointing to a value of the total amount of memory allocated to the Erlang VM.
+我们可以看到，它包含一个 `:total` 的键，指向分配给 Erlang VM 的内存总量的值。
 
-Thus, a Telemetry event is executed with the name `[vm, memory]` and a set of measurements including this total. When we invoke our `Telemetry.Metrics.last_value/2` function, we are telling our reporter, `TelemetryStatsD`, to attach a handler for this event and to respond to it by constructing a gauge metric with the value of the `:total` key included in the provided measurements:
+这样，一个名为 `[vm，memory]` 的 Telemetry 事件就会被执行，并得到一组包括这个总数的测量值。当我们调用我们的 `Telemetry.Metrics.last_value/2` 函数时，我们是在告诉我们的报告者 `TelemetryStatsD` 为这个事件附加一个处理程序，并通过构建一个包含在所提供的测量值中的 `:total` 键值的测量值来响应它。
 
 ```elixir
 # lib/quantum/telemetry.ex
@@ -145,9 +146,9 @@ defp metrics do
 end
 ```
 
-### The `total_run_queue_lengths/0` Function
+### `total_run_queue_lengths/0` 函数
 
-The [`total_run_queue_lengths/0`](https://github.com/beam-telemetry/telemetry_poller/blob/master/src/telemetry_poller_builtin.erl#L27) function measures the total VM run queue length, as well as the total CPU schedulers' run queue length and passes those measurements to a call to `telemetry:execute/3`:
+[`total_run_queue_lengths/0`](https://github.com/beam-telemetry/telemetry_poller/blob/master/src/telemetry_poller_builtin.erl#L27) 函数测量 VM 运行队列的总长度，以及 CPU 调度器运行队列的总长度，并将这些测量结果传递给对 `telemetry:execute/3` 的调用。
 
 ```erlang
 % telemetry_poller/src/telemetry_poller_builtin.erl
@@ -162,7 +163,7 @@ total_run_queue_lengths() ->
         #{}).
 ```
 
-To observe this event, we are specifying that our Telemetry pipeline attach a handler for the `[vm, total_run_queue_lengths]` event and constructing two gauge metrics for every such event that is executed--one with the value of the `total` measurement and one with the value of the `cpu` measurement:
+为了观察这个事件，我们指定 Telemetry 管道为 `[vm, total_run_queue_lengths]` 事件附加一个处理程序，并为每个被执行的此类事件构建两个测量指标--一个是 `total` 测量值，一个是 `cpu` 测量值。
 
 ```elixir
 # lib/quantum/telemetry.ex
@@ -175,9 +176,9 @@ defp metrics do
 end
 ```
 
-### The `system_counts/0` Function
+### `system_counts/0` 函数
 
-The [`system_counts/0`](https://github.com/beam-telemetry/telemetry_poller/blob/master/src/telemetry_poller_builtin.erl#L42) function takes measurements including the total process count and executes a Telemetry event with these measurements via a call to `telemetry:execute/3`:
+[`system_counts/0`](https://github.com/beam-telemetry/telemetry_poller/blob/master/src/telemetry_poller_builtin.erl#L42) 函数通过调用 `telemetry:execute/3` 进行测量，包括总进程数，并利用这些测量结果执行 Telemetry 事件。
 
 ```erlang
 system_counts() ->
@@ -189,7 +190,7 @@ system_counts() ->
     }).
 ```
 
-To observe this event, we are specifying that our Telemetry pipeline attach a handler for the `[vm, system_counts]` event and construct a gauge metric with the value of the `process_count` measurement for every such event:
+为了观察这一事件，我们指定我们的 Telemetry 管道为 `[vm, system_counts]` 事件附加一个处理程序，并为每一个这样的事件构建一个具有 `process_count` 测量值的度量指标：
 
 ```elixir
 # lib/quantum/telemetry.ex
@@ -201,11 +202,10 @@ defp metrics do
 end
 ```
 
+## 轮询自定义测量
 
-## Polling for Custom Measurements
+你也可以使用 `telemetry_poller` 库来发射描述你的应用程序中运行的自定义进程或 worker 的测量值，或者发射自定义测量值。更多信息请参见[文档](https://hexdocs.pm/telemetry_metrics/Telemetry.Metrics.html#module-vm-metrics)。
 
-You can also use the `telemetry_poller` library to emit measurements describing custom processes or workers running in your app, or to emit custom measurements. See the docs [here](https://hexdocs.pm/telemetry_metrics/Telemetry.Metrics.html#module-vm-metrics) for more info.
+## 结语
 
-## Conclusion
-
-Once again we've seen that Erlang and Elixir's family of Telemetry libraries make it easy for us to achieve fairly comprehensive instrumentation with very little hand-rolled code. By adding the `telemetry_poller` library to our dependencies, we're ensuring our application will execute a set of Telemetry events describing Erlang VM measurements at regular intervals. We're observing these events, formatting them and sending them to StatsD with the help of `Telemetry.Metrics` and `TelemetryMetricsStatsd`, allowing us to paint an even fuller picture of the state of our Phoenix app at any given time.
+我们再一次看到，Erlang 和 Elixir 的 Telemetry 系列库让我们很容易用很少的手工代码实现相当全面的测量。通过将 `telemetry_poller` 库添加到我们的依赖关系中，确保我们的应用程序将定期执行一组描述 Erlang VM 测量的 Telemetry 事件。我们正在观察这些事件，对它们进行格式化，并在 `Telemetry.Metrics` 和 `TelemetryMetricsStatsd` 的帮助下将它们发送到 StatsD，使我们能够在任何给定的时间内更全面地描绘我们 Phoenix 应用的状态。

@@ -13,10 +13,10 @@ excerpt: >
 
 In this series, we're instrumenting a Phoenix app and sending metrics to StatsD with the help of Elixir and Erlang's Telemetry offerings.
 
-* [Part I: Telemetry Under The Hood](https://elixirschool.com/blog/instrumenting-phoenix-with-telemetry-part-one/)
-* [Part II: Handling Telemetry Events with `TelemetryMetrics` + `TelemetryMetricsStatsd`](https://elixirschool.com/blog/instrumenting_phoenix_with_telemetry_part_two/)
-* Part III: Observing Phoenix + Ecto Telemetry Events
-* [Part IV: Erlang VM Measurements with `telemetry_poller`, `TelemetryMetrics` + `TelemetryMetricsStatsd`](https://elixirschool.com/blog/instrumenting-phoenix-with-telemetry-part-four/)
+- [Part I: Telemetry Under The Hood](https://elixirschool.com/blog/instrumenting-phoenix-with-telemetry-part-one/)
+- [Part II: Handling Telemetry Events with `TelemetryMetrics` + `TelemetryMetricsStatsd`](https://elixirschool.com/blog/instrumenting_phoenix_with_telemetry_part_two/)
+- Part III: Observing Phoenix + Ecto Telemetry Events
+- [Part IV: Erlang VM Measurements with `telemetry_poller`, `TelemetryMetrics` + `TelemetryMetricsStatsd`](./2020-05-13-instrumenting-phoenix-with-telemetry-part-four.md)
 
 ## Intro
 
@@ -32,12 +32,12 @@ In this post, we'll examine Phoenix and Ecto's out-of-the-box Telemetry events a
 
 To achieve observability, we know we nee to track things like:
 
-* Count and duration of all requests to all endpoints, with the ability to view this information broken down by things like:
-  * Route
-  * Response status
-* Count and duration of all Ecto queries, with the ability to view this information broken down by things like:
-  * Query command (e.g. `SELECT`, `UPDATE`)
-  * Table (e.g. `Users`)
+- Count and duration of all requests to all endpoints, with the ability to view this information broken down by things like:
+  - Route
+  - Response status
+- Count and duration of all Ecto queries, with the ability to view this information broken down by things like:
+  - Query command (e.g. `SELECT`, `UPDATE`)
+  - Table (e.g. `Users`)
 
 Luckily for us, pretty much _all_ of these events are already being emitted by Phoenix and Ecto directly!
 
@@ -70,7 +70,6 @@ What if we ultimately want to send StatsD metrics to Datadog, which _does_ suppo
 
 For the purposes of this tutorial, we'll use the DogStatsD formatter to make it easy to read and understand the metrics and tags that we are constructing and sending to StatsD.
 
-
 ```elixir
 defmodule Quantum.Telemetry do
   use Supervisor
@@ -100,9 +99,9 @@ end
 
 You can follow along with this tutorial by cloning down the repo [here]
 (https://github.com/elixirschool/telemetry-code-along/tree/part-3-start).
-* Checking out the starting state of our code on the branch [part-3-start](https://github.com/elixirschool/telemetry-code-along/tree/part-3-start)
-* Find the solution code on the branch [part-3-solution](https://github.com/elixirschool/telemetry-code-along/tree/part-3-solution)
 
+- Checking out the starting state of our code on the branch [part-3-start](https://github.com/elixirschool/telemetry-code-along/tree/part-3-start)
+- Find the solution code on the branch [part-3-solution](https://github.com/elixirschool/telemetry-code-along/tree/part-3-solution)
 
 ## Phoenix Telemetry Events
 
@@ -123,7 +122,6 @@ metadata = %{metadata | conn: conn}
 Here, Phoenix is calculating the duration by subtracting the start time, set at the beginning of the request processing pipeline, from the current time. Then it's updating the metadata map to include the `conn`. Lastly, it's executing the Telemetry metric with this information.
 
 Now that we know which Telemetry event we care about, let's make our `Telemetry.Metrics`, `Quantum.Telemetry` module aware of it.
-
 
 ```elixir
 # lib/quantum/telemetry.ex
@@ -190,7 +188,7 @@ def endpoint_metadata(%{conn: %{status: status}, plug: plug, plug_opts: plug_opt
 end
 ```
 
-Then, when we call a given metrics function, for example `counter/2`, we set  the `:tag_values` option to this function and `:tags` to our complete list of tags:
+Then, when we call a given metrics function, for example `counter/2`, we set the `:tag_values` option to this function and `:tags` to our complete list of tags:
 
 ```elixir
 # lib/quantum/telemetry.ex
