@@ -5,6 +5,7 @@
 喜欢的话可以给个 star, 欢迎 issue !
 
 ## [官网链接](https://elixirschool.com/blog/)
+
 ## 博客内容 (按发布时间排序)
 
 ### 2020
@@ -12,10 +13,11 @@
 - [ ] [使用 Context 和 LiveView 绘制实时 SVG 图表](./posts/2020-10-06-server-side-svg-charts-with-contex-and-liveview.md)
 - [ ] [使用 telemetry 仪表化 Phoenix 项目第四部分](./posts/2020-05-13-instrumenting-phoenix-with-telemetry-part-four.md)
 - [ ] [使用 telemetry 仪表化 Phoenix 项目第三部分](./posts/2020-05-06-instrumenting-phoenix-with-telemetry-part-three.md)
-- [ ] [使用 telemetry 仪表化 Phoenix 项目第二部分](./posts/2020-04-29-instrumenting-phoenix-with-telemetry-part-two.md)
+- [ ] [使用 Telemetry 仪表化 Phoenix 第二部分: Telemetry Metrics + Reporters](./posts/2020-04-29-instrumenting-phoenix-with-telemetry-part-two.md)
 - [x] [使用 Telemetry 和 LiveDashboard 对 Phoenix 进行仪表化](./posts/2020-04-24-instrumenting-phoenix-with-live-dashboard.md)
 - [x] [使用 Telemetry 仪表化 Phoenix 第一部分: Telemetry 的背后](./posts/2020-04-22-instrumenting-phoenix-with-telemetry-part-one.md)
-### 2019 
+
+### 2019
 
 - [x] [LiveView 设计模式 - LiveComponent 和单一责任原则](./posts/2019-12-29-live-view-live-component.md)
 - [x] [构建 Elixir School 的招生门户网站](./posts/2019-10-23-building-admissions.md)

@@ -9,24 +9,24 @@ excerpt: >
   In this series, we're instrumenting a Phoenix app and sending metrics to StatsD with the help of Elixir and Erlang's Telemetry offerings. In Part II we'll use Elixir's `Telemetry.Metrics` and `TelemetryMetricsStatsd` libraries to define and send metrics to StatsD for a given Telemetry event.
 ---
 
-## Table Of Contents
+## 目录
 
-In this series, we're instrumenting a Phoenix app and sending metrics to StatsD with the help of Elixir and Erlang's Telemetry offerings.
+在这个系列中，我们将借助 Elixir 和 Erlang 的 Telemetry 产品，对一个 Phoenix 应用进行仪表化，并将指标发送到 StatsD。简要介绍一下我们将涉及的内容：
 
-* [Part I: Telemetry Under The Hood](https://elixirschool.com/blog/instrumenting-phoenix-with-telemetry-part-one/)
-* Part II: Handling Telemetry Events with `TelemetryMetrics` + `TelemetryMetricsStatsd`
-* [Part III: Observing Phoenix + Ecto Telemetry Events](https://elixirschool.com/blog/instrumenting_phoenix_with_telemetry_part_three/)
-* [Part IV: Erlang VM Measurements with `telemetry_poller`, `TelemetryMetrics` + `TelemetryMetricsStatsd`](https://elixirschool.com/blog/instrumenting-phoenix-with-telemetry-part-four/)
+- [第一部分: Telemetry 的背后](./2020-04-22-instrumenting-phoenix-with-telemetry-part-one.md)
+- 第二部分: 用 `TelemetryMetrics` + `TelemetryMetricsStatsd` 处理 Telemetry 事件
+- [第三部分: 观测 Phoenix + Ecto Telemetry 事件](./2020-05-06-instrumenting_phoenix_with_telemetry_part_three.md)
+- [第四部分: 用 `telemetry_poller`、`TelemetryMetrics` + `TelemetryMetricsStatsd` 对 Erlang VM 进行测量](./2020-05-06-instrumenting_phoenix_with_telemetry_part_three.md)
 
-## Intro
+## 简介
 
-In [Part I](https://elixirschool.com/blog/instrumenting-phoenix-with-telemetry-part-one/) of this series, we learned why observability is important and introduced Erlang's Telemetry library. We used it to hand-roll some instrumentation for our Phoenix app, but it left us with some additional problems to solve. In this post, we'll use Elixir's `Telemetry.Metrics` and `TelemetryMetricsStatsd` libraries to define and send metrics to StatsD for a given Telemetry event.
+在本系列的 [第一部分](./2020-04-22-instrumenting-phoenix-with-telemetry-part-one.md) 中，我们了解了为什么可观测性很重要，并介绍了 Erlang 的 Telemetry 库。我们用它为我们的 Phoenix 应用手工轧制了一些可视化仪表盘，但它给我们留下了一些额外的问题需要解决。在这篇文章中，我们将使用 Elixir 的 `Telemetry.Metrics` 和 `TelemetryMetricsStatsd` 库来定义一个给定的 Telemetry 事件的度量指标并将其发送到 StatsD。
 
-## Recap
+## 回顾
 
-In [our previous post](https://elixirschool.com/blog/instrumenting-phoenix-with-telemetry-part-one/), we added some Telemetry instrumentation to our Phoenix app, [Quantum](https://github.com/elixirschool/telemetry-code-along/tree/part-1-solution). You can review the final code from our previous article [here](https://github.com/elixirschool/telemetry-code-along/tree/part-1-solution). To recap, we established a Telemetry event, `[:phoenix, :request]`, that we attached to a handler module, `Quantum.Telemetry.Metrics`. We executed this event from just one controller action--the `new` action of the `UserController`.
+在 [我们的上一篇文章](./2020-04-22-instrumenting-phoenix-with-telemetry-part-one.md), 我们添加了一些 Telemetry 监测指标给 Phoenix 应用, [Quantum](https://github.com/elixirschool/telemetry-code-along/tree/part-1-solution)。你可以 [在这里](https://github.com/elixirschool/telemetry-code-along/tree/part-1-solution) 查看我们之前文章中的最终代码。概括地说，我们建立了一个 Telemetry 事件，`[:phoenix, :request]`，将其附加到一个处理模块 `Quantum.Telemetry.Metrics` 上。我们只从一个控制器动作-- `UserController` 的 `new` 动作中执行这个事件。
 
-From that controller action, we execute the Telemetry event with a measurement map that includes the duration of the web request along with the request `conn`:
+从该控制器动作中，我们执行 Telemetry 事件，测量 map 结构包括 web 请求的持续时间和请求 `conn`。
 
 ```elixir
 # lib/quantum_web/controllers/user_controller.ex
@@ -38,7 +38,7 @@ def new(conn, _params) do
 end
 ```
 
-We handle this event in our handler module, `Quantum.Telemetry.Metric`, with the `handle_event/4` callback function. In this function we use the event data, including the duration and information in the `conn` to, send a set of metrics to StatsD with the help of the `Statix` Elixir StatsD client library:
+我们在模块 `Quantum.Telemetry.Metric` 中用 `handle_event/4` 回调函数处理这个事件。在这个函数中，我们使用事件数据，包括持续时间和 `conn` 中的信息，在 `Statix` Elixir StatsD 客户端库的帮助下，向 StatsD 发送一组指标。
 
 ```elixir
 # lib/quantum/telemetry/metrics.ex
@@ -53,67 +53,68 @@ defmodule Quantum.Telemetry.Metrics do
 end
 ```
 
-## What's Wrong With This?
+## 这有什么不妥？
 
-Telemetry made it easy for us to emit an event and operate on it, but our current usage of the Telemetry library leaves a lot to be desired.
+Telemetry 让我们很容易发出一个事件并对其进行操作，但我们目前对 Telemetry 库的使用还有很多需要改进的地方。
 
-One drawback of our current approach is that it leaves us on the hook for Telemetry event handling and metrics reporting. We had to define our own custom event handling module, manually attach that module to the given Telemetry event and define the handler's callback function.
+我们目前的方法有一个缺点是，它让我们对 Telemetry 的事件处理和指标报告束手无策。我们必须定义我们自己的自定义事件处理模块，手动将该模块附加到给定的 Telemetry 事件上，并定义处理者的回调函数。
 
-In order for that callback function to report metrics to StatsD for a given event, we had to create our own custom module that uses the `Statix` library _and_ write code that formats the metric to send to StatsD for a given Telemetry event. The mental overhead of translating Telemetry event data into the appropriate StatsD metric is costly, and that effort will have to be undertaken for every new Telemetry event we execute and handle.
+为了让回调函数向 StatsD 报告给定事件的指标，我们必须创建我们自己的自定义模块，使用 `Statix` 库，_并_ 编写代码，为给定的 Telemetry 事件格式化指标以发送给 StatsD。将 Telemetry 事件数据翻译成适当的 StatsD 度量的心理开销是昂贵的，而且我们执行和处理每一个新的 telemetry 事件都必须进行这种努力。
 
-## We Need Help
+## 我们需要帮助
 
-Wouldn't it be great if we _didn't_ have to define our own handler modules or metric reporting logic? If only there was some way to simply list the Telemetry events we care about and have them automatically reported to StatsD as the correctly formatted metric...
+如果我们不需要定义我们自己的处理模块或度量报告逻辑，那不是很好吗？如果有某种方法可以简单地列出我们关心的 telemetry 事件，并将它们作为正确的格式化指标自动报告给 StatsD...就好了。
 
-This is exactly where the `Telemetry.Metrics` and `TelemetryMetricsStatsd` libraries come in!
+这正是 `Telemetry.Metrics` 和 `TelemetryMetricsStatsd` 库的作用所在。
 
-## Introducing `Telemetry.Metrics` and `TelemetryMetricsStatsd`
+## 介绍 `Telemetry.Metrics` 和 `TelemetryMetricsStatsd`
 
-The [`Telemetry.Metrics` library](https://hexdocs.pm/telemetry_metrics/Telemetry.Metrics.html) provides a common interface for defining metrics based on Telemetry events. It allows us declare the set of Telemetry events that we want to handle and specify which metrics to construct for these events. It also allows us to specify an out-of-the-box reporter with which to handle and report our events to third-parties.
+[`Telemetry.Metrics`](https://hexdocs.pm/telemetry_metrics/Telemetry.Metrics.html) 库提供了一个共同的接口，用于定义基于 Telemetry 事件的度量。它允许我们声明我们要处理的一组 Telemetry 事件，并指定为这些事件构建哪些度量。它还允许我们指定一个开箱即用的报告器来处理和向第三方报告我们的事件。
 
-This means we _don't_ have to define our own handler modules and functions and we _don't_ have to write any code responsible for reporting metrics for events to common third-party tools like StatsD. We'll report our metrics to StatsD with the `TelemetryMetricsStatsd` reporting library, but Elixir's Telemetry family of libraries also includes a reporter for Prometheus, or you can roll your own.
+这意味着我们 _不_ 需要定义自己的处理模块和函数，也不需要编写任何代码来负责向 StatsD 等常见的第三方工具报告事件的度量。我们将使用 `TelemetryMetricsStatsd` 报告库向 StatsD 报告我们的指标，但是 Elixir 的 Telemetry 系列库还包括一个针对 Prometheus 的报告器，或者你也可以自己开发。
 
-In the previous post, we added code to execute the following Telemetry event from the `new` action of our `UserController`:
+在上一篇文章中，我们添加了代码，从我们的 `UserController` 的 `new` 动作中执行以下 Telemetry 事件：
 
 ```elixir
 :telemetry.execute([:phoenix, :request], %{duration: System.monotonic_time() - start}, conn)
 ```
 
-Now, instead of handling this event with our custom handler and `Statix` reporter, will use `Telemetry.Metrics` and the `TelemetryMetricsStatsd` reporter to do all of the work for us!
+现在，不用我们的自定义处理程序和 `Statix` 报告来处理这个事件，而是用 `Telemetry.Metrics` 和 `TelemetryMetricsStatsd` 报告来为我们做所有的工作。
 
-## How It Works
+## 它如何工作
 
-Before we start writing code, let's walk through how `Telemetry.Metrics` and the `TelemetryMetricsStatsd` reporter work together with Erlang's Telemetry library to handle Telemetry events.
+在开始写代码之前，我们先来了解一下 `Telemetry.Metrics` 和 `TelemetryMetricsStatsd` 报告器是如何与 Erlang 的 Telemetry 库一起工作来处理 Telemetry 事件的。
 
-The `Telemetry.Metrics` library is responsible for specifying which Telemetry events we want to handle as metrics. It defines the list of events we care about and specifies which events should be sent to StatsD as which type of metric (for example, counter, timing, gauge etc.). It gives this list of events-as-metrics to the Telemetry reporting client, `TelemetryMetricsStatsd`.
+`Telemetry.Metrics` 库负责指定我们要处理的 Telemetry 事件作为度量。它定义了我们关心的事件列表，并指定哪些事件应该作为哪种类型的度量(例如，计数器、定时、仪表等)被发送到 StatsD。它把这个作为度量的事件列表交给 Telemetry 报告客户端 `TelemetryMetricsStatsd`。
 
-The `TelemetryMetricsStatsd` library is responsible for taking that list of events and attaching its own event handler module, `TelemetryMetricsStatsd.EventHandler` to each event via a call to `:telemetry.attach/4`. Recall from our first post that `:telemetry/attach/4` stores events and their associated handlers in an ETS table.
+`TelemetryMetricsStatsd` 库负责获取该事件列表，并通过调用 `:telemetry.attach/4` 将自己的事件处理模块 `TelemetryMetricsStatsd.EventHandler` 附加到每个事件。从我们的第一篇文章中回想一下，`:telemetry/attach/4` 将事件及其相关的处理程序存储在一个 ETS 表中。
 
-Later, when a Telemetry event is executed via a call to `:telemetry.execute/3`, Telemetry looks up the event handler, `TelemetryMetricsStatsd.EventHandler`, for the given event in the ETS table and invokes it. The event handler module will format the event, metadata and any associated tags as the appropriate StatsD metric and send the resulting metric to StatsD over UDP.
+之后，当通过调用 `:telemetry.execute/3` 执行 Telemetry 事件时，Telemetry 会在 ETS 表中为给定的事件查找事件处理程序 `:elemetryMetricsStatsd.EventHandler`，并调用它。事件处理模块将把事件、元数据和任何相关的标签格式化为适当的 StatsD 度量，并通过 UDP 把产生的度量发送给 StatsD。
 
-Most of this happens under the hood. We are only on the hook for defining a `Telemetry.Metrics` module and listing the Telemetry events we want to handle as which type of metric. That's it!
+大部分这些都是在引擎盖下发生的。我们只需要定义一个 `Telemetry.Metrics` 模块，并把我们想处理的 Telemetry 事件列为哪种类型的度量。就是这样！
 
-## Getting Started
+## 起步
 
-You can follow along with this tutorial by cloning down the repo [here](https://github.com/elixirschool/telemetry-code-along/tree/part-2-start).
-* Checking out the starting state of our code on the branch [part-2-start](https://github.com/elixirschool/telemetry-code-along/tree/part-2-start)
-* Find the solution code on the branch [part-2-solution](https://github.com/elixirschool/telemetry-code-along/tree/part-2-solution)
+你可以通过克隆下来的 [repo](https://github.com/elixirschool/telemetry-code-along/tree/part-2-start) 来跟进这个教程。
 
-## Overview
+- 在分支 [part-2-start](https://github.com/elixirschool/telemetry-code-along/tree/part-2-start) 上查看我们代码的起始状态。
+- 在分支 [part-2-solution](https://github.com/elixirschool/telemetry-code-along/tree/part-2-solution) 上查找解题代码。
 
-In order to get this Telemetry pipeline up and running, we don't have to write too much code.
+## 概述
 
-We will:
+为了让我们的 Telemetry 管道启动和运行，我们不需要写太多代码。
 
-1. Define a supervisor module that imports `Telemetry.Metrics`
-2. Define a set of metrics for the Telemetry events we want to observe using the `Telemetry.Metrics` metrics definition functions
-3. Tell the supervisor to run the `TelemetryMetricsStatsd` GenServer with the list of metrics we defined in the previous step
+我们将：
 
-Let's do it!
+1. 定义一个监督模块并且引入 `Telemetry.Metrics`
+2. 使用 `Telemetry.Metrics` 度量定义函数为我们要观察的 Telemetry 事件定义一组度量指标。
+3. 告诉监督器运行 `TelemetryMetricsStatsd` GenServer，其中包含我们在上一步定义的度量列表
 
-## Setting Up `Telemetry.Metrics`
+让我们开始吧！
 
-First, we'll add the `Telemetry.Metrics` library and the `TelemetryMetricsStatsd` reporter library to our application's dependencies and run `mix deps.get`:
+## 设置 `Telemetry.Metrics`
+
+首先, 我们将 `Telemetry.Metrics` 库和 `TelemetryMetricsStatsd` 报告库添加到我们应用的依赖中然后运行 `mix deps.get`:
 
 ```elixir
 # mix.exs
@@ -125,13 +126,13 @@ defp deps do
 end
 ```
 
-Now we're ready to define a module that imports `Telemetry.Metrics`.
+现在我们准备定义一个模块，导入 `Telemetry.Metrics`。
 
-## Step 1: Defining a Metrics Module
+## 步骤 1: 定义一个 Metrics 模块
 
-We'll define a module that imports the `Telemetry.Metrics` library and acts as a Supervisor. Our Supervisor will start up the child GenServer provided by the `TelemetryMetricsStatsd` reporter. It will start that GenServer along with an argument of the list of Telemetry events to listen for, structured as metrics, via the `:metrics` option.
+我们将定义一个模块，导入 `Telemetry.Metrics` 库作为一个监督器。我们的 Supervisor 将启动由 `TelemetryMetricsStatsd` 报告者提供的子 GenServer。它将通过 `:metrics` 选项启动 GenServer，同时提供一个参数，即要监听的 Telemetry 事件列表，结构为 metrics。
 
-We'll place our metrics module in `lib/quantum/telemetry.ex`
+我们将把 metrics 模块放在 `lib/quantum/telemetry.ex` 中
 
 ```elixir
 defmodule Quantum.Telemetry do
@@ -158,7 +159,7 @@ defmodule Quantum.Telemetry do
 end
 ```
 
-We'll come back to the metrics list in a bit. First, let's teach our application to start this Supervisor when the app starts up but adding it to our application's supervision tree in the `Quantum.Application.start/2` function:
+我们一会儿再来讨论指标列表。首先，让我们教我们的应用程序在启动时启动这个 Supervisor，但在 `Quantum.Application.start/2` 函数中把它添加到我们应用程序的监督树中。
 
 ```elixir
 # lib/quantum/application.ex
@@ -174,23 +175,23 @@ def start(_type, _args) do
 end
 ```
 
-Now we're ready to specify which Telemetry events to handle as metrics.
+现在我们已经准备好指定哪些 Telemetry 事件作为指标来处理。
 
-## Step 2: Specifying Events As Metrics
+## 步骤 2: 将事件指定为指标
 
-Our `Telemetry.Metrics` module, `Quantum.Telemetry`, is responsible for telling the `TelemetryMetricsStatsd` GenServer which Telemetry events to respond to and how to treat each event as a specific type of metric.
+我们的 `Telemetry.Metrics` 模块, `Quantum.Telemetry`, 负责告诉 `TelemetryMetricsStatsd` GenServer 对哪些 Telemetry 事件作出反应，以及如何将每个事件视为特定类型的度量指标。
 
-We want to handle the `[:phoenix, :request]` event described above. First, let's consider what type of metrics we want to report for this event. Let's say we want to increment a counter for each such event, thereby keeping track of the number of requests our app receives to the endpoint. Let's also send a timing metric to report the duration of a given web request.
+我们要处理上面描述的 `[:phoenix, :request]` 事件。首先，让我们考虑一下我们要为这个事件报告什么类型的指标。比方说，我们想为每个这样的事件递增一个计数器，从而跟踪我们的应用程序收到的对端点的请求数量。我们还可以发送一个定时度量来报告一个给定的网络请求的持续时间。
 
-Now that we have a basic idea of what kind of metrics we want to construct and send to StatsD for our event, let's take a look at how `Telemetry.Metrics` allows us to define these metrics.
+现在，我们对我们要为我们的事件构建什么样的度量并发送给 StatsD 有了一个基本的概念，让我们看看 `Telemetry.Metrics` 是如何让我们定义这些度量的。
 
-### Defining Our Metrics
+### 定义我们的度量指标
 
-The `Telemetry.Metrics` module provides a set of [five metrics functions](https://hexdocs.pm/telemetry_metrics/Telemetry.Metrics.html#module-metrics). These functions are responsible for formatting Telemetry event data as a given metric.
+`Telemetry.Metrics` 模块提供了一套 [五个度量函数](https://hexdocs.pm/telemetry_metrics/Telemetry.Metrics.html#module-metrics)。这些函数负责将 Telemetry 事件数据格式化为给定的度量指标。
 
-We'll use the `Telemetry.Metrics.counter/2` and the `Telemetry.Metrics.summary/2` functions to define our metrics for the given event.
+我们将使用 `Telemetry.Metrics.counter/2` 和 `Telemetry.Metrics.summary/2` 函数来定义我们对给定事件的度量。
 
-In our `Quantum.Telemetry` module, which imports `Telemetry.Metrics`, we'll add the following to the `metrics` function:
+在导入 `Telemetry.Metrics` 的 `Quantum.Telemetry` 模块中，我们将在 `metrics` 函数中添加以下内容：
 
 ```elixir
 # lib/quantum/telemetry.ex
@@ -210,12 +211,12 @@ defp metrics do
 end
 ```
 
-Each metric function takes in two arguments:
+每个度量函数需要两个参数：
 
-* The event name
-* A list of options
+- 事件名
+- 一个 options 列表
 
-And returns a struct that describes the given metric type. For example, the `counter/2` function returns a [`%Telemetry.Metrics.Counter{}` struct](https://hexdocs.pm/telemetry_metrics/Telemetry.Metrics.Counter.html#content) that looks like this:
+并返回一个描述给定度量指标类型的结构。例如，`counter/2` 函数返回一个 [`%Telemetry.Metrics.Counter{}`](https://hexdocs.pm/telemetry_metrics/Telemetry.Metrics.Counter.html#content) 结构，看起来像这样：
 
 ```elixir
 %Telemetry.Metrics.Counter{
@@ -230,11 +231,11 @@ And returns a struct that describes the given metric type. For example, the `cou
 }
 ```
 
-Now that we've defined our metrics list, we're ready for the next step.
+现在我们已经定义了我们的指标列表，我们已经准备好进入下一步了。
 
-## Step 3: Start The `TelemetryMetricsStatsd` GenServer with the Metrics List
+## 步骤 3: 启动 `TelemetryMetricsStatsd` GenServer 的指标列表。
 
-The list of metrics structs gets passed to the `TelemetryMetricsStatsd` GenServer when it gets started up:
+当 `TelemetryMetricsStatsd` GenServer 被启动时，指标结构的列表会被传递给它。
 
 ```elixir
 defmodule Quantum.Telemetry do
@@ -270,27 +271,27 @@ defmodule Quantum.Telemetry do
 end
 ```
 
-This kicks off the following process:
+这就启动了下面的过程：
 
-* When the `TelemetryMetricsStatsd` starts, it stores events in ETS along with their handler _and_ a config map including this list of metric structs
-* Later, when `TelemetryMetricsStatsd` is responding to executed events, it looks up the event in ETS and uses the metrics structs stored in that config map to format the appropriate metrics for sending to StatsD
+- 当 `TelemetryMetricsStatsd` 启动时，它在 ETS 中存储了事件和它们的处理程序 _和_ 一个配置 map，包括这个度量结构的列表。
+- 之后，当 `TelemetryMetricsStatsd` 对执行的事件做出响应时，它在 ETS 中查找事件，并使用存储在该配置图中的度量结构来格式化适当的度量以发送给 StatsD。
 
-### Seeing It In Action
+### 见证它的行动
 
-Note that in our call to `counter/2` and `summary/2`, we're using the `:tag` option to specify which tags will be applied to the metric when it gets sent to StatsD. The `TelemetryMetricsStatsD` reporter will, when it receives our `[:phoenix, :request]` event, grab any values for the tag keys that are present in the event metadata and use them to construct the metric.
+请注意，在对 `counter/2` 和 `summary/2` 的调用中，我们使用 `:tag` 选项来指定当指标被发送到 StatsD 时，哪些标签将被应用到指标中。当 `TelemetryMetricsStatsD` 报告器收到我们的 `[:phoenix, :request]` 事件时，将抓取事件元数据中存在的标签键的任何值，并使用它们来构建度量。
 
-So, when we execute our Telemetry with the `conn` passed in as the metadata argument:
+所以，当我们执行我们的 Telemetry 时，将 `conn` 作为元数据参数传递进来。
 
 ```elixir
 # lib/quantum_web/controllers/user_controller.ex
-def new(conn, _params) do 
+def new(conn, _params) do
   :telemetry.execute([:phoenix, :request], %{duration: System.monotonic_time() - start}, conn)
 end
 ```
 
-The `TelemetryMetricsStatsD` will format a counter and summary metric tagged with the value of the `:request_path` key found in the `conn`.
+`TelemetryMetricsStatsD` 将格式化一个计数器和摘要指标，标记为在 `conn` 中找到的 `:request_path` 键的值。
 
-So, if we run our app and send some web requests, we'll see the following metrics reported to StatsD:
+因此，如果我们运行我们的应用程序并发送一些 Web 请求，我们将看到以下指标报告给 StatsD。
 
 ```
 {
@@ -321,27 +322,26 @@ So, if we run our app and send some web requests, we'll see the following metric
 }
 ```
 
-## Under The Hood
+## 揭秘
 
-The `Quantum.Telemetry` module is, believe it or not, the _only_ code we have to write in order to send these metrics to StatsD for the `"phoenix.router_dispatch.stop"` event. The Telemetry libraries take care of everything else for us under the hood.
+不管你信不信，`Quantum.Telemetry` 模块是我们必须编写的唯一代码，以便将这些指标发送到 StatsD 的 `"phoenix.router_dispatch.stop"` 事件。Telemetry 库为我们处理了其他所有的事情。
 
-Let's take a closer look at how it all works.
+让我们仔细看看它是如何工作的。
 
-1. The `Telemetry.Metrics` supervisor that we defined in `Quantum.Telemetry` defines a list of metrics that we want to emit to StatsD for a given Telemetry event
-2. When the supervisor starts, it starts the `TelemetryMetricsStatsd` GenServer and gives it this list
-3. When the `TelemetryMetricsStatsd` GenServer starts, it calls `:telemetry.attach/4` for each listed event, storing it in an ETS table along with the handler callback and a config map that includes the metrics definitions. The handler callback it gives to `:telemetry.attach/4` is its own `TelemetryMetricsStatsd.EventHandler.handle_event/4` function.
-4. Later, when a Telemetry event is executed via a call to `:telemetry.execute/3`, Telemetry looks up the handler callback and config (including metrics definitions) for the given event in ETS
-5. The `:telemetry.execute/3` function then calls this handler callback, `TelemetryMetricsStatsd.EventHandler.handle_event/4`, with the event name, event measurement map, event metadata and metrics config
-6. The `TelemetryMetricsStatsd.EventHandler.handle_event/4` function formats the appropriate metric using all of this information and sends it to StatsD over UDP
+1. 我们在 `Quantum.Telemetry` 中定义的 `Telemetry.Metrics` 监督器定义了一个我们想要为给定的 Telemetry 事件向 StatsD 发射的度量列表。
+2. 当监督器启动时，它启动 `TelemetryMetricsStatsd` GenServer，并给它传递一个列表。
+3. 当 `TelemetryMetricsStatsd` GenServer 启动时，它为每个列出的事件调用 `:telemetry.attach/4`，将其与处理程序回调和包括度量定义的配置图一起储存在 ETS 表中。它给 `:telemetry.attach/4` 的处理程序回调是自己的 `TelemetryMetricsStatsd.EventHandler.handle_event/4` 函数。
+4. 之后，当一个 Telemetry 事件通过调用 `:telemetry.execute/3` 被执行时，Telemetry 在 ETS 中查找给定事件的处理回调和配置（包括度量定义）。
+5. 然后 `:telemetry.execute/3` 函数调用这个处理程序回调 `TelemetryMetricsStatsd.EventHandler.handle_event/4`，其中包括事件名称、事件测量 map 结构、事件元数据和指标配置。
+6. `TelemetryMetricsStatsd.EventHandler.handle_event/4` 函数使用所有这些信息格式化适当的指标，并通过 UDP 将其发送到 StatsD。
 
 Phew!
 
-Let's take a deeper dive into this process by taking a look at some source code.
+让我们通过查看一些源代码来深入了解这个过程。
 
+### `TelemetryMetricsStatsd` 将事件附加到处理程序和配置数据
 
-### `TelemetryMetricsStatsd` Attaches Events to Handlers and Config Data
-
-When our supervisor starts the `TelemetryMetricsStatsd` GenServer, the GenServer's `init/1` function calls on [`TelemetryMetricsStatsd.EventHandler.attach/7`](https://github.com/beam-telemetry/telemetry_metrics_statsd/blob/master/lib/telemetry_metrics_statsd/event_handler.ex#L24) with a set of arguments that includes the metrics list we provided. This in turn executes a call to `:telemetry.attach/4`:
+当我们的监督器启动 `TelemetryMetricsStatsd` GenServer 时，GenServer 的 `init/1` 函数调用 [`TelemetryMetricsStatsd.EventHandler.attach/7`](https://github.com/beam-telemetry/telemetry_metrics_statsd/blob/master/lib/telemetry_metrics_statsd/event_handler.ex#L24)，其参数集包括我们提供的指标列表。这反过来又会执行对 `:telemetry.attach/4` 的调用。
 
 ```elixir
 # telemetry_metrics_statsd/lib/telemetry_metrics_statsd/event_handler.ex
@@ -365,11 +365,11 @@ def attach(metrics, reporter, mtu, prefix, formatter, global_tags) do
 end
 ```
 
-The call to `:telemetry.attach/4` will create an ETS entry that stores the event name along with the handler callback function,`&TelemetryMetricsStatsd.EventHandler.handle_event/4`, and a config map that contains the metrics definitions for the event.
+对 `:telemetry.attach/4` 的调用将创建一个 ETS 条目，该条目存储了事件名称以及处理程序回调函数 `&TelemetryMetricsStatsd.EventHandler.handle_event/4`，以及一个包含该事件的度量定义的配置图。
 
-### `TelemetryMetricsStatsd.EventHandler` Handles Executed Events
+### `TelemetryMetricsStatsd.EventHandler` 处理执行的事件
 
-Later, the `[:phoenix, :request]` event is executed in our `UserController`:
+随后，`[:phoenix, :request]` 事件在我们的 `UserController` 中被执行：
 
 ```elixir
 # lib/quantum_web/controllers/user_controller.ex
@@ -378,13 +378,13 @@ def new(conn, _params) do
 end
 ```
 
-The `:telemetry.execute/3` function looks up the event in ETS. It fetches the handler callback function, along with the config that was stored for that event, including the list of metric definitions.
+`:telemetry.execute/3` 函数在 ETS 中查找事件。它获取处理程序的回调函数，以及为该事件存储的配置，包括度量定义的列表。
 
-Telemetry will then call the callback function, `TelemetryMetricsStatsd.EventHandler.handle_event/4`, with the provided measurement map and metadata, along with stored config it looked up for the event in ETS.
+然后，Telemetry 将调用回调函数 `TelemetryMetricsStatsd.EventHandler.handle_event/4`，并提供测量 map 结构和元数据，以及它在 ETS 中为该事件查找的存储配置。
 
-`TelemetryMetricsStatsd.EventHandler.handle_event/4` will format the metric according to the metrics definitions stored in ETS for the event and send the resulting metric to StatsD.
+`TelemetryMetricsStatsd.EventHandler.handle_event/4` 将根据 ETS 中存储的事件的度量定义来格式化度量，并将得到的度量发送给 StatsD。
 
-Here we can see that the [`TelemetryMetricsStatsd.EventHandler.handle_event/4`](https://github.com/beam-telemetry/telemetry_metrics_statsd/blob/master/lib/telemetry_metrics_statsd/event_handler.ex#L46) iterates over the metric definitions for the event and constructs the appropriate metric from the event data using the given measurement and metadata maps along with the metric struct from the list of metrics stored in the config. It then publishes the metric to StatsD over UDP via the call to `publish_metrics/2`
+在这里我们可以看到，[`TelemetryMetricsStatsd.EventHandler.handle_event/4`](https://github.com/beam-telemetry/telemetry_metrics_statsd/blob/master/lib/telemetry_metrics_statsd/event_handler.ex#L46) 会对事件的度量定义进行迭代，并使用给定的测量和元数据映射以及配置中存储的度量列表中的度量结构，从事件数据中构建合适的度量。然后通过调用 `publish_metrics/2`，通过 UDP 将度量值发布到 StatsD。
 
 ```elixir
 # telemetry_metrics_statsd/lib/telemetry_metrics_statsd/event_handler.ex
@@ -429,21 +429,20 @@ def handle_event(_event, measurements, metadata, %{
 end
 ```
 
-## Conclusion
+## 结语
 
-The `Telemetry.Metrics` and `TelemetryMetricsStatsd` libraries make it even easier for us to handle Telemetry events and report metrics based on those events. All we have to do is define a Supervisor that uses `Telemetry.Metrics` and tell that Supervisor to start the `TelemetryMetricsStatsd` GenServer with a list of metric definitions.
+`Telemetry.Metrics` 和 `TelemetryMetricsStatsd` 库使我们更容易处理 Telemetry 事件并根据这些事件报告指标。我们所要做的就是定义一个使用 `Telemetry.Metrics` 的 Supervisor，并告诉这个 Supervisor 用一个度量定义的列表来启动 `TelemetryMetricsStatsd` GenServer。
 
-That's it! The `TelemetryMetricsStatsd` library will take care of calling `:telemetry.attach/3` to store events in ETS along with a handler callback function and the metrics list for that event. Later, when a Telemetry event is executed, Telemetry will lookup the event and its associated handler function and metrics list and invoke the handler function with this data. The handler function, `TelemetryMetricsStatsd.EventHandler.handle_event/4`, will iterate over the list of metric structs that was stored for the event in ETS and construct the appropriate StatsD metric given the metric type and tags, the event measurement map and metadata. All for free!
+就是这样! `TelemetryMetricsStatsd` 库将负责调用 `:telemetry.attach/3` 在 ETS 中存储事件以及处理回调函数和该事件的度量列表。之后，当 Telemetry 事件被执行时，Telemetry 将查找该事件及其相关的处理函数和指标列表，并利用这些数据调用处理函数。处理函数 `TelemetryMetricsStatsd.EventHandler.handle_event/4` 将迭代存储在 ETS 中的事件的度量结构列表，并根据度量类型和标签、事件测量 map 结构和元数据构建相应的 StatsD 度量。所有这些都是免费的。
 
+## 下一个
 
-## Next Up
+在这篇文章中，我们看到了 `Telemetry.Metrics` 和 `TelemetryMetricsStatsd` 是如何抽象出自定义处理程序和回调函数的需求，将这些处理程序附加到事件上，并实现我们自己的度量报告逻辑。但是我们的 Telemetry 管道仍然需要一点工作。
 
-In this post, we saw how `Telemetry.Metrics` and `TelemetryMetricsStatsd` abstracted away the need to define custom handlers and callback functions, attach those handlers to events and implement our own metric reporting logic. But our Telemetry pipeline still needs a little work.
+我们仍然需要发送 _所有_ 的 Telemetry 事件。
 
-We're still on the hook for emitting _all_ of our own Telemetry events.
+为了能够真正观察我们生产环境的 Phoenix 应用的状态，我们需要报告的不仅仅是一个端点的请求持续时间和计数。我们希望能够处理信息丰富的事件，这些事件描述了整个应用中的 Web 请求、数据库查询、Erlang 虚拟机的行为和状态、应用中任何工作者的行为和状态等等。
 
-In order to really be able to observe the state of our production Phoenix app, we need to be reporting on much more than just one endpoint's request duration and count. We want to be able to handle information-rich events describing web requests across the app, database queries, the behavior and state of the Erlang VM, the behavior and state of any workers in our app, and more.
+通过手动在我们需要的地方执行自定义的 Telemetry 事件来完成可视化指标，它们将是乏味和耗时的。最重要的是，在整个应用程序中标准化事件命名约定、测量和元数据将是一个挑战。
 
-Instrumenting all of that by hand, by executing custom Telemetry events wherever we need, them will be tedious and time-consuming. On top of that, it will be a challenge to standardize event naming conventions, measurements and metadata across the app.
-
-In [next week's post](https://elixirschool.com/blog/instrumenting_phoenix_with_telemetry_part_three/), we'll examine Phoenix and Ecto's out-of-the-box Telemetry events and use `Telemetry.Metrics` to observe a wide-range of such events, thus eliminating the need for us to execute our own custom events for most of our observability use-cases.
+在[下周的文章](./2020-05-06-instrumenting_phoenix_with_telemetry_part_three.md)中，我们将研究 Phoenix 和 Ecto 开箱即用的 Telemetry 事件，并使用 `Telemetry.Metrics` 来观察广泛的此类事件，从而使我们无需为大多数观察性用例执行我们自己的自定义事件。
