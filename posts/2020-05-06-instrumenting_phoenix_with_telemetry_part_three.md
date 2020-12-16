@@ -9,45 +9,47 @@ excerpt: >
   In this series, we're instrumenting a Phoenix app and sending metrics to StatsD with the help of Elixir and Erlang's Telemetry offerings. In Part III we'll examine Phoenix and Ecto's out-of-the-box Telemetry events and use `Telemetry.Metrics` to observe a wide-range of such events.
 ---
 
-## Table Of Contents
+## 目录
 
 In this series, we're instrumenting a Phoenix app and sending metrics to StatsD with the help of Elixir and Erlang's Telemetry offerings.
 
-- [Part I: Telemetry Under The Hood](https://elixirschool.com/blog/instrumenting-phoenix-with-telemetry-part-one/)
-- [Part II: Handling Telemetry Events with `TelemetryMetrics` + `TelemetryMetricsStatsd`](https://elixirschool.com/blog/instrumenting_phoenix_with_telemetry_part_two/)
-- Part III: Observing Phoenix + Ecto Telemetry Events
-- [Part IV: Erlang VM Measurements with `telemetry_poller`, `TelemetryMetrics` + `TelemetryMetricsStatsd`](./2020-05-13-instrumenting-phoenix-with-telemetry-part-four.md)
+在这个系列中，我们将借助 Elixir 和 Erlang 的 Telemetry 产品，对一个 Phoenix 应用进行仪表化，并将指标发送到 StatsD。
 
-## Intro
+- [第一部分: Telemetry 的背后](./2020-04-22-instrumenting-phoenix-with-telemetry-part-one.md)
+- [第二部分: 用 `TelemetryMetrics` + `TelemetryMetricsStatsd` 处理 Telemetry 事件](./2020-04-29-instrumenting_phoenix_with_telemetry_part_two.md)
+- 第三部分: 观测 Phoenix + Ecto Telemetry 事件
+- [第四部分: 用 `telemetry_poller`、`TelemetryMetrics` + `TelemetryMetricsStatsd` 对 Erlang VM 进行测量](./2020-05-13-instrumenting-phoenix-with-telemetry-part-four.md)
 
-In the [previous post](https://elixirschool.com/blog/instrumenting_phoenix_with_telemetry_part_two/), we saw how the `Telemetry.Metrics` and `TelemetryMetricsStatsd` libraries abstracted away the need to define custom handlers, attach those handlers to events, and implement our own metric reporting logic. But our Telemetry pipeline still needs a little work--we're still on the hook for emitting all of our own Telemetry events!
+## 简介
 
-In order to really be able to observe the state of our production Phoenix app, we need to be reporting on much more than just one endpoint's request duration and count. We need to report information-rich metrics describing web requests across the app, database queries, the behavior and state of the Erlang VM, the behavior and state of any workers in our app, and more.
+在 [上一篇](./2020-04-29-instrumenting_phoenix_with_telemetry_part_two.md) 中，我们看到了 `Telemetry.Metrics` 和 `TelemetryMetricsStatsd` 库是如何抽象出定义自定义处理程序，将这些处理程序附加到事件上，并实现我们自己的度量报告逻辑。但是我们的 Telemetry 管道仍然需要一点点的工作--我们仍然需要发送所有 Telemetry 事件!
 
-Instrumenting all of that by hand, by executing custom Telemetry events wherever we need them, will be tedious and time-consuming. On top of that, it will be a challenge to standardize event naming conventions, measurements, and metadata across the app.
+为了真正能够观察我们生产的 Phoenix 应用的状态，我们需要报告的不仅仅是一个端点的请求持续时间和计数。我们需要报告信息丰富的指标，描述整个应用程序的网络请求、数据库查询、Erlang 虚拟机的行为和状态、应用程序中任何工作者的行为和状态等等。
 
-In this post, we'll examine Phoenix and Ecto's out-of-the-box Telemetry events and use `Telemetry.Metrics` to observe a wide-range of such events.
+通过在我们需要的地方执行自定义的 Telemetry 事件来手工测量所有这些指标，将是非常繁琐和耗时的。最重要的是，在整个应用程序中标准化事件命名约定、测量和元数据将是一个挑战。
 
-## Achieving Observability with Phoenix and Ecto Telemetry Events
+在这篇文章中，我们将研究 Phoenix 和 Ecto 的开箱即用的 Telemetry 事件，并使用 `Telemetry.Metrics` 来观察广泛的此类事件。
 
-To achieve observability, we know we nee to track things like:
+## 通过 Phoenix 和 Ecto Telemetry 事件实现可观测性。
 
-- Count and duration of all requests to all endpoints, with the ability to view this information broken down by things like:
-  - Route
-  - Response status
-- Count and duration of all Ecto queries, with the ability to view this information broken down by things like:
-  - Query command (e.g. `SELECT`, `UPDATE`)
-  - Table (e.g. `Users`)
+为了实现可观察性，我们知道我们需要跟踪以下内容：
 
-Luckily for us, pretty much _all_ of these events are already being emitted by Phoenix and Ecto directly!
+- 所有端点的所有请求数量和持续时间，并能通过以下方式查看这些信息：
+  - 路由
+  - 回复状态
+- 所有 Ecto 查询的次数和持续时间，并能按以下方式查看这些信息：
+  - 查询命令（如 `SELECT`、`UPDATE`）。
+  - 表（如 `Users`）
 
-In the following tutorial, we will teach `Telemetry.Metrics` to observe these out-of-the-box events and format the appropriate set of metrics, with information-rich tags, for each event.
+幸运的是，几乎 _所有_ 这些事件都已经由 Phoenix 和 Ecto 直接发出了。
 
-## A Note On Formatting Metrics
+在下面的教程中，我们将教 `Telemetry.Metrics` 来观察这些开箱即用的事件，并为每个事件格式化适当的指标集，并加上信息丰富的标签。
 
-In our previous post, we used the `TelemetryMetricsStatsd` reporting library to format metrics and send them to StatsD over UDP. We can configure this reporter with either the standard formatter or the DogStatsD formatter. The standard formatter constructs and emits metrics that are compatible with the Etsy implementation of StatsD. This implementation does _not_ support tagging, so `TelemetryMetricsStatsd` accommodates the tags we assign to metrics by including the tag values in the metric name.
+## 关于格式化指标的说明
 
-For example, if we specify the following counter metric:
+在上一篇文章中，我们使用 `TelemetryMetricsStatsd` 报告库来格式化指标，并通过 UDP 将其发送到 StatsD。我们可以用标准格式化或 DogStatsD 格式化来配置这个报表。标准格式化程序可以构建和发送与 StatsD 的 Etsy 实现兼容的度量。这个实现不支持标签，所以 `TelemetryMetricsStatsd` 通过在度量名称中包含标签值来适应我们分配给度量的标签。
+
+例如，如果我们指定以下计数器度量指标：
 
 ```elixir
 counter(
@@ -56,19 +58,19 @@ counter(
 )
 ```
 
-And execute a Telemetry event where the `conn` we pass in for the metadata argument contains `%{request_path: "/register/new"}`, then `TelemetryMetricsStatsd` will construct a metric:
+执行一个 Telemetry 事件，其中我们传递进来的元数据参数 `conn` 包含 `%{request_path: "/register/new"}`，那么 `TelemetryMetricsStatsd` 将构建一个度量。
 
 ```
 "phoenix.request.-register-new"
 ```
 
-What if we ultimately want to send StatsD metrics to Datadog, which _does_ support metric tagging? In that case, we can configure the `TelemetryMetricsStatsd` reporter to use the DogStatsD formatter, which would emit the following counter metric for the above event, including tags:
+如果我们最终想把 StatsD 度量发送到 Datadog，而 Datadog 支持度量标记呢？在这种情况下，我们可以将 `TelemetryMetricsStatsd` 报告器配置为使用 DogStatsD 格式化，它将为上述事件（包括标签）发出以下计数器指标：
 
 ```
 "phoenix.request:1|c|#request_path:/register/new"
 ```
 
-For the purposes of this tutorial, we'll use the DogStatsD formatter to make it easy to read and understand the metrics and tags that we are constructing and sending to StatsD.
+在本教程中，我们将使用 DogStatsD 格式化，以便于阅读和理解我们正在构建并发送至 StatsD 的指标和标签。
 
 ```elixir
 defmodule Quantum.Telemetry do
@@ -95,21 +97,20 @@ defmodule Quantum.Telemetry do
 end
 ```
 
-## Getting Started
+## 起步
 
-You can follow along with this tutorial by cloning down the repo [here]
-(https://github.com/elixirschool/telemetry-code-along/tree/part-3-start).
+你可以克隆下来的 [repo](https://github.com/elixirschool/telemetry-code-along/tree/part-3-start)，跟着这个教程。
 
-- Checking out the starting state of our code on the branch [part-3-start](https://github.com/elixirschool/telemetry-code-along/tree/part-3-start)
-- Find the solution code on the branch [part-3-solution](https://github.com/elixirschool/telemetry-code-along/tree/part-3-solution)
+- 在分支 [part-3-start](https://github.com/elixirschool/telemetry-code-along/tree/part-3-start) 上查看我们代码的起始状态。
+- 在分支 [part-3-solution](https://github.com/elixirschool/telemetry-code-along/tree/part-3-solution) 上找到解题代码。
 
-## Phoenix Telemetry Events
+## Phoenix Telemetry 事件
 
-### The `[:phoenix, :router_dispatch, :stop]` Event
+### `[:phoenix, :router_dispatch, :stop]` 事件
 
-First up, we'll leverage one of the out-of-the-box Phoenix events to help us track and report metrics for web request counts and durations--the `[:phoenix, :router_dispatch, :stop]` event.
+首先，我们将利用一个开箱即用的 Phoenix 事件来帮助我们跟踪和报告 Web 请求数量和持续时间的指标 -- `[:phoenix, :router_dispatch, :stop]` 事件。
 
-The `Phoenix.Router` module executes this event after the request is processed by the Plug pipeline and the controller, but _before_ a response is rendered. Looking in Phoenix source code we can see the event being emitted [here](https://github.com/phoenixframework/phoenix/blob/d4596650df21e7e0603debcb5f2ad25eb9ac082d/lib/phoenix/router.ex#L357):
+`Phoenix.Router` 模块在请求被 Plug 管道和控制器处理后，但在响应呈现之前执行这个事件。在 Phoenix 的源代码中，我们可以 [在这里](https://github.com/phoenixframework/phoenix/blob/d4596650df21e7e0603debcb5f2ad25eb9ac082d/lib/phoenix/router.ex#L357) 看到该事件被发出。
 
 ```elixir
 # phoenix/lib/phoenix/router.ex
@@ -119,9 +120,9 @@ metadata = %{metadata | conn: conn}
 :telemetry.execute([:phoenix, :router_dispatch, :stop], %{duration: duration}, metadata)
 ```
 
-Here, Phoenix is calculating the duration by subtracting the start time, set at the beginning of the request processing pipeline, from the current time. Then it's updating the metadata map to include the `conn`. Lastly, it's executing the Telemetry metric with this information.
+在这里，Phoenix 正在计算持续时间，从当前时间中减去在请求处理管道开始时设置的开始时间。然后，它在更新元数据 map，以包含 `conn`。最后，它在用这些信息执行 Telemetry 度量。
 
-Now that we know which Telemetry event we care about, let's make our `Telemetry.Metrics`, `Quantum.Telemetry` module aware of it.
+现在我们知道了我们关心的是哪个 Telemetry 事件，让我们的 `Telemetry.Metrics`、`Quantum.Telemetry` 模块也知道它。
 
 ```elixir
 # lib/quantum/telemetry.ex
@@ -142,9 +143,9 @@ def metrics do
 end
 ```
 
-Now, whenever the `Phoenix.Router` executes the `[:phoenix, :router_dispatch, :stop]` Telemetry event for a given web request, we will see counter and timer metrics emitted to StatsD tagged with the `:plug` and `:plug_opts` values from the event metadata.
+现在，每当 `Phoenix.Router` 为给定的 Web 请求执行 `[:phoenix, :router_dispatch, :stop]` Telemetry 事件时，我们将看到向 StatsD 发出的计数器和定时器指标，这些指标被事件元数据中的 `:plug` 和 `:plug_opts` 值标记。
 
-By running the app and visiting the landing page, we see the following reported to StatsD:
+通过运行应用程序并访问登陆页面，我们会看到向 StatsD 报告的以下内容：
 
 ```
 # timing
@@ -154,11 +155,11 @@ By running the app and visiting the landing page, we see the following reported 
 "phoenix.router_dispatch.stop.count:1|c|#plug:Elixir.QuantumWeb.PageController,plug_opts:index"
 ```
 
-This represents a BIG win for us, as compared to our previous approach of manually executing a Telemetry event from _every controller action in our app_. By defining metrics for this event in our `Quantum.Telemetry` module and providing those metrics to the `TelemetryMetricsStatsd` reporter, we are able to report metrics for every web request our app receives, across all endpoints.
+与我们以前从应用程序中的每个控制器中手动执行 Telemetry 事件的方法相比，这对我们来说是一个巨大的胜利。通过在我们的 `Quantum.Telemetry` 模块中定义该事件的指标，并将这些指标提供给 `TelemetryMetricsStatsd` 报告器，我们能够报告我们的应用程序在所有端点上收到的每个网络请求的指标。
 
-### Getting More Out Of Tags
+### 从标签中获取更多信息
 
-We can also see how helpful the `:tags` option of the metrics functions can be. These tags are ensuring that the metrics we report to StatsD are information-rich--they contain data from the context of the web request. Recall from the previous post that the `TelemetryMetricsStatsd` reporter will apply tags for a given metric where those tags are present as keys in the event metadata. So, when `Phoenix.Router` executes the following Telemetry event:
+我们还可以看到度量函数的 `:tags` 选项是多么有用。这些标签确保了我们向 StatsD 报告的指标是信息丰富的--它们包含了来自网络请求上下文的数据。从上一篇文章中可以回想一下，`TelemetryMetricsStatsd` 报告器将为给定的度量应用标签，这些标签作为键存在于事件元数据中。因此，当 `Phoenix.Router` 执行以下 Telemetry 事件时：
 
 ```elixir
 # phoenix/lib/phoenix/router.ex
@@ -168,17 +169,17 @@ metadata = %{metadata | conn: conn}
 :telemetry.execute([:phoenix, :router_dispatch, :stop], %{duration: duration}, metadata)
 ```
 
-It provides the `:telemetry.execute/3` call with `metadata` that includes top-level keys of `:plug` and `:plug_opts`.
+它向 `:telemetry.execute/3` 调用提供 `metadata`，其中包括 `:plug` 和 `:plug_opts` 的顶层键。
 
-It _also_ includes the request `conn` in that metadata map, under a key of `:conn`. What if we want to grab some data out of the `conn` to include in our metric tags?
+它 _还_ 在元数据映射中包含了请求 `conn`，键为 `:conn`。如果我们想从 `conn` 中抓取一些数据来包含在我们的度量标签中呢？
 
-It would be great if we could tag these web request counter metrics with the response status--that way we can aggregate counts of successful and failed web requests.
+如果我们能用响应状态来标记这些 web 请求计数器指标，那就太好了--这样我们就可以汇总成功和失败的 web 请求的数量。
 
-The response status _is_ present in the `conn`, under a key of `:status`. But the `Telemetry.Metrics.counter/2` function only knows how to deal with tags that are top-level in the provided `metadata`. If only there was some way to tell the counter metric how to apply tags from data that is _nested inside_ the provided metadata.
+响应状态存在于 `conn` 中，键为 `:status`。但是 `Telemetry.Metrics.counter/2` 函数只知道如何处理所提供的 `metadata` 中的顶级标签。如果有办法告诉计数器度量如何应用嵌套在所提供元数据中的数据中的标签就好了。
 
-This is where the metrics functions' `:tag_values` option comes in! We can use the `:tag_values` option to store a function that will be called later on during the Telemetry event handling process to construct additional tags from nested metadata info.
+这就是度量函数的 `:tag_values` 选项的用武之地。我们可以使用 `:tag_values` 选项来存储一个函数，该函数将在稍后的 Telemetry 事件处理过程中被调用，以从嵌套的元数据信息中构建额外的标签。
 
-All _we_ have to do is implement a function that expects to receive the event metadata and returns a map that includes all of the tags we want to apply to our metric:
+_我们_ 所要做的就是实现一个函数，期望接收事件元数据，并返回一个包含所有我们想要应用到度量的标签的映射。
 
 ```elixir
 # lib/quantum/telemetry.ex
@@ -188,7 +189,7 @@ def endpoint_metadata(%{conn: %{status: status}, plug: plug, plug_opts: plug_opt
 end
 ```
 
-Then, when we call a given metrics function, for example `counter/2`, we set the `:tag_values` option to this function and `:tags` to our complete list of tags:
+然后，当我们调用一个给定的度量函数时，例如 `counter/2`，我们将 `:tag_values` 选项设置为这个函数，`:tags` 设置为我们完整的标签列表。
 
 ```elixir
 # lib/quantum/telemetry.ex
@@ -204,21 +205,21 @@ def metrics do
 end
 ```
 
-Now, when we run our Phoenix server and visit the landing page, we see the following counter metric emitted to StatsD:
+现在，当我们运行 Phoenix 服务器并访问登陆页面时，我们看到以下计数器指标被发送到 StatsD：
 
 ```
 "phoenix.router_dispatch.stop.count:1|c|#plug:Elixir.QuantumWeb.PageController,plug_opts:index,status:200"
 ```
 
-Notice that now the metric is tagged with the response status. This will make it easy for us to visualize counts of failed and successful requests in Datadog.
+请注意，现在指标被标记为响应状态。这将使我们很容易在 Datadog 中可视化失败和成功请求的计数。
 
-### More Phoenix Telemetry Events
+### 更多 Phoenix Telemetry 事件
 
-So far, we've taken advantage of just one of several Telemetry events executed by Phoenix source code. There are a number of helpful events we can have our Telemetry pipeline handle. Let's take a brief look at some of these events now.
+到目前为止，我们只是利用了 Phoenix 源代码执行的几个 Telemetry 事件中的一个。我们可以让我们的 Telemetry 管道处理一些有用的事件。现在让我们简单地看看其中的一些事件。
 
-#### The `[:phoenix, :error_rendered]` Telemetry Event
+#### `[:phoenix, :error_rendered]` Telemetry 事件
 
-The `Phoenix.Endpoint.RenderErrors` module executes a Telemetry event after rendering the error view. We can see the call to execute this event in source code [here](https://github.com/phoenixframework/phoenix/blob/00a022fbbf25a9d0845329161b1bc1a192c2d407/lib/phoenix/endpoint/render_errors.ex#L81):
+`Phoenix.Endpoint.RenderErrors` 模块在渲染错误视图后执行一个 Telemetry 事件。我们可以在 [源代码](https://github.com/phoenixframework/phoenix/blob/00a022fbbf25a9d0845329161b1bc1a192c2d407/lib/phoenix/endpoint/render_errors.ex#L81) 中看到执行该事件的调用。
 
 ```elixir
 # phoenix/lib/phoenix/endpoint/render_errors.ex
@@ -236,7 +237,7 @@ defp instrument_render_and_send(conn, kind, reason, stack, opts) do
 end
 ```
 
-We can tell our Telemetry pipeline to handle this event as a counter and tag it with the request path and response status in our `Quantum.Telemetry.metrics/0` function like this:
+我们可以告诉我们的 Telemetry 管道把这个事件作为一个计数器来处理，并在我们的 `Quantum.Telemetry.metrics/0` 函数中用请求路径和响应状态来标记它，像这样：
 
 ```elixir
 # lib/quantum/telemetry.ex
@@ -256,17 +257,17 @@ def error_request_metadata(%{conn: %{request_path: request_path}, status: status
 end
 ```
 
-Now, we'll see the following counter metric incremented in StatsD when a user visits, `/blah`, a path that does not exist:
+现在，我们会看到当用户访问 `/blah` ，一个不存在的路径时，StatsD 中的以下计数器指标会递增：
 
 ```
 "phoenix.error_rendered.count:1|c|#request_path:blah,status:404"
 ```
 
-#### `Phoenix.Socket` Telemetry Event
+#### `Phoenix.Socket` Telemetry 事件
 
-Phoenix also provides some out-of-the-box instrumentation for Socket and Channel interactions.
+Phoenix 还为 Socket 和 Channel 交互提供了一些开箱即用的工具。
 
-The `Phoenix.Socket` module executes a Telemetry event whenever the socket is connected to. We can see that event in source code [here](https://github.com/phoenixframework/phoenix/blob/e83b6291cb4ed7cd6572b7af274842910667ade3/lib/phoenix/socket.ex#L450):
+每当连接到 Socket 时，`Phoenix.Socket` 模块就会执行一个 Telemetry 事件。我们可以在 [源代码](https://github.com/phoenixframework/phoenix/blob/e83b6291cb4ed7cd6572b7af274842910667ade3/lib/phoenix/socket.ex#L450) 中看到该事件。
 
 ```elixir
 # phoenix/lib/phoenix/socket.ex
@@ -307,9 +308,9 @@ def __connect__(user_socket, map, socket_options) do
 end
 ```
 
-We can see that the event is executed with the duration measurement and a metadata map that includes the connection params and other contextual info. We can tell our Telemetry pipeline to handle this event by adding metrics for the `"phoenix.socket_connected"` event in our `Quantum.Telemetry.metrics/0` list:
+我们可以看到，该事件的执行带有持续时间测量和元数据映射，其中包括连接参数和其他上下文信息。我们可以通过在我们的 `Quantum.Telemetry.metrics/0` 列表中添加 `"phoenix.socket_connected"` 事件的度量来告诉我们的 Telemetry 管道处理这个事件：
 
-For example:
+例如：
 
 ```elixir
 # lib/quantum/telemetry.ex
@@ -324,13 +325,13 @@ def metrics do
 end
 ```
 
-Now we will increment a StatsD metric every time the socket is joined.
+现在，我们将在每次加入 socket 时增加一个 StatsD 指标。
 
-### `Phoenix.Channel` Telemetry Events
+### `Phoenix.Channel` Telemetry 事件
 
-The `Phoenix.Channel.Server` module executes two Telemetry events--one when the channel is joined and one whenever the channel invokes `handle_info/2`.
+`Phoenix.Channel.Server` 模块会执行两个 Telemetry 事件 -- 一个是当加入 Channel 时，另一个是当 channel 调用 `handle_info/2` 时。
 
-We can see the `[:phoenix, :channel_joined]` Telemetry event in source code [here](https://github.com/phoenixframework/phoenix/blob/8a4aa4eed0de69f94ab09eca157c87d9bd204168/lib/phoenix/channel/server.ex#L302):
+我们可以在 [源码](https://github.com/phoenixframework/phoenix/blob/8a4aa4eed0de69f94ab09eca157c87d9bd204168/lib/phoenix/channel/server.ex#L302) 中看到 `[:phoenix, :channel_joined]` Telemetry 事件。
 
 ```elixir
 # phoenix/lib/phoenix/channel/server.ex
@@ -348,7 +349,7 @@ def handle_info({:join, __MODULE__}, {auth_payload, {pid, _} = from, socket}) do
 end
 ```
 
-And we can see the `[:phoenix, channel_handled_in]` event [here](https://github.com/phoenixframework/phoenix/blob/8a4aa4eed0de69f94ab09eca157c87d9bd204168/lib/phoenix/channel/server.ex#L319)
+我们可以 [在这里](https://github.com/phoenixframework/phoenix/blob/8a4aa4eed0de69f94ab09eca157c87d9bd204168/lib/phoenix/channel/server.ex#L319) 看到 `[:phoenix, channel_handled_in]` 事件
 
 ```elixir
 # phoenix/lib/phoenix/channel/server.ex
@@ -369,41 +370,39 @@ def handle_info(
 end
 ```
 
-We can add some metrics reporting for these events by defining metrics in `Quantum.Telemetry` for either of the `"phoenix.channel_joined"` and `"phoenix.channel_handled_in"` events.
+我们可以通过在 `Quantum.Telemetry` 中为 `"phoenix.channel_joined"` 和 `"phoenix.channel_handled_in"` 事件中的任何一个定义指标，为这些事件添加一些指标报告。
 
-Now that we've taken a brief tour of Phoenix Telemetry events, let's hook up some reporting for Ecto events.
+现在我们已经简单了解了 Phoenix Telemetry 事件，让我们为 Ecto 事件挂上一些报告。
 
-## Ecto Telemetry Events
+## Ecto Telemetry 事件
 
-Ecto provides some out-of-the-box instrumentation for queries. Let's take a look at and define metrics for some of these Telemetry events now.
+Ecto 为查询提供了一些开箱即用的可视化。现在让我们来看看并为其中的一些 Telemetry 事件定义指标。
 
-Ecto will execute a Telemetry event, [`[:my_app, :repo, :query]`](https://github.com/elixir-ecto/ecto/blob/2aca7b28eef486188be66592055c7336a80befe9/lib/ecto/repo.ex#L120) for every query sent to the Ecto adapter. It will emit this event with a measurement map and a metadata map.
+Ecto 将为每个发送到 Ecto 适配器的查询执行一个 Telemetry 事件，[`[:my_app, :repo, :query]`](https://github.com/elixir-ecto/ecto/blob/2aca7b28eef486188be66592055c7336a80befe9/lib/ecto/repo.ex#L120)。它将发出这个事件，并附上一个测量 map 和一个元数据 map。
 
-The measurement map will include:
-
-```
-* `:idle_time` - the time the connection spent waiting before being checked out for the query
-* `:queue_time` - the time spent waiting to check out a database connection
-* `:query_time` - the time spent executing the query
-* `:decode_time` - the time spent decoding the data received from the database
-* `:total_time` - the sum of the other measurements
-```
-
-The metadata map will includes:
+测量 map 将包括：
 
 ```
-* `:type` - the type of the Ecto query. For example, for Ecto.SQL
-    databases, it would be `:ecto_sql_query`
-* `:repo` - the Ecto repository
-* `:result` - the query result
-* `:params` - the query parameters
-* `:query` - the query sent to the database as a string
-* `:source` - the source the query was made on (may be nil)
-* `:options` - extra options given to the repo operation under
-  `:telemetry_options`
+* `:idle_time` - 连接在被查出查询结果前的等待时间。
+* `:queue_time` - 等待检查数据库连接的时间。
+* `:query_time` - 执行查询的时间 the time spent executing the query
+* `:decode_time` - 解码从数据库收到的数据所花费的时间。
+* `:total_time` - 总计时间。
 ```
 
-If we want to establish metrics for Ecto query counts aggregated by table and command, we could establish the following metric in our `Quantum.Telemetry` metrics list:
+元数据 map 将包括:
+
+```
+* `:type` - Ecto 查询的类型。例如，对于 Ecto.SQL 数据库，它将是 `:ecto_sql_query`
+* `:repo` - Ecto 储存库
+* `:result` - 查询结果
+* `:params` - 查询参数
+* `:query` - 以字符串形式发送到数据库的查询
+* `:source` - 查询的源头(可能为零)
+* `:options` - `:telemetry_options` 下 repo 操作的额外选项。
+```
+
+如果我们想建立按表和命令汇总的 Ecto 查询次数的度量，我们可以在 `Quantum.Telemetry` 度量列表中建立以下度量。
 
 ```elixir
 def metrics do
@@ -421,13 +420,13 @@ def query_metatdata(%{source: source, result: {_, %{command: command}}}) do
 end
 ```
 
-This will increment a counter in StatsD for each query to a given table with a given command. For example:
+这将在 StatsD 中为给定命令对给定表的每次查询增加一个计数器。例如：
 
 ```
 "quantum.repo.query:1|c|#source:users,command:select"
 ```
 
-We can also establish a timing metric with the use of the `summary` metric function:
+我们还可以利用 `summary` 度量函数建立一个时序度量：
 
 ```elixir
 def metrics do
@@ -446,22 +445,22 @@ def query_metadata(%{source: source, result: {_, %{command: command}}}) do
 end
 ```
 
-This will report timing metrics to StatsD for each query executed with a given command to a given table. For example:
+这将向 StatsD 报告每一个对给定表执行给定命令的查询的时间指标。例如：
 
 ```
 "quantum.repo.query.total_time:1.7389999999999999|ms|#source:users,command:select"
 ```
 
-## More Metrics
+## 更多度量指标
 
-This post has mainly focused on the `counter/2` and `summary/2` `Telemetry.Metrics` functions, corresponding to the "count" and "timing" StatsD metric type respectively. `Telemetry.Metrics` implements five metrics functions, each of which map to a specific metric type. To learn how to define and report on these various metric types, check out the docs [here](https://hexdocs.pm/telemetry_metrics/Telemetry.Metrics.html#module-metrics) and [here](https://hexdocs.pm/telemetry_metrics_statsd/TelemetryMetricsStatsd.html)
+本文主要介绍了 `counter/2` 和 `summary/2` 以及 `Telemetry.Metrics` 函数，分别对应 StatsD "count" 和 "timing" 度量类型。`Telemetry.Metrics` 实现了五个度量函数，每个函数都映射到一个特定的度量类型。要了解如何定义和报告这些不同的度量类型，请查看[metrics 文档](https://hexdocs.pm/telemetry_metrics/Telemetry.Metrics.html#module-metrics) 和 [TelemetryMetricsStatsd 文档](https://hexdocs.pm/telemetry_metrics_statsd/TelemetryMetricsStatsd.html)。
 
-## Conclusion
+## 结语
 
-Instrumenting our Phoenix app by taking advantage of the Telemetry events that are executed for us by Phoenix and Ecto allowed us to achieve a high degree of observability without writing a lot of custom code.
+通过利用 Phoenix 和 Ecto 为我们执行的 Telemetry 事件，对我们的 Phoenix 应用进行仪表化，使我们能够在不编写大量自定义代码的情况下实现高度的可观察性。
 
-We simply defined our `Telemetry.Metrics` module, configured it to start up the `TelemetryMetricsStatsd` reporter and defined the list of existing Telemetry events to observe as metrics. Now we're reporting a valuable set of information-rich metrics to StatsD, formatted for Datadog, without manually executing a single Telemetry event or defining any of our own event handlers.
+我们简单地定义了我们的 `Telemetry.Metrics` 模块，配置它来启动 `TelemetryMetricsStatsd` 报告器，并定义了现有的 Telemetry 事件列表，作为指标进行观察。现在，我们向 StatsD 报告了一组有价值的信息丰富的指标，格式化的 Datadog，而无需手动执行一个 Telemetry 事件或定义任何我们自己的事件处理程序。
 
-## Next Up
+## 下一个
 
-There's one more flavor of out-of-the-box metrics reporting we'll explore in this series. In our [next post](https://elixirschool.com/blog/instrumenting-phoenix-with-telemetry-part-four/), we'll use the `telemetry_poller` Erlang library to emit Erlang VM measurements as Telemetry events and we'll use `Telemetry.Metrics` and `TelemetryMetricsStatsd` to observe and report those events as metrics.
+在这个系列中，我们还将探索一种开箱即用的度量报告的味道。在我们的 [下一篇](./2020-05-13-instrumenting-phoenix-with-telemetry-part-four.md) 中，我们将使用 Erlang `telemetry_poller` 库将 Erlang 虚拟机的测量结果作为 Telemetry 事件发出，我们将使用 `Telemetry.Metrics` 和 `TelemetryMetricsStatsd` 来观察和报告这些事件作为度量。
