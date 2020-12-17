@@ -10,7 +10,7 @@
 
 ### 2020
 
-- [ ] [使用 Context 和 LiveView 绘制实时 SVG 图表](./posts/2020-10-06-server-side-svg-charts-with-contex-and-liveview.md)
+- [x] [使用 Context 和 LiveView 绘制实时 SVG 图表](./posts/2020-10-06-server-side-svg-charts-with-contex-and-liveview.md)
 - [x] [使用 telemetry 仪表化 Phoenix 第四部分: 使用 `telemetry_poller` 对 Erlang VM 进行测量](./posts/2020-05-13-instrumenting-phoenix-with-telemetry-part-four.md)
 - [x] [使用 telemetry 仪表化 Phoenix 第三部分: 观测 Phoenix + Ecto Telemetry 事件](./posts/2020-05-06-instrumenting-phoenix-with-telemetry-part-three.md)
 - [x] [使用 Telemetry 仪表化 Phoenix 第二部分: Telemetry Metrics + Reporters](./posts/2020-04-29-instrumenting-phoenix-with-telemetry-part-two.md)

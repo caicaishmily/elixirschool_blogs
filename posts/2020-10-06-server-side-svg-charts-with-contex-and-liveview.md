@@ -11,37 +11,39 @@ excerpt: >
 
 # 使用 Context 和 LiveView 绘制实时 SVG 图表
 
-This post is inspired by some of my work, together with [Bruce Tate](https://twitter.com/redrapids), on Pragmatic Bookshelf's upcoming book on LiveView. Elixir School is happy to be able to offer a give-away of a small number e-books once they are published, so stay tuned for updates!
+这篇文章的灵感来自于我和 [Bruce Tate](https://twitter.com/redrapids) 一起为 Pragmatic Bookshelf 即将出版的 《LiveView》 一书所做的一些工作。很高兴能够在电子书出版后提供少量电子书的赠品给到 Elixir School，敬请关注更新!
 
-As LiveView matures it is becoming clear that it much more than just a tool for building real-time features in your web app. LiveView is a state management system for your single page app. Developers are increasingly reaching for LiveView to build and manage the complexities of a full-featured SPA. This is why, in our upcoming LiveView book, we're aiming to build out a diverse and robust set of features using LiveView.
+随着 LiveView 的成熟，人们越来越清楚它不仅仅是一个在 Web 应用中构建实时功能的工具。LiveView 是你的单页面应用的状态管理系统。开发人员越来越多地接触到 LiveView，以构建和管理复杂功能的 SPA。这就是为什么在我们即将出版的 LiveView 书中，我们的目标是使用 LiveView 构建出一套多样化和强大的功能。
 
-Once such common feature is that of a real-time admin-facing dashboard. Such dashboards often require data visualization and LiveView means we can offer data viz in real-time. In this post, we'll look at how to leverage the [Contex](https://github.com/mindok/contex) library for server-side SVG chart rendering. We'll render a Contex chart in a LiveView and update our chart in real-time. Along the way, I hope you'll get excited about what you can do with LiveView, and what you can learn if you dive into our upcoming book.
+曾经一个常见的功能是面向管理员的实时仪表盘。这样的仪表盘往往需要数据可视化，而 LiveView 意味着我们可以实时提供数据。在这篇文章中，我们将看看如何利用 [Contex](https://github.com/mindok/contex) 库进行服务器端 SVG 图表渲染。我们将在 LiveView 中渲染一个 Contex 图表，并实时更新我们的图表。一路下来，我希望你会对使用 LiveView 可以做什么感到兴奋，如果你深入研究我们即将出版的书，你可以学到点什么。
 
-## The Problem
+## 问题
 
-While there quite a few JavaScript charting libraries to choose from, we're after a _server-side rendering_ solution. LiveView manages state on the server. State changes trigger re-renders the HTML, pushes that HTML to the client, which then efficiently updates the UI. So, we don't want to bring in a library to renders charts with lots of complex JavaScript on the client. We need to be able to draw our charts on the server and send that chart HTML down to the client.
+虽然有不少 JavaScript 图表库可供选择，但我们追求的是一个 _服务器端渲染_ 的解决方案。LiveView 在服务器上管理状态。状态变化会触发 HTML 的重新渲染，并将 HTML 推送到客户端，然后由客户端高效地更新 UI。所以，我们不希望引入一个库来在客户端上使用大量复杂的 JavaScript 来渲染图表。我们需要能够在服务器上绘制我们的图表，并将该图表的 HTML 发送到客户端。
 
-While there aren't many server-rendered chart libraries in Elixir, luckily for us, there is Contex!
+虽然 Elixir 中并没有多少服务器渲染的图表库，但幸运的是，我们有 Contex!
 
-## Introducing Contex
-[Contex](https://github.com/mindok/contex) is a server-side charting library written in Elixir that allows us to build and render SVG charts on the server. We can then use LiveView to render these charts in a template and enable them to be updated in real-time. Contex currently supports bar charts, point plots, gantt charts and sparkline charts.
+## 介绍 Contex
 
-It's worth mentioning that there are a few other server-side charting libraries in Elixir. The [`ggity`](https://github.com/srowley/ggity) is designed to "bring interface of R's `ggplot2` library to the task of drawing SVG plots with Elixir" and supports a number of different chart types. The [`plotex`](https://github.com/elcritch/plotex) library builds and renders time plot series SVG charts on the server. The `ggity` library, while likely a good choice for exploratory data analysis, is not optimized for use with LiveView nor is it currently intended for production use and the `plotex` library is aimed at rendering time plot series charts only. So, `contex`, while still a new library with some [in-progress TODOs](https://github.com/mindok/contex#warning), is most closely aligned with our need to performantly render data in LiveView, in real-time, in a variety of formats.
+[Contex](https://github.com/mindok/contex) 是一个用 Elixir 编写的服务器端图表库，它允许我们在服务器上构建和渲染 SVG 图表。然后我们可以使用 LiveView 在模板中渲染这些图表，并使它们能够实时更新。Contex 目前支持条形图、点图、甘特图和折线图。
 
-In this post, we'll focus on using Contex to build a bar chart.
+值得一提的是，Elixir 中还有一些其他的服务器端图表库。[`ggity`](https://github.com/srowley/ggity) 旨在 "将 R 的 `ggplot2` 库的接口带入到用 Elixir 绘制 SVG 图的任务中"，并支持多种不同的图表类型。[`plotex`](https://github.com/elcritch/plotex) 库在服务器上构建和渲染时间图系列 SVG 图表。`ggity` 库虽然可能是探索性数据分析的一个不错的选择，但并没有针对 LiveView 的使用进行优化，目前也没有打算用于生产用途，而 `plotex` 库的目的只是为了渲染时间图系列图表。因此，`contex` 虽然还是一个新的库，有一些 [在建的 TODO](https://github.com/mindok/contex#warning)，但它最符合我们在 LiveView 中以各种格式实时执行渲染数据的需求。
 
-## What We'll Build
-Drawing from an example that you'll see in greater depth in our upcoming LiveView book, we'll add a chart to our Admin Dashboard LiveView. The Admin Dashboard is part of an online gaming app in which users can play online versions of games like ping-pong and tic-tac-toe. We ask users to fill our a survey that rates games on a scale of 1 to 5 stars. Our Admin Dashboard should include a chart of products and their average star ratings. Something like this:
+在本篇文章中，我们将着重于使用 Contex 来构建一个条形图。
 
-![game ratings chart]({% asset game-ratings-chart.png @path %})
+## 我们将构建什么
 
-The chart should also update in real-time. In other words, as users around the world use and review our extremely popular and super fun games, the chart should update in real-time to reflect updated average ratings.
+借鉴一个你将在我们即将出版的 LiveView 书中看到更深入内容的例子，我们将在 Admin Dashboard LiveView 中添加一个图表。管理员仪表盘是一个在线游戏应用的一部分，用户可以在其中玩在线版本的游戏，如乒乓球和井字游戏。我们要求用户填写一份调查表，对游戏进行 1 到 5 星的评分。我们的管理面板应该包括一个产品的图表和他们的平均星级。就像这样：
 
-For the purposes of this post, we'll assume we already have a LiveView `GameStoreWeb.AdminDashboardLive`, mounted at `live '/admin-dashboard'`.
+![游戏评分表](https://elixirschool.com/assets/game-ratings-chart-c97d10c38c3dc7b6c9ba91d9710f8957b4de80dab0df1218942908c028bc18b6.png)
 
-This LiveView renders a stateful child component, `GameStoreWeb.GameRatingsLive`. This component is where we will build and render our bar chart.
+图表也应该实时更新。换句话说，当世界各地的用户使用和评论我们的极受欢迎和超级有趣的游戏时，图表应该实时更新以反映更新的平均评分。
 
-Taking a brief look at our `AdminDashboardLive` LiveView, we can see it establishes a socket assignment, `:game_ratings_component_id`:
+在这篇文章中，我们将假设我们已经有一个 LiveView `GameStoreWeb.AdminDashboardLive`，挂载在 `live '/admin-dashboard'`。
+
+这个 LiveView 会渲染一个有状态的子组件 `GameStoreWeb.GameRatingsLive`。这个组件是我们构建和渲染条形图的地方。
+
+简单看一下我们的 `AdminDashboardLive` LiveView，我们可以看到它建立了一个 socket，`:game_ratings_component_id`。
 
 ```elixir
 # lib/game_store_web/live/admin_dashboard_live.ex
@@ -54,7 +56,7 @@ defmodule GameStoreWeb.AdminDashboardLive do
 end
 ```
 
-Then, we use this assignment to set the `:id` of our stateful component:
+然后，我们使用这个赋值来设置 `:id` 给我们有状态组件。
 
 ```elixir
 # lib/game_store_web/live/admin_dashboard_live.html.leex
@@ -63,23 +65,25 @@ Then, we use this assignment to set the `:id` of our stateful component:
       id: @game_ratings_component_id %>
 ```
 
-We're storing the component's ID in socket assigns so that we can use it later to send updates to the component with the help of the `send_update/2` function. More on that later.
+我们将组件的 ID 存储在 socket assigns 中，这样我们就可以在以后使用它来通过 `send_update/2` 函数向组件发送更新。后面会有更多的介绍。
 
-## Getting Started
-First off, we'll add the Contex package to our app's dependencies in the `mix.exs` file:
+## 入门
+
+首先，我们将在 `mix.exs` 文件中添加 Contex 包到我们应用程序的依赖关系中：
 
 ```elixir
 {:contex, "0.3.0"}
 ```
 
-Run `mix deps.get` to install the new dependency.
+运行 `mix deps.get` 来安装新的依赖关系。
 
-## Querying Data To Chart
-Before we can render our bar chart, we need to query for and format our data for the chart. We'll write query that selects all of the games, along with the average rating for each game.
+## 查询图表所需数据
 
-We'll implement our query in a query builder module defined in the core of application. The functional core of our application is where we put all of the code that is predictable and reliable. Working with the data in our database is a great example of something that is just that. Let's take a look at our query  now.
+在我们渲染柱状图之前，我们需要查询并格式化我们的图表数据。我们将编写查询选择所有的游戏，以及每个游戏的平均评分。
 
-In our data model, we games that have many ratings. So, we'll query for games, joined on the ratings table, and select the game name and a computed average of all of the given game's ratings' stars.
+我们将在应用核心中定义的查询构建模块中实现我们的查询。我们应用程序的功能核心是我们放置所有可预测和可靠的代码的地方。在我们的数据库中处理数据就是一个很好的例子。现在我们来看看我们的查询。
+
+在我们的数据模型中，我们游戏有很多评级。所以，我们将查询游戏，在评级表上加入，并选择游戏名称和所有给定游戏的评级星级的计算平均值。
 
 ```elixir
 # lib/catalogue/game/query.ex
@@ -108,9 +112,10 @@ defmodule GameStore.Catalogue.Game.Query do
   end
 end
 ```
-While the work of *composing* queries is predictable and reliable, the work of *executing* queries is anything but. You can't be certain of what the results of executing a database query will be, and such work is often dependent on input from a user. So, the execution of our query will be the responsibility of our app's `Catalogue` context. The context acts as our application's boundary, and it's where we can located code that deals with uncertainty and with input from the outside world.
 
-Let's wrap up our query in a context function in the `Catalogue` context now. We execute our query by piping it to a call to `Repo.all()`
+_组成_ 查询的工作是可以预测和可靠的，而 _执行_ 查询的工作却不是这样。你无法确定执行数据库查询的结果是什么，而且这种工作往往依赖于用户的输入。所以，我们查询的执行将由我们应用程序的 `Catalogue` 上下文负责。上下文作为我们应用的边界，我们可以在这里定位处理不确定性和来自外界的输入的代码。
+
+现在让我们在 `Catalogue` 上下文中用上下文函数来封装我们的查询。我们通过管道将我们的查询执行到对 `Repo.all()` 的调用。
 
 ```elixir
 # lib/catalogue.ex
@@ -125,9 +130,10 @@ defmodule GameStore.Catalogue do
 end
 ```
 
-Let's take a look at the results of executing this query now:
+我们现在来看一下执行这个查询的结果：
 
-```iex
+```bash
+# iex 环境
 iex> alias GameStore.Repo
 iex(4)> Catalogue.games_with_average_ratings()
 [debug] QUERY OK source="games" db=6.1ms decode=2.1ms queue=7.1ms idle=1495.6ms
@@ -139,17 +145,19 @@ SELECT g0."name", avg(r1."stars")::float FROM "games" AS g0 INNER JOIN "ratings"
 ]
 ```
 
-Note that we've chosen for our query to select and return a collection of results, each of which is a tuple with two elements. The first element is the name of the game and the second element is the average rating. This format is purposeful, designed for use in our Contex bar chart.
+请注意，我们的查询选择并返回一个结果集合，每个结果都是一个有两个元素的元组。第一个元素是游戏的名称，第二个元素是平均评分。这种格式是有目的的，是为了在我们的 Contex 条形图中使用。
 
-Let's turn our attention to building out that chart with this data now.
+现在让我们把注意力转向用这些数据构建出那个图表。
 
-## Defining Your Chart in LiveView
-Before we build out or component in earnest, it's worth mentioning the pattern that we will be applying to manage state in that component. We'll rely on reducers to successively update socket state to initialize the starting state of our component and handle updates. Reducers are functions that take a thing and return an updated thing of the same type. They allow us to compose neat, clean pipelines that make it easy to build and manage LiveView state and respond to events by updating that state. This is a pattern that we'll go into greater depth on in our LiveView book.
+## 在 LiveView 中定义你的图表
 
-### Storing Chart Data in State
-First off, we'll teach our `GameRatingsLive` component to query for these games with average ratings and keep them in the socket assigns.
+在我们认真构建出或组件之前，值得一提的是我们将应用的模式来管理该组件中的状态。我们将依靠 reducers 来连续更新 socket 状态，以初始化我们组件的起始状态并处理更新。reducers 是接受一个事物并返回一个更新后的相同类型事物的函数。它们使我们能够编写整洁、干净的管道，使我们能够轻松地构建和管理 LiveView 状态，并通过更新该状态来响应事件。这是一种模式，我们将在我们的 LiveView 书中更深入地介绍。
 
-Recall that earlier we said that we're rendering the `GameRatingsLive` component as a stateful component in the `AdminDashboardLive` LiveView. We'll leverage the stateful component's `update/2` lifecycle method to fetch our game and ratings data and store it in socket assigns.
+### 在状态中排序图表数据
+
+首先，我们要教我们的 `GameRatingsLive` 组件查询这些有平均评分的游戏，并将它们保存在 socket assigns 中。
+
+记得前面我们说过，我们要把 `GameRatingsLive` 组件渲染成 `AdminDashboardLive` LiveView 中的有状态组件。我们将利用有状态组件的 `update/2` 生命周期方法来获取我们的游戏和评分数据，并将其存储在 socket assigns 中。
 
 ```elixir
 # lib/game_store_web/live/game_ratings_live.ex
@@ -171,25 +179,27 @@ defmodule GameStoreWeb.GameRatingsLive do
 end
 ```
 
-Note that we're piping our socket through a set of reducers, each of which further decorate the socket state. These reducer functions take in an argument of the socket, do something to that socket, and return a new socket with the updated state.
+请注意，我们的 socket 是通过一组 reducer 来实现的，每一个 reducer 都会对 socket 的状态进行进一步的装饰。这些 reducer 函数接收一个 socket 的参数，对该 socket 做一些事情，然后返回一个具有更新状态的新 socket。
 
-First, we'll apply whatever assigns have come in from the parent LiveView, then we'll add a key of `:games_with_average_ratings` to assigns, pointing to a value of our query results.
+首先，我们将应用从父 LiveView 传来的任何赋值，然后我们将在赋值中添加一个 `:games_with_average_ratings` 的键，指向我们的查询结果的值。
 
-Now that we have our query results available in state, we're ready to use them to build our chart.
+现在我们已经有了状态下的查询结果，我们准备使用它们来构建我们的图表。
 
-### Building The Bar Chart
-There are three stages to building a Contex chart:
+### 构建柱状图
 
-* Initializing the dataset
-* Initializing the chart
-* Rendering the chart to SVG
+构建 Contex 图表有三个阶段：
 
-We'll add a reducer to our `update/2` pipeline that updates socket state for each step in this process.
+- 初始化数据集
+- 初始化图表
+- 将图表渲染成 SVG
 
-#### Initializing the `DataSet`
-The first step of building a Contex chart is to initialize the data set with the `Contex.DataSet` module. [The `DataSet` module](https://hexdocs.pm/contex/Contex.Dataset.html) wraps your dataset for plotting charts. It provides a set of convenience functions that subsequent chart plotting modules will leverage to operate on and chart your data. `Dataset` handles several different data structures by marshalling them into a consistent form for consumption by the chart plotting functions. The data structures it can handle are: a list of maps, list of lists or a list of tuples. Recall that we ensured that our query for games with average ratings returns a list of tuples.
+我们将为我们的 `update/2` 管道添加一个 reducer，它可以更新这个进程中每一步的 socket 状态。
 
-We'll begin by implementing a new reducer function, `assign_dataset/1`. This reducer will initialize a new `DataSet` with the query results, our list of game and average rating tuples, from socket assigns. Then, it will add the dataset to socket state:
+#### 初始化 `DataSet`
+
+构建 Contex 图表的第一步是用 `Contex.DataSet` 模块初始化数据集。[`DataSet` 模块](https://hexdocs.pm/contex/Contex.Dataset.html) 将您的数据集包装起来，用于绘制图表。它提供了一组方便的函数，后续的图表绘制模块将利用这些函数来操作你的数据并绘制图表。`Dataset` 通过将不同的数据结构整合成一致的形式来处理它们，供图表绘制函数使用。它可以处理的数据结构有：map 的列表、列表的列表或元组的列表。回想一下，我们确保我们对具有平均评分的游戏的查询返回的是一个元组列表。
+
+我们将首先实现一个新的 reducer 函数 `assign_dataset/1`。这个 reducer 将从 socket assigns 初始化一个新的 `DataSet`，其中包含查询结果，我们的游戏和平均评级元组列表。然后，它将把数据集添加到 socket 状态。
 
 ```elixir
 # lib/game_store_web/live/game_ratings_live.ex
@@ -214,7 +224,7 @@ defmodule GameStoreWeb.GameRatingsLive do
 end
 ```
 
-If we take a look at the output of our call to `Contex.DataSet.new/1`, we'll see the following struct:
+如果我们看一下调用 `Contex.DataSet.new/1` 的输出，我们会看到以下结构：
 
 ```elixir
 %Contex.Dataset{
@@ -228,10 +238,11 @@ If we take a look at the output of our call to `Contex.DataSet.new/1`, we'll see
 }
 ```
 
-The `DataSet` considers the first element of a given tuple in the list to be the "category column" and the second element to be the "value column". The category column is used to label the bar chart category (in our case the game name), and the value column is used to populate the value of that category.
+`DataSet` 认为给定元组的列表中第一个元素是 "category 列"，第二个元素是 "value 列"。category 列用于标注条形图类别（在我们的例子中是游戏名称），value 列用于填充该类别的值。
 
-#### Initializing the `BarChart`
-Now that we have our dataset, we can use it to initialize our `BarChart`. We'll do this in a subsequent reducer that we'll add to the `update/2` pipeline, `assign_chart/1`.
+#### 初始化 `BarChart`
+
+现在我们有了数据集，我们可以用它来初始化我们的 `BarChart`。我们将在后续的 `update/2` 管道中添加 `assign_chart/1` 来完成这个操作。
 
 ```elixir
 # lib/game_store_web/live/game_ratings_live.ex
@@ -255,7 +266,7 @@ defmodule GameStoreWeb.GameRatingsLive do
 end
 ```
 
-The call to `BarChart.new/1` will create a `BarChart` struct that describes how to plot the bar chart. Let's take a look at this struct now:
+调用 `BarChart.new/1` 将创建一个 `BarChart` 结构，描述如何绘制柱状图。现在我们来看看这个结构：
 
 ```elixir
 %Contex.BarChart{
@@ -325,9 +336,9 @@ The call to `BarChart.new/1` will create a `BarChart` struct that describes how 
 }
 ```
 
-The `BarChart` has a number of configurable options with defaults, all of which are listed in the documentation [here](https://hexdocs.pm/contex/Contex.BarChart.html#summary). For example, we can set the orientation (which defaults to vertical), the colors, the padding and more.
+`BarChart` 有许多可配置的默认选项，所有这些选项都列在 [文档](https://hexdocs.pm/contex/Contex.BarChart.html#summary) 中。例如，我们可以设置方向（默认为垂直）、颜色、padding 等。
 
-We can leverage the exposed configuration functions to update these defaults. Let's take a look at how we can manipulate the color of our chart:
+我们可以利用暴露的配置函数来更新这些默认值。让我们来看看如何操作图表的颜色。
 
 ```elixir
 # lib/game_store_web/live/game_ratings_live.ex
@@ -341,20 +352,21 @@ defp assign_chart(%{assigns: %{dataset: dataset}} = socket) do
 end
 ```
 
-This will cause our chart to render with the "warm" color scheme.
+这将使我们的图表呈现为 "暖色" 配色方案。
 
-It's important to note again that the first column of the dataset is used as the category column (i.e. the bar), and the second column is used as the value column (i.e. the bar height). This is managed through the `:column_map` attribute. We can see our `BarChart` struct has the following `:column_map` value:
+需要注意的是，数据集的第一列被用作类别列（即条形图），第二列被用作值列（即条形图高度）。这是通过 `:column_map` 属性来管理的。我们可以看到我们的 `BarChart` 结构的 `:column_map` 值如下：
 
 ```elixir
-column_map: %{category_col: 0, value_cols: [1]}
+column_map.%{category_col:}。%{category_col: 0, value_cols: [1]}
 ```
 
-The values of `0` and `[1]` refer to the indices of elements in the tuples in our `DataSet`. The element at the `0` index will be considered the "category" and the element and the `1` index will be considered the "value". Our tuples have the game name at the zero index and the average rating at the `1` index, so our game names will be treated at the category and their average ratings the value.
+`0` 和 `[1]` 的值指的是我们的 `DataSet` 中元组中元素的指数。`0` 索引的元素将被视为 "类别"，而 `1` 索引的元素将被视为 "值"。我们的元组中，游戏名称位于 0 索引，平均评分位于 1 索引，因此我们的游戏名称将被视为类别，而其平均评分将被视为值。
 
-#### Render the Chart SVG
-THe `Contex.Plot` module will plot our data and render it to SVG markup. We'll add another reducer to our pipeline, `assign_chart_svg`. This reducer will initialize and configure the `Contex.Plot` and render it to SVG. Then, it will assign this SVG to the `:chart_svg` key in socket assigns.
+#### 将图表渲染成 SVG
 
-The `Plot` module manages the layout of the chart plot--the chart title, axis labels, legend, etc. We initialize our `Plot` with the plot width and height, and the chart struct:
+`Contex.Plot` 模块将我们的数据绘制并渲染成 SVG 标记。我们将添加另一个 reducer `assign_chart_svg` 到我们的管道中，。这个 reducer 将初始化和配置 `Contex.Plot` 并将其渲染为 SVG。然后，它将把这个 SVG 分配给 socket assigns 中的 `:chart_svg` 键。
+
+`Plot` 模块管理图表图的布局--图表标题、轴标签、图例等。我们用图表的宽度和高度以及图表结构来初始化我们的 `Plot`。
 
 ```elixir
 # lib/game_store_web/live/game_ratings_live.ex
@@ -378,7 +390,7 @@ defmodule GameStoreWeb.GameRatingsLive do
 end
 ```
 
-We'll customize our plot with a chart table and some labels for the x- and y-axis:
+我们将用一个图表表格和一些 X 轴和 Y 轴的标签来自定义我们的图。
 
 ```elixir
 defp assign_chart_svg(%{assigns: %{chart: chart}} = socket) do
@@ -388,9 +400,9 @@ defp assign_chart_svg(%{assigns: %{chart: chart}} = socket) do
 end
 ```
 
-This will (you guessed it), apply the title, subtitles and axis labels to our chart.
+这将（你猜对了），应用标题，字幕和轴标签到我们的图表。
 
-Now we're ready to transform our plot into an SVG with the help of the `Plot` module's `to_svg/1` function. We'll also be sure to add the generated SVG to socket assigns:
+现在我们已经准备好借助 `Plot` 模块的 `to_svg/1` 函数将我们的图转化为 SVG。我们还要确保将生成的 SVG 添加到 socket assigns 中。
 
 ```elixir
 defp assign_chart_svg(%{assigns: %{chart: chart}} = socket) do
@@ -404,26 +416,24 @@ defp assign_chart_svg(%{assigns: %{chart: chart}} = socket) do
 end
 ```
 
-Now we're ready to render this SVG markup in our template.
+现在我们准备在模板中渲染这个 SVG 标记。
 
-#### Rendering the Chart in the Template
-Our `GameRatingsLive` template is pretty simple, it renders the SVG stored in the `@chart_svg` assignment:
+#### 在模板中渲染图表
+
+我们的 `GameRatingsLive` 模板非常简单，它渲染存储在 `@chart_svg` 赋值中的 SVG：
 
 ```html
 <!-- lib/game_store_web/live/game_ratings_live.html.leex -->
-<div>
-  <%= @chart_svg %>
-</div>
+<div><%= @chart_svg %></div>
 ```
 
-Now, we should see the following chart rendered when we navigate to `/admin-dashboard`:
+现在，当我们导航到 `/admin-dashboard` 时，我们应该看到下面的图表：
 
-![game ratings chart]({% asset game-ratings-chart.png @path %})
+![游戏评分图](https://elixirschool.com/assets/game-ratings-chart-c97d10c38c3dc7b6c9ba91d9710f8957b4de80dab0df1218942908c028bc18b6.png)
 
-One "gotcha" that I'll point out is that, in order to get the column labels (i.e. game names and star values) to be visible, I had to apply the custom CSS borrowed from the Contex example app [here](https://github.com/mindok/contex-samples/blob/master/assets/css/app.css#L6-L52), and copied below:
+我要指出的一个 "疑难杂症" 是，为了让列标签（即游戏名称和星级）可见，我不得不应用从 [Contex 示例应用](https://github.com/mindok/contex-samples/blob/master/assets/css/app.css#L6-L52) 中借用自定义 CSS，并复制到下面：
 
 ```css
-
 .exc-tick {
   stroke: grey;
 }
@@ -454,12 +464,12 @@ One "gotcha" that I'll point out is that, in order to get the column labels (i.e
 }
 .exc-subtitle {
   fill: darkgrey;
-  font-size: 1.0rem;
+  font-size: 1rem;
   stroke: none;
 }
 
 .exc-domain {
-  stroke:  rgb(207, 207, 207);
+  stroke: rgb(207, 207, 207);
 }
 
 .exc-barlabel-in {
@@ -473,23 +483,24 @@ One "gotcha" that I'll point out is that, in order to get the column labels (i.e
 }
 ```
 
-Now that our chart is rendering beautifully, let's talk about updating it in real-time.
+现在我们的图表已经呈现出漂亮的效果，我们来谈谈实时更新的问题。
 
-## Real-Time Updates
-The great news about rendering our chart in a LiveView is that we'll get real-time updates for free! Should any state changes occur server-side, the chart will be automatically re-rendered with any new data. We could imagine, for example, leveraging PubSub to send a message to the parent `AdminDashboardLive` every time a user submits a new game rating. The `AdminDashboard` could then in turn use the `send_update/2` function to update the child `GameRatingsLive` component, causing it to re-render and re-fetch the games with average ratings data from the database, thus rendering an updated chart with the latest game ratings. In this way, LiveView can manage the state of our single page in a way that reflects and is impacted by the overall state of our distributed application. Working with PubSub and LiveView is a little outside the scope of this post, but you can learn more about it in our earlier post on this topic [here](https://elixirschool.com/blog/live-view-with-pub-sub/).
+## 实时更新
 
-Aside from the free live updates our chart will benefit from, just by virtue of being rendered in LiveView, the Contex library does allow us to add event handlers to the chart itself. The `BarChart` module exposes a function, [`event_handler/2`](https://hexdocs.pm/contex/Contex.BarChart.html#event_handler/2), which attaches a `phx-click` attribute to each bar element in the chart.
+好消息是在 LiveView 中渲染我们的图表将获得免费的实时更新！如果服务器端发生任何状态变化，图表将自动用任何新数据重新渲染。例如，我们可以想象，利用 PubSub 在每次用户提交新的游戏评级时向父 `AdminDashboardLive` 发送一条消息。然后，`AdminDashboard` 又可以利用 `send_update/2` 函数更新子 `GameRatingsLive` 组件，使其重新渲染并从数据库中重新获取带有平均评分数据的游戏，从而渲染出带有最新游戏评分的更新图表。通过这种方式，LiveView 可以以一种反映并受分布式应用整体状态影响的方式来管理我们单页的状态。与 PubSub 和 LiveView 的合作有点超出了本篇文章的范围，但你可以在我们之前关于这个主题的 [文章](./2019-04-11-live-view-with-pub-sub.md) 中了解更多信息。
 
-We'll use this function to implement the following functionality:
+除了我们的图表将受益于免费的实时更新，仅仅凭借在 LiveView 中的渲染，Contex 库确实允许我们添加事件处理程序到图表本身。`BarChart` 模块公开了一个函数， [`event_handler/2`](https://hexdocs.pm/contex/Contex.BarChart.html#event_handler/2)，它为图表中的每个条形元素附加了一个 `phx-click` 属性。
 
-> When a user clicks a given bar in our chart,
-> Then that bar is highlighted
+我们将使用这个函数来实现以下功能：
 
-Something like this:
+> 当用户点击我们图表中的一个给定的条形元素时。
+> 然后，该栏被高亮显示
 
-![game ratings chart selected category]({% asset game-ratings-bar-chart-selected.png @path %})
+类似这样：
 
-We'll being by using the `BarChart.event_handler/2` function to add a `phx-click` event to the bars in our chart.
+![游戏评分表选择类别](https://elixirschool.com/assets/game-ratings-bar-chart-selected-206c41ec90ed935dbde4ce64b2bc74fcc415c364d9c04ad48663a3939c94bd3f.png)
+
+我们将通过使用 `BarChart.event_handler/2` 函数为图表中的条形图添加 `phx-click` 事件。
 
 ```elixir
 # lib/game_store_web/live/game_ratings_live.ex
@@ -504,7 +515,7 @@ defp assign_chart(%{assigns: %{dataset: dataset}} = socket) do
 end
 ```
 
-Now let's see what happens when we click a given bar in our chart and check our server logs:
+现在让我们看看当我们点击图表中给定的条形图时，会发生什么，并检查我们的服务器日志。
 
 ```elixir
 [error] GenServer #PID<0.617.0> terminating
@@ -512,19 +523,19 @@ Now let's see what happens when we click a given bar in our chart and check our 
 GameStoreWeb.AdminDashboardLive.handle_event("chart-bar-clicked", %{"category" => "Tic-Tac-Toe", "series" => "1", "value" => "3.4285714285714284"}, #Phoenix.LiveView.Socket<assigns: %{flash: %{}, live_action: :index, live_module: GameStoreWeb.AdminDashboardLive, survey_results_component_id: "survey-results"}, changed: %{}, endpoint: GameStoreWeb.Endpoint, id: "phx-FjuQogS0osBJcgnD", parent_pid: nil, root_pid: #PID<0.617.0>, router: GameStoreWeb.Router, view: GameStoreWeb.AdminDashboardLive, ...>)
 ```
 
-Oh no! Our parent LiveView crashed because we haven't yet implemented the `handle_event/3` function for our `"chart-bar-clicked"` event. You'll notice that the event was sent to the parent LiveView, `GameStoreWeb.AdminDashboardLive`, and _not_ our `GameRatingsLive` component. This is because, in order to send an event to a component, rather than it's parent, it is necessary to add the `phx-target=<%= @myself %>` attribute to the element that contains the `phx-click` event (or other DOM element binding). The `@myself` assignment refers to the unique identifier for the current component.
+哦，不！我们的父 LiveView 崩溃了。因为我们还没有为我们的 `"chart-bar-clicked"` 事件实现 `handle_event/3` 函数。你会注意到这个事件被发送到父 LiveView，`GameStoreWeb.AdminDashboardLive`，而不是我们的 `GameRatingsLive` 组件。这是因为，为了将一个事件发送到一个组件，而不是它的父组件，有必要将 `phx-target=<%= @myself %>` 属性添加到包含 `phx-click` 事件的元素（或其他 DOM 元素绑定）。`@myself` 赋值是指当前组件的唯一标识符。
 
-However, the Contex package doesn't (yet) allow us to specify the event target via the call to `BarChart.event_handler/2`. There is an [open issue](https://github.com/mindok/contex/issues/29) for just this work if there are any readers out there interesetd in contributing!
+然而，Contex 包并不允许我们通过调用 `BarChart.event_handler/2` 来指定事件目标。有一个 [open issue](https://github.com/mindok/contex/issues/29) 就是关于这个工作的，如果有读者有兴趣的话，可以贡献一下。
 
-So, we'll need to:
+所以，我们需要：
 
-* Implement the `handle_event/3` function in the parent LiveView, `AdminDashboardLive`
-* Get the parent LiveView to send an update to the child component when it receives this event
-* Teach the child component, `GameRatingsLive`, to render the SVG chart with a "category selection"
+- 在父 LiveView 中实现 `handle_event/3` 函数，`AdminDashboardLive`。
+- 当父 LiveView 收到该事件时，获取父 LiveView 向子组件发送更新。
+- 教会子组件 `GameRatingsLive` 用 "category selection" 来渲染 SVG 图表。
 
-Let's do it!
+我们开始吧!
 
-We'll start with our `handle_event/3` function. The function will pattern match the `"chart-bar-clicked"` event name and use the `send_update/2` function to tell the `GameRatingsLive` component to re-render:
+我们将从 `handle_event/3` 函数开始。该函数将模式匹配 `"chart-bar-clicked"` 事件名称，并使用 `send_update/2` 函数告诉 `GameRatingsLive` 组件重新渲染：
 
 ```elixir
 # lib/game_store_web/live/admin_dashboard_live.ex
@@ -540,19 +551,20 @@ defmodule GameStoreWeb.AdminDashboardLive do
   end
 end
 ```
-`send_update/2` is called with the name of the component that we want to update and a keyword list that will get passed to the updating component as the new assigns. The keyword list _must_ include the ID that we are targeting for an update. Here, we're pulling the component's ID out of socket assigns where we stored it in the first part of this blog post.
 
-With this call to `send_update/2`, we will cause the `GameRatingsLive` component to re-render and re-invoke the `update/2` callback, this time with an `assigns` that includes our `:selected_category` key pointing to the click event payload. We'll cover the `send_update/2` function, and more options for communicating between child components and parent LiveViews, in the LiveView book. For now, its enough to understand that `send_update/2` can be invoked from a parent LiveView to tell a component that is running in the LiveView to update.
+`send_update/2` 调用的是我们要更新的组件名称和一个关键字列表，这个关键字列表将作为新的赋值传递给更新的组件。关键字列表 _必须_ 包含我们要更新的 ID。在这里，我们将组件的 ID 从 socket assigns 中提取出来，我们在这篇博客文章的第一部分将其存储在那里。
 
-Now we're ready to teach the `GameRatingsLive` component how to render a Contex `BarChart` with a selected category. We can do this with the help of the [`BarChart.select_item/2`](https://hexdocs.pm/contex/Contex.BarChart.html#select_item/2). This function takes in two arguments, the current `BarChart` struct and a map that looks like this:
+通过调用 `send_update/2`，我们将使 `GameRatingsLive` 组件重新渲染并重新调用 `update/2` 回调，这次调用的 `assigns` 包括我们的`:selected_category` 键，指向点击事件的 payload。我们将在 LiveView 一书中介绍 `send_update/2` 函数，以及更多子组件和父 LiveViews 之间的通信选项。现在，我们只需要了解 `send_update/2` 可以从父 LiveView 中调用，告诉正在运行的组件更新。
+
+现在我们已经准备好教 `GameRatingsLive` 组件如何渲染一个带有选定类别的 Contex `BarChart`。我们可以借助 [`BarChart.select_item/2`](https://hexdocs.pm/contex/Contex.BarChart.html#select_item/2) 来实现这个功能。这个函数有两个参数，一个是当前的 `BarChart` 结构，另一个是类似这样的映射：
 
 ```elixir
 %{category: category, series: series}
 ```
 
-Luckily, this is just the data that was sent through in our click event payload and that is now available in assigns under the `:selected_category` key!
+幸运的是，这只是在点击事件 payload 中发送的数据，现在这些数据在 assigns 中的 `:selected_category` 键下是可用的。
 
-Let's update our component's `assign_chart/1` function to use the `:selected_category` info from assigns, if it is present, and apply it to the bar chart:
+让我们更新组件的 `assign_chart/1` 函数来使用 assigns 中的 `:selected_category` 信息（如果存在的话），并将其应用到条形图中。
 
 ```elixir
 # lib/game_store_web/live/game_ratings_live.ex
@@ -580,17 +592,19 @@ defp maybe_select_category(chart, _socket) do
 end
 ```
 
-Here we're adding a conditional reducer `maybe_select_category/2`, to our chart creation pipeline. If it is called with a socket that contains the `:selected_category` assignment (as would be the case if the component is updating courtesy of the parent receiving the click event), then it will apply the selected category values to the `BarChart.select_item/2` function. Otherwise, it will simply return the un-changed chart.
+在这里，我们在图表创建管道中添加了一个条件性的 reducer `maybe_select_category/2`。如果它被包含 `:selected_category` 赋值的 socket 调用(如果组件是由接收到点击事件的父节点更新的情况下)，那么它将把选择的类别值应用到 `BarChart.select_item/2` 函数中。否则，它将简单地返回没有变化的图表。
 
-Now, if we point our browser at `/admin-dashboard` and click a given bar chart category bar, we should see it highlighted appropriately!
+现在，如果浏览器指向 `/admin-dashboard`，并点击一个给定的条形图类别栏，我们应该会看到它被适当地高亮显示了!
 
-## Conclusion
-We can see that Contex is a powerful and flexible tool for server-side SVG charting in Elixir. On top of that, it seamlessly integrates into our LiveView, accommodating real-time updates and even allowing us to attach `phx-click` events to chart elements. I hope to see the Contex library grow even further and encourage anyone reading to try it our and consider contributing.
+## 结语
 
-Beyond our look at Contex, we touched on a lot of LiveView concepts here. We took a look at how core/boundary application design comes into play in our LiveView features, we leveraged stateful components and saw how parent LiveViews can communicate to their child components and we wrote some nice, organized LiveView code that leveraged reducers to establish socket state. For a deeper dive into these concepts and more, don't forget to check out Pragmatic Bookshelf's upcoming LiveView book, and keep an eye out for Elixir School's LiveView book give-away!
+我们可以看到，Contex 是 Elixir 中服务器端 SVG 图表的一个强大而灵活的工具。最重要的是，它能无缝集成到我们的 LiveView 中，适应实时更新，甚至允许我们将 `phx-click` 事件附加到图表元素上。我希望看到 Contex 库进一步发展，并鼓励任何阅读者试用它并考虑做出贡献。
 
-## Resources
-For a closer look at Contex:
+除了看 Contex，我们在这里还涉及了很多 LiveView 的概念。我们看了一下核心/边界应用设计是如何在我们的 LiveView 功能中发挥作用的，我们利用了有状态的组件，并看到了父 LiveViews 如何与它们的子组件进行通信，我们还写了一些漂亮的、有组织的 LiveView 代码，利用 reducers 建立 socket 状态。如果想更深入地了解这些概念和更多的内容，不要忘了查看 Pragmatic Bookshelf 即将出版的 LiveView 书籍，并留意 Elixir School 的 LiveView 书籍赠品。
 
-* [Contex official site](https://contex-charts.org/)
-* [Contex sample app](https://github.com/mindok/contex-samples)
+## 资源介绍
+
+想要更近一步了解 Contex：
+
+- [Contex 官网](https://contex-charts.org/)
+- [Contex 示例应用](https://github.com/mindok/contex-samples)
