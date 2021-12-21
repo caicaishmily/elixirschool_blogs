@@ -12,33 +12,33 @@ How Elixir School migrated from Jekyll to a Phoenix powered site
 
 ---
 
-# Now With More Elixir!
+# 现在有了更多的灵药!
 
-If you follow us on Twitter then you may have gotten a sneak peek at the new site before today's big launch but for those who haven't followed along we thought we'd cover this exciting new chapter in our history.
+如果你在 Twitter 上关注我们，那么你可能已经在今天的大会之前偷看了新网站，但对于那些没有关注我们的人来说，我们认为应该报道一下这个历史上这个令人兴奋的新篇章。
 
-## TL;DR The History
+## TL;DR 历史
 
-The very first commit for Elixir School took place the day after my birthday many moons ago now: May 31, 2015. Since then the project has evolved from me to over 500 individuals who've contributed new content, translations, and other improvements. As things grew it became clear we needed to migrate from markdown in a repo, and given the lack of options in the Elixir space at the time, we selected Jekyll. Jekyll got us online and served us well to provide a static site that handled 10s of thousands of weekly users across the globe.
+Elixir 学校的第一次提交是在许多月前我生日的第二天进行的。2015 年 5 月 31 日。从那时起，这个项目已经从我开始发展到超过 500 人，他们贡献了新的内容、翻译和其他改进。随着事情的发展，我们显然需要从 repo 中的 markdown 迁移，鉴于当时 Elixir 领域缺乏选择，我们选择了 Jekyll。Jekyll 让我们上线，并为我们提供了一个静态的网站，处理全球每周成千上万的用户。
 
-But there's something about the place to go for learning Elixir to be built on a Ruby tool. Not to mention the simplicity of a static site is great but hampers some of the cooler ideas we've had.
+但是，学习 Elixir 的地方有一些是建立在 Ruby 工具上的。更不用说静态网站的简单性很好，但阻碍了我们的一些更酷的想法。
 
-Fast forward six years later and there's a vibrant community around Elixir. With this wealth of experience, perspective, and background has come some really wonderful tooling.
+六年后的今天，Elixir 周围有一个充满活力的社区。有了这些丰富的经验、观点和背景，就有了一些非常棒的工具。
 
-Without further ado let's look at how we got from Jekyll to Phoenix!
+闲话少说，让我们来看看我们是如何从 Jekyll 到 Phoenix 的!
 
-## Jekyll to Phoenix
+## Jekyll 到 Phoenix
 
 ### Nimble Publisher
 
-The single biggest hurdle in our journey from Jekyll to Phoenix has been figuring out the best way to migrate the existing content without rewriting it, losing contributor history, or adding additional burdens on contributors. Enter Dashbit's NimblePublisher library!
+在我们从 Jekyll 到 Phoenix 的旅程中，最大的障碍是找出最好的方法来迁移现有的内容，而不重写它，失去贡献者的历史，或者给贡献者增加额外的负担。进入 Dashbit 的 NimblePublisher 库!
 
-We'll be covering our usage of NimblePublisher in follow-on blog posts, until then don't forget to check out our [NimblePublisher](https://elixirschool.com/en/lessons/misc/nimble_publisher) lesson!
+我们将在后续的博文中介绍我们对 NimblePublisher 的使用，在此之前，请不要忘记查看我们的[NimblePublisher](https://elixirschool.com/en/lessons/misc/nimble_publisher)课程!
 
-### Custom mix Tasks
+### 自定义 mix Tasks
 
-We employ custom mix tasks for two main purposes today: generating a sitemap and RSS feed. These two tasks leverage the content modules we built with NimblePublisher.
+我们今天主要为两个目的采用了自定义混合任务：生成网站地图和 RSS 提要。这两个任务利用了我们用 NimblePublisher 构建的内容模块。
 
-Of the two tasks the RSS feed is the most straightforward, we enumerate our list of blog posts and build up an XML document:
+在这两个任务中，RSS 订阅是最直接的，我们列举了我们的博客文章列表并建立了一个 XML 文档。
 
 ```elixir
 defmodule Mix.Tasks.SchoolHouse.Gen.Rss do
@@ -86,9 +86,9 @@ defmodule Mix.Tasks.SchoolHouse.Gen.Rss do
 end
 ```
 
-The sitemap generator follows a similar format but the value of content and its structure makes the task a bit more complicated. We break down the generation into a couple of steps:
+网站地图生成器遵循类似的格式，但内容的价值和它的结构使任务变得有点儿复杂。我们将生成过程分解为几个步骤：
 
-1. Add the blog index and our privacy policy
+1. 添加博客索引和我们的隐私政策
 
    ```elixir
    defp all_links do
@@ -99,7 +99,7 @@ The sitemap generator follows a similar format but the value of content and its 
    end
    ```
 
-2. Create a collection of blog post links
+2. 创建一个博客文章链接的集合
 
    ```elixir
    defp post_links do
@@ -109,7 +109,7 @@ The sitemap generator follows a similar format but the value of content and its 
    end
    ```
 
-3. Build up the links for each locale. This includes all lessons and pages such as conferences, podcasts, "Why Elixir?", and others.
+3. 建立每个地区的链接。这包括所有的课程和页面，如会议、播客、"为什么是 Elixir？" 以及其他
 
    ```elixir
    defp locale_links(locale), do: page_links(locale) ++ lesson_links(locale)
@@ -154,7 +154,7 @@ The sitemap generator follows a similar format but the value of content and its 
    end
    ```
 
-Both tasks are run in our release process and stored in the static directory to be served alongside other assets like `robots.txt`:
+这两个任务都在我们的发布过程中运行，并存储在静态目录中，与其他资源如 `robots.txt `一起提供。
 
 ```elixir
 plug Plug.Static,
@@ -164,46 +164,48 @@ plug Plug.Static,
   only: ~w(css fonts images js favicon.ico robots.txt feed.xml sitemap.xml)
 ```
 
-### Roadmap Forward
+### 前进路线图
 
-#### New Content
+#### 新内容
 
-With this launch we also restructured our content into new sections! This paves the way for much more content and a more managable way to organize and consume it. Some of the new content you can be on the look out for:
+通过这次发布，我们还将我们的内容重组为新的部分！这为更多的内容和更易于管理的组织和消费方式铺平了道路。这为更多的内容铺平了道路，也为组织和消费这些内容提供了更易于管理的方式。你可以留意一些新的内容：
 
-1. **Advanced Content**
+1. **高级内容**
 
-   1. Dedicated metaprogramming lesson that explores this powerful functionality
-   2. Greatly expanding on our Specifications and Type content
+   1. 专门的元编程课程，探讨这一强大的功能
+   2. 大大扩展了我们的规格和类型内容
 
-2. **Data Processing**
+2. **数据处理**
 
-   1. New Lesson: [Broadway](https://github.com/dashbitco/broadway) library by Dashbit
-   2. New Lesson: [Flow](https://github.com/dashbitco/flow) library by Dashbit
+   1. 新课：Dashbit 的 [Broadway](https://github.com/dashbitco/broadway) 库
+   2. 新课：Dashbit 的 [Flow](https://github.com/dashbitco/flow) 库
 
-   Together these give us coverage of the data trifecta: GenStage, Flow, and Broadway.
+   这些课程给了我们对数据三要素的覆盖：GenStage、Flow 和 Broadway。
 
 3. **Ecto**
 
-   1. Expanding existing Ecto content
-   2. New Lesson: Advanced Ecto querying techniques
+   1. 扩展现有的 Ecto 内容
+   2. 新课: 高级 Ecto 查询技术
 
-4. **Storage**
+4. **存储**
 
-   1. New Lesson: Redix library
-   2. New Lesson: Cachex library
+   1. 新课：Redix 库
+   2. 新课：Cachex 库
 
-5. **Fundamentals**
+5. **基础知识**
 
-   1. New Lesson: Functional Programming 101
-   2. New Lesson: Functional Programming 102
-   3. New Lesson: Data structures
+   1. 新课：函数式编程 101
+   2. 新课：函数式编程 102
+   3. 新课：数据结构
 
-We continue to discuss the possibility and value of expanding into Phoenix and Erlang content more heavily. We'd love your feedback! Interested in contributing to some of these lessons? Have suggestions for content? Don't hesitate to reach out or get involved!
+我们继续讨论更大量地扩展到 Phoenix 和 Erlang 内容的可能性和价值。我们希望得到您的反馈! 有兴趣为这些课程做一些贡献吗？对内容有建议吗？不要犹豫，请联系我们或参与进来。
 
-Our lessons aren't all! We've got a lot of exciting blog content in mind for the coming months:
+我们的课程还不是全部，在未来的几个月里，我们有很多令人兴奋的博客内容：
 
-1. We plan to resume our book, course, and conference reviews to continue to provide the community with an unbiased resource on which learning materials available to them are worth the expense.
-2. In conjunction with [Elixir Companies](https://elixir-companies.com/en) we're going to be kicking off a new blog series on companies using Elixir. Some of the questions you've been asking we aim to answer: Who's using Elixir? How did they end up selecting Elixir? How has the onboarding been? What is Elixir used for?
-3. Community Spotlights! There are **a lot** of amazing people in the community many of which don't get the recoginition they deserve. We want to fix that by selecting and highlighting those who're giving back to the community and moving us all forward. There are some terrific people involved in Elixir overshadowed by a smaller louder group and we want to change that!
+1. 我们计划恢复我们的书籍、课程和会议评论，继续为社区提供公正的资源，说明哪些学习材料是值得他们花费的。
 
-We're excited about all the new possibilities and content in store and we hope you are too!
+2. 与[Elixir 公司](https://elixir-companies.com/en) 一起，我们将启动一个关于使用 Elixir 公司的新博客系列。你一直在问的一些问题，我们的目的是要回答。谁在使用 Elixir？他们最终是如何选择 Elixir 的？入职情况如何？Elixir 是用来做什么的？
+
+3. 社区亮点! 社区里有 **很多** 了不起的人，其中很多人没有得到他们应得的认可。我们希望通过选择和强调那些回馈社会和推动我们所有人的人，来解决这个问题。有一些参与 Elixir 的了不起的人被一个较小的声音所掩盖，我们想改变这种状况！我们对所有的新成员感到兴奋。
+
+我们对所有新的可能性和储存的内容感到兴奋，我们希望你也是如此。
