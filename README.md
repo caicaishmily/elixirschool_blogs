@@ -8,6 +8,12 @@
 
 ## 博客内容 (按发布时间排序)
 
+### 2021
+
+- [x] [现在有了更多的灵药!](./posts/2021-12-01-now-with-more-elixir.md)
+- [x] [til: 使用 ecto 的 `map` 进行更干净的查询](./posts/2021-11-22-til-cleaner-queries-with-ecto-map.md)
+- [x] [在 Elixir 中如何使用模式匹配和不可变性来实现干净的控制流](./posts/2021-06-07-clean-control-flow-in-elixir-with-pattern-matching-and-immutability.md)
+
 ### 2020
 
 - [x] [使用 Context 和 LiveView 绘制实时 SVG 图表](./posts/2020-10-06-server-side-svg-charts-with-contex-and-liveview.md)
