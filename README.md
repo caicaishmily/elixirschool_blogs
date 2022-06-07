@@ -65,6 +65,10 @@
 - [x] [起步](./posts/2018-04-23-just-the-beginning.md)
 - [x] [1.6 前瞻](./posts/2018-04-03-a-look-at-16.md)
 
+## Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=caicaishmily/elixirschool_blogs&type=Date)](https://star-history.com/#caicaishmily/elixirschool_blogs&Date)
+
 ### 友情赞助
 
 请小编喝杯咖啡
