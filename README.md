@@ -4,14 +4,25 @@
 
 喜欢的话可以给个 star, 欢迎 issue !
 
-## [官网链接](https://elixirschool.com/blog/)
+## [官网链接](https://elixirschool.com/blog)
 
 ## 博客内容 (按发布时间排序)
+
+### 2023
+
+- [ ][用 ExUnit 运行特定的测试案例](./posts/2023-02-15-run-specific-tests-with-exunit.md)
+
+### 2022
+
+- [ ][odbc 和流](./posts/2022-02-22-odbc-and-streams.md)
+- [ ][具有动态属性的组件](./posts/2022-08-01-components-with-dynamic-attributes.md)
 
 ### 2021
 
 - [x] [现在有了更多的灵药!](./posts/2021-12-01-now-with-more-elixir.md)
 - [x] [til: 使用 ecto 的 `map` 进行更干净的查询](./posts/2021-11-22-til-cleaner-queries-with-ecto-map.md)
+- [ ] [Rocket Validator](./posts/2021-09-02-rocket-validator.md)
+- [x][与他人一起学习 Elixir - Elixir 图书俱乐部](./posts/2021-07-14-elixir-book-club.md)
 - [x] [在 Elixir 中如何使用模式匹配和不可变性来实现干净的控制流](./posts/2021-06-07-clean-control-flow-in-elixir-with-pattern-matching-and-immutability.md)
 
 ### 2020
