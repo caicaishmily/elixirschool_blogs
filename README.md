@@ -14,8 +14,8 @@
 
 ### 2022
 
-- [ ] [odbc 和流](./posts/2022-02-22-odbc-and-streams.md)
 - [ ] [具有动态属性的组件](./posts/2022-08-01-components-with-dynamic-attributes.md)
+- [x] [odbc 和流](./posts/2022-02-22-odbc-and-streams.md)
 
 ### 2021
 
