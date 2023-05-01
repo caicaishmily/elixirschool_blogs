@@ -10,7 +10,7 @@
 
 ### 2023
 
-- [ ] [用 ExUnit 运行特定的测试案例](./posts/2023-02-15-run-specific-tests-with-exunit.md)
+- [x] [用 ExUnit 运行特定的测试案例](./posts/2023-02-15-run-specific-tests-with-exunit.md)
 
 ### 2022
 
