@@ -79,11 +79,3 @@
 ## Star History
 
 [![Star History Chart](https://api.star-history.com/svg?repos=caicaishmily/elixirschool_blogs&type=Date)](https://star-history.com/#caicaishmily/elixirschool_blogs&Date)
-
-### 友情赞助
-
-请小编喝杯咖啡
-
-|              微信              |             支付宝             |
-| :----------------------------: | :----------------------------: |
-| ![alipay](./assets/alipay.png) | ![wechat](./assets/wechat.png) |
